@@ -1,8 +1,8 @@
 VoiceOverUtils = {}
 
-local SOUNDS_BASE_DIR = "Interface\\AddOns\\VoiceOver\\Sounds\\"
-local QUEST_SOUNDS_BASE_DIR = SOUNDS_BASE_DIR .. "Quests\\"
-local GOSSIP_SOUNDS_BASE_DIR = SOUNDS_BASE_DIR .. "Gossip\\"
+local SOUNDS_BASE_DIR = "Interface\\AddOns\\VoiceOver\\generated\\sounds\\"
+local QUEST_SOUNDS_BASE_DIR = SOUNDS_BASE_DIR .. "quests\\"
+local GOSSIP_SOUNDS_BASE_DIR = SOUNDS_BASE_DIR .. "gossip\\"
 
 function VoiceOverUtils:addFilePathToSoundData(soundData)
     if soundData["questId"] == nil then

@@ -55,6 +55,6 @@ Generating all of the quests and gossip in the game would be quite expensive, so
 The generated TTS audio files will be saved in the sounds folder, with separate subfolders for quests and gossip. Lookup tables and sound length tables will also be generated for use in the addon. 
 
 ## Addon Install
-Copy over everything from inside the `generated` folder to the VoiceOver folder, then the VoiceOver folder to `World of Warcraft/_classic_era_/Interface/AddOns`
+Copy over the `generated` folder to the VoiceOver folder, then the VoiceOver folder to `World of Warcraft/_classic_era_/Interface/AddOns`
 ## Contributing
 If you want to contribute to this project, please feel free to open an issue or submit a pull request.

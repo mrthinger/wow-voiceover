@@ -138,7 +138,6 @@ function SoundQueueUI:configureFirstButton(button, soundData)
 end
 
 function SoundQueueUI:updateSoundQueueDisplay()
-    print("update disp called")
     local yPos = -10
     for i, soundData in ipairs(self.soundQueue.sounds) do
         local button = self.soundQueueFrame.buttons[i] or self:createButton(i)

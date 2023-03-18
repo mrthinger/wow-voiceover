@@ -4,9 +4,9 @@
 ## Version: 0.2
 
 EventHandler.lua
-sound_length_table.lua
+generated/sound_length_table.lua
 FuzzySearch.lua
-gossip_file_lookups.lua
+generated/gossip_file_lookups.lua
 SoundQueue.lua
 SoundQueueUI.lua
 Utils.lua
