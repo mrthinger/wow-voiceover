@@ -1,0 +1,13 @@
+## Interface: 11403
+## Title: VoiceOver
+## Notes: Adds voiceovers to npcs
+## Version: 0.2
+
+EventHandler.lua
+sound_length_table.lua
+FuzzySearch.lua
+gossip_file_lookups.lua
+SoundQueue.lua
+SoundQueueUI.lua
+Utils.lua
+Main.lua
