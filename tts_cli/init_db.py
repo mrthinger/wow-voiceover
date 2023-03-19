@@ -7,13 +7,17 @@ import os
 from tqdm import tqdm
 
 
-VMANGOS_DB_DUMP_URL = "https://github.com/vmangos/core/releases/download/db_latest/db-999a003.zip"
+VMANGOS_DB_DUMP_URL = "https://api.github.com/repos/vmangos/core/releases/tags/db_latest"
 EXPORTED_FILES = ['sql/exported/CreatureDisplayInfo.sql',
                   'sql/exported/CreatureDisplayInfoExtra.sql']
 
 
 def download_and_extract_latest_db_dump():
-    response = requests.get(VMANGOS_DB_DUMP_URL)
+    print("Retrieving latest version")
+    check_version = requests.get(VMANGOS_DB_DUMP_URL)
+    get_latest = check_version.json()['assets'][0]['browser_download_url']
+    print("Processing")
+    response = requests.get(get_latest)
     if response.status_code == 200:
         z = zipfile.ZipFile(io.BytesIO(response.content))
         z.extractall("sql")
