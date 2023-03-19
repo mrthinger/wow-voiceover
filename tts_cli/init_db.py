@@ -7,7 +7,7 @@ import os
 from tqdm import tqdm
 
 
-VMANGOS_DB_DUMP_URL = "https://github.com/vmangos/core/releases/download/db_latest/db-723bf8b.zip"
+VMANGOS_DB_DUMP_URL = "https://github.com/vmangos/core/releases/download/db_latest/db-999a003.zip"
 EXPORTED_FILES = ['sql/exported/CreatureDisplayInfo.sql',
                   'sql/exported/CreatureDisplayInfoExtra.sql']
 
