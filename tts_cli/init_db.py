@@ -8,8 +8,8 @@ from tqdm import tqdm
 
 
 VMANGOS_DB_DUMP_URL = "https://api.github.com/repos/vmangos/core/releases/tags/db_latest"
-EXPORTED_FILES = ['sql/exported/CreatureDisplayInfo.sql',
-                  'sql/exported/CreatureDisplayInfoExtra.sql']
+EXPORTED_FILES = ['assets/sql/exported/CreatureDisplayInfo.sql',
+                  'assets/sql/exported/CreatureDisplayInfoExtra.sql']
 
 
 def download_and_extract_latest_db_dump():
@@ -20,7 +20,7 @@ def download_and_extract_latest_db_dump():
     response = requests.get(get_latest)
     if response.status_code == 200:
         z = zipfile.ZipFile(io.BytesIO(response.content))
-        z.extractall("sql")
+        z.extractall("assets/sql")
     else:
         print("Error: Unable to download the database dump.")
         exit(1)
@@ -70,7 +70,7 @@ def import_sql_files_to_database():
     cursor.execute(f"USE {MYSQL_DATABASE};")
 
     sql_files = []
-    for dirpath, _, filenames in os.walk("sql/db_dump"):
+    for dirpath, _, filenames in os.walk("assets/sql/db_dump"):
         for filename in filenames:
             if filename.endswith(".sql"):
                 sql_files.append(os.path.join(dirpath, filename))

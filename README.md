@@ -16,43 +16,35 @@ This project contains a CLI (Command Line Interface) tool that generates Text-to
 - docker (for the database)
 
 ## Installation
-1. Install the required packages.
+1. Make a python virtual enviornment. (make sure to source it after creating)
+```bash
+python -m venv .venv
+```
+2. Install the required packages.
 ```bash
 pip install -r requirements.txt
 ```
-2. Copy the .env.example file to .env and fill in your ElevenLabs API Key and database credentials. The included database values are fine if you're going to use the docker-compose file.
+3. Copy the .env.example file to .env and fill in your ElevenLabs API Key and database credentials. The included database values are fine if you're going to use the docker-compose file.
 ```bash
 cp .env.example .env
 ```
-3. Start the MySQL DB
+4. Start the MySQL DB
 ```bash
 docker compose up -d
 ```
-4. Seed the MySQL DB
+5. Seed the MySQL DB
 ```bash
 python cli-main.py init-db
 ```
 
 ## Voice Setup
-The generation scripts assume you have voices created in Elevenlabs named in the format `race-gender`. Right now there is support for troll, orc, tauren, and goblin - male/female. You will need to create your own voice clones. If you'd like to add more races, add them to the tts_cli/tts_utils.py race table and voice map. A good place to get samples is @ https://www.wowhead.com/sounds/npc-greetings/name:orc 
+The generation scripts assume you have voices created in Elevenlabs named in the format `race-gender`. For the exact races the script checks your elevenlabs account for, refer to `tts_cli\consts.py`. Gender will always either be `male` or `female`. ex: `orc-male`. You will need to create your own voice clones. A good place to get samples is @ https://www.wowhead.com/sounds/npc-greetings/name:orc 
 ## Usage
-To use the CLI tool, run the following command with either quests or gossip as an argument:
+To use the interactive CLI tool, run the following command:
 
 ```bash
-python cli-main.py <mode>
+python cli-main.py
 ```
-Replace <mode> with one of the following options:
-
-- quests: Process quest texts and generate TTS audio files.
-- gossip: Process gossip texts and generate TTS audio files.  
-
-Example:
-
-```bash
-python cli-main.py quests
-```
-
-Generating all of the quests and gossip in the game would be quite expensive, so you can edit the exact query for retrieving text in tts_cli/sql_queries.py
 ## Output
 The generated TTS audio files will be saved in the sounds folder, with separate subfolders for quests and gossip. Lookup tables and sound length tables will also be generated for use in the addon. 
 
