@@ -10,3 +10,4 @@ python-dotenv==1.0.0
 requests==2.28.2
 SLPP==1.2.3
 tqdm==4.65.0
+cryptography

@@ -83,7 +83,8 @@ class TTSProcessor:
                 result = f"Audio file saved successfully!: {outpath}"
                 print(result)
         else:
-            result = "Error: unable to save audio file."
+            result = f"Error: unable to save audio file {response}"
+            print(result)
         return result
 
 
@@ -181,7 +182,7 @@ class TTSProcessor:
     def process_all_data(self, df, selected_voices):
         df = self.preprocess_dataframe(df)
         self.create_output_dirs()
-        self.process_rows_in_parallel(df, self.process_row, selected_voices, max_workers=20)
+        self.process_rows_in_parallel(df, self.process_row, selected_voices, max_workers=5)
         print("Audio finished generating.")
         self.write_gossip_file_lookups_table(df)
         print("Added new entries to gossip_file_lookups.lua")
