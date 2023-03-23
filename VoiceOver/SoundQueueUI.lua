@@ -19,7 +19,6 @@ function SoundQueueUI:new(soundQueue)
     return soundQueueUI
 end
 
-
 function SoundQueueUI:initDisplay()
     self.soundQueueFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
     self.soundQueueScrollFrame = CreateFrame("ScrollFrame", nil, self.soundQueueFrame)
@@ -28,7 +27,7 @@ function SoundQueueUI:initDisplay()
     self.soundQueueFrame:SetHeight(300)
     self.soundQueueFrame:SetPoint("BOTTOMRIGHT", 0, 0)
     self.soundQueueFrame.buttons = {}
-    self.soundQueueFrame:SetMovable(true) -- Allow the frame to be moved
+    self.soundQueueFrame:SetMovable(true)  -- Allow the frame to be moved
     self.soundQueueFrame:EnableMouse(true) -- Allow the frame to be clicked on
 
     -- Create a local variable to track whether the frame is being dragged
@@ -77,7 +76,6 @@ function SoundQueueUI:initNPCHead()
     end)
 end
 
-
 function SoundQueueUI:createButton(i)
     local button = CreateFrame("Button", nil, self.soundQueueButtonContainer)
     self.soundQueueFrame.buttons[i] = button
@@ -104,7 +102,12 @@ function SoundQueueUI:configureButton(button, soundData, i, yPos)
 
     if i == 1 then
         self:configureFirstButton(button, soundData)
-        yPos = yPos - 64
+
+        if soundData.unitGuid then
+            yPos = yPos - 64
+        else
+            yPos = yPos - 20
+        end
     else
         button:SetSize(300, 20)
         button.textWidget:SetPoint("LEFT", button.iconWidget, "RIGHT", 5, 0)
@@ -116,25 +119,28 @@ function SoundQueueUI:configureButton(button, soundData, i, yPos)
 end
 
 function SoundQueueUI:configureFirstButton(button, soundData)
-    if self.npcHead:IsShown() == false then
+    if soundData.unitGuid and (self.npcHead:IsShown() == false or oldCreatureId == nil) then
         self.npcHead:Show()
-    end
+        button:SetSize(300, 64)
+        button.textWidget:SetPoint("LEFT", button.iconWidget, "RIGHT", 70, 0)
 
-    button:SetSize(300, 64)
-    button.textWidget:SetPoint("LEFT", button.iconWidget, "RIGHT", 70, 0)
+        local creatureID = select(6, strsplit("-", soundData.unitGuid))
+        if creatureID ~= self.oldCreatureId then
+            self.npcHead:SetCreature(creatureID)
+            self.npcHead:SetCustomCamera(0)
+            self.npcHead:SetAnimation(60)
 
-    local creatureID = select(6, strsplit("-", soundData.unitGuid))
-    if creatureID ~= self.oldCreatureId then
-        self.npcHead:SetCreature(creatureID)
-        self.npcHead:SetCustomCamera(0)
-        self.npcHead:SetAnimation(60)
+            self.oldCreatureId = creatureID
+        else
+            self.npcHead:SetCustomCamera(0)
+        end
 
-        self.oldCreatureId = creatureID
+        self.npcHead:SetPoint("LEFT", button.iconWidget, "RIGHT", 0, 0)
     else
-        self.npcHead:SetCustomCamera(0)
+        self.npcHead:Hide()
+        button:SetSize(300, 20)
+        button.textWidget:SetPoint("LEFT", button.iconWidget, "RIGHT", 5, 0)
     end
-
-    self.npcHead:SetPoint("LEFT", button.iconWidget, "RIGHT", 0, 0)
 end
 
 function SoundQueueUI:updateSoundQueueDisplay()
