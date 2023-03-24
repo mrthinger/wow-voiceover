@@ -12,7 +12,6 @@ function VoiceOverUtils:addFilePathToSoundData(soundData)
     end
 end
 
-
 function VoiceOverUtils:addGossipFileName(soundData)
     local npcIdString = select(6, strsplit("-", soundData.unitGuid))
     local npcId = tonumber(npcIdString)
