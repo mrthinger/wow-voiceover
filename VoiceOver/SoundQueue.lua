@@ -39,7 +39,7 @@ function VoiceOverSoundQueue:PlayQuestSoundByIndex(questID, title, index)
     -- Update the quest play button for the given index
     if #self.sounds > 0 then
         soundData.questLogButton:SetNormalTexture("Interface\\TIMEMANAGER\\ResetButton")
-        --soundData.questLogButton:SetScript("OnClick", function() self:StopQuestSoundByIndex(soundData) end)
+        soundData.questLogButton:SetScript("OnClick", function() end)
     end
 end
 

@@ -5,6 +5,15 @@ local eventHandler = VoiceOverEventHandler:new(soundQueue)
 
 eventHandler:RegisterEvents()
 
+hooksecurefunc("AbandonQuest", function()
+	local questName = GetAbandonQuestName()
+
+	for index, queuedSound in ipairs(soundQueue.sounds) do
+		if queuedSound.title == questName then
+			soundQueue:removeSoundFromQueue(queuedSound)
+		end
+	end
+end)
 
 hooksecurefunc("QuestLog_Update", function()
 	local numEntries, numQuests = GetNumQuestLogEntries()
@@ -46,7 +55,7 @@ hooksecurefunc("QuestLog_Update", function()
 								break
 							else
 								VoiceOverSoundQueue.questPlayButtons[questIndex]:SetNormalTexture("Interface\\TIMEMANAGER\\ResetButton")
-								--VoiceOverSoundQueue.questPlayButtons[questIndex]:SetScript("OnClick", function() soundQueue:StopQuestSoundByIndex(queuedSound) end)
+								VoiceOverSoundQueue.questPlayButtons[questIndex]:SetScript("OnClick", function() end)
 								changed = true
 								break
 							end
