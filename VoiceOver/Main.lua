@@ -35,36 +35,26 @@ hooksecurefunc("QuestLog_Update", function()
 					local changed = false
 					for index, queuedSound in ipairs(soundQueue.sounds) do
 						if queuedSound.questId == questID then
-							if queuedSound.index and queuedSound.index ~= questIndex then
-								if index == 1 then
-									queuedSound.index = questIndex
-									queuedSound.questLogButton = VoiceOverSoundQueue.questPlayButtons[questIndex]
+							queuedSound.index = questIndex
+							queuedSound.questLogButton = VoiceOverSoundQueue.questPlayButtons[questIndex]
 
-									VoiceOverSoundQueue.questPlayButtons[questIndex]:SetNormalTexture(
-										"Interface\\TIMEMANAGER\\PauseButton")
-									VoiceOverSoundQueue.questPlayButtons[questIndex]:SetScript("OnClick",
-										function() soundQueue:StopQuestSoundByIndex(queuedSound) end)
-									changed = true
-									break
-								else
-									queuedSound.index = questIndex
-									queuedSound.questLogButton = VoiceOverSoundQueue.questPlayButtons[questIndex]
-
-									VoiceOverSoundQueue.questPlayButtons[questIndex]:SetNormalTexture(
-										"Interface\\TIMEMANAGER\\ResetButton")
-									--VoiceOverSoundQueue.questPlayButtons[questIndex]:SetScript("OnClick", function() soundQueue:StopQuestSoundByIndex(queuedSound) end)
-									changed = true
-									break
-								end
-							else
+							if index == 1 then
+								VoiceOverSoundQueue.questPlayButtons[questIndex]:SetNormalTexture("Interface\\TIMEMANAGER\\PauseButton")
+								VoiceOverSoundQueue.questPlayButtons[questIndex]:SetScript("OnClick",
+									function() soundQueue:StopQuestSoundByIndex(queuedSound) end)
 								changed = true
+								break
+							else
+								VoiceOverSoundQueue.questPlayButtons[questIndex]:SetNormalTexture("Interface\\TIMEMANAGER\\ResetButton")
+								--VoiceOverSoundQueue.questPlayButtons[questIndex]:SetScript("OnClick", function() soundQueue:StopQuestSoundByIndex(queuedSound) end)
+								changed = true
+								break
 							end
 						end
 					end
 
 					if changed == false then
-						VoiceOverSoundQueue.questPlayButtons[questIndex]:SetNormalTexture(
-							"Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+						VoiceOverSoundQueue.questPlayButtons[questIndex]:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
 						VoiceOverSoundQueue.questPlayButtons[questIndex]:SetScript("OnClick",
 							function() soundQueue:PlayQuestSoundByIndex(questID, title, questIndex) end)
 					end

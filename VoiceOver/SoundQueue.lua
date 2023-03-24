@@ -1,7 +1,6 @@
 VoiceOverSoundQueue = {}
 VoiceOverSoundQueue.__index = VoiceOverSoundQueue
 
-VoiceOverSoundQueue.questRows = {}
 VoiceOverSoundQueue.questPlayButtons = {}
 local lastSoundData = nil
 
@@ -29,8 +28,6 @@ function VoiceOverSoundQueue:PlayQuestSoundByIndex(questID, title, index)
         ["index"] = index,
         ["questLogButton"] = VoiceOverSoundQueue.questPlayButtons[index]
     }
-
-    VoiceOverSoundQueue.questRows[index] = soundData
 
     -- Add file path to sound data
     VoiceOverUtils:addFilePathToSoundData(soundData)
