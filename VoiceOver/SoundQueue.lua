@@ -41,7 +41,6 @@ function VoiceOverSoundQueue:PlayQuestSoundByIndex(questID, title, index)
 
     -- Update the quest play button for the given index
     if #self.sounds > 0 then
-        soundData.buttonType = "QUEUED"
         soundData.questLogButton:SetNormalTexture("Interface\\TIMEMANAGER\\ResetButton")
         --soundData.questLogButton:SetScript("OnClick", function() self:StopQuestSoundByIndex(soundData) end)
     end
@@ -53,7 +52,6 @@ function VoiceOverSoundQueue:StopQuestSoundByIndex(soundData)
     self:removeSoundFromQueue(soundData)
 
     -- Update the quest play button for
-    soundData.buttonType = nil
     soundData.questLogButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
     soundData.questLogButton:SetScript("OnClick",
         function() self:PlayQuestSoundByIndex(soundData.questId, soundData.title, soundData.index) end)
@@ -100,7 +98,6 @@ function VoiceOverSoundQueue:playSound(soundData)
         self:removeSoundFromQueue(soundData)
 
         if soundData.questLogButton then
-            soundData.buttonType = nil
             soundData.questLogButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
             soundData.questLogButton:SetScript("OnClick",
                 function() self:PlayQuestSoundByIndex(soundData.questId, soundData.title, soundData.index) end)
@@ -128,7 +125,6 @@ function VoiceOverSoundQueue:playSound(soundData)
     end
 
     if soundData.questLogButton then
-        soundData.buttonType = "PAUSE"
         soundData.questLogButton:SetNormalTexture("Interface\\TIMEMANAGER\\PauseButton")
         soundData.questLogButton:SetScript("OnClick", function() self:StopQuestSoundByIndex(soundData) end)
     end
@@ -142,7 +138,6 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
             table.remove(self.sounds, index)
 
             if soundData.questLogButton then
-                soundData.buttonType = nil
                 soundData.questLogButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
                 soundData.questLogButton:SetScript("OnClick",
                     function() self:PlayQuestSoundByIndex(soundData.questId, soundData.title, soundData.index) end)

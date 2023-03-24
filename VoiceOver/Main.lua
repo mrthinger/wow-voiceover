@@ -37,7 +37,6 @@ hooksecurefunc("QuestLog_Update", function()
 						if queuedSound.questId == questID then
 							if queuedSound.index and queuedSound.index ~= questIndex then
 								if index == 1 then
-									queuedSound.buttonType = "PAUSE"
 									queuedSound.index = questIndex
 									queuedSound.questLogButton = VoiceOverSoundQueue.questPlayButtons[questIndex]
 
@@ -48,7 +47,6 @@ hooksecurefunc("QuestLog_Update", function()
 									changed = true
 									break
 								else
-									queuedSound.buttonType = "QUEUED"
 									queuedSound.index = questIndex
 									queuedSound.questLogButton = VoiceOverSoundQueue.questPlayButtons[questIndex]
 
