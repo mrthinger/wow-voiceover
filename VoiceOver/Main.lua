@@ -32,9 +32,9 @@ hooksecurefunc("QuestLog_Update", function()
 				-- If the play button has not been created yet, create it
 				if not VoiceOverSoundQueue.questPlayButtons[questIndex] then
 					local playButton = CreateFrame("Button", nil, questLogTitle, "UIPanelButtonTemplate")
-					playButton:SetWidth(16)
-					playButton:SetHeight(16)
-					playButton:SetPoint("LEFT", questLogTitle, "LEFT", 210, 0)
+					playButton:SetWidth(15)
+					playButton:SetHeight(15)
+					playButton:SetPoint("LEFT", questLogTitle, "LEFT", 215, 0)
 					playButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
 
 					VoiceOverSoundQueue.questPlayButtons[questIndex] = playButton
