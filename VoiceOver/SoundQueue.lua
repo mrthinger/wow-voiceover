@@ -86,14 +86,19 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
         end
     end
 
-    if removedIndex == 1 then
+    if removedIndex == 1 and not self.isPaused then
+
         StopSound(soundData.handle)
         soundData.nextSoundTimer:Cancel()
 
-        if #self.sounds > 0 and not self.isPaused then
+        if #self.sounds > 0 then
             local nextSoundData = self.sounds[1]
             self:playSound(nextSoundData)
         end
+    end
+
+    if #self.sounds == 0 then
+        self.isPaused = false
     end
 
     self.ui:updateSoundQueueDisplay()
