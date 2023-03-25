@@ -52,3 +52,31 @@ The generated TTS audio files will be saved in the sounds folder, with separate 
 Copy over the `generated` folder to the VoiceOver folder, then the VoiceOver folder to `World of Warcraft/_classic_era_/Interface/AddOns`
 ## Contributing
 If you want to contribute to this project, please feel free to open an issue or submit a pull request.
+
+# CLI Docs
+
+## Dataframe Schema
+
+The dataframe schema before calling the `preprocess_dataframe` function consists of the following columns:
+
+| Column        | Description                                                  |
+|---------------|--------------------------------------------------------------|
+| `source`      | Indicates the type of interaction, can be 'accept', 'progress', 'complete', or 'gossip' |
+| `quest`       | The quest ID or empty string if it's a gossip interaction    |
+| `text`        | The text content of the interaction                           |
+| `DisplayRaceID` | The race ID of the NPC involved in the interaction          |
+| `DisplaySexID`  | The gender ID of the NPC involved in the interaction        |
+| `name`        | The name of the NPC involved in the interaction               |
+| `id`          | The creature ID of the NPC involved in the interaction        |
+
+## New Fields Added by `preprocess_dataframe`
+
+The `preprocess_dataframe` function adds the following new fields to the dataframe:
+
+| Column                   | Description                                                  |
+|--------------------------|--------------------------------------------------------------|
+| `race`                   | The race of the NPC, mapped from `DisplayRaceID` using `RACE_DICT` |
+| `gender`                 | The gender of the NPC, mapped from `DisplaySexID` using `GENDER_DICT` |
+| `voice_name`             | The voice name, which is a combination of the race and gender fields |
+| `templateText_race_gender` | A combination of the text, race, and gender fields          |
+| `templateText_race_gender_hash` | A hash of the `templateText_race_gender` field          |

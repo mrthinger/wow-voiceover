@@ -1,14 +1,9 @@
 VoiceOverSoundQueue = {}
 VoiceOverSoundQueue.__index = VoiceOverSoundQueue
 
-VoiceOverSoundQueue.questPlayButtons = {}
-local lastSoundData = nil
-
 function VoiceOverSoundQueue:new()
     local soundQueue = {}
     setmetatable(soundQueue, VoiceOverSoundQueue)
-
-
 
     soundQueue.ui = SoundQueueUI:new(soundQueue)
     soundQueue.soundIdCounter = 0
@@ -16,42 +11,6 @@ function VoiceOverSoundQueue:new()
     soundQueue.sounds = {}
 
     return soundQueue
-end
-
--- Play sound for a given quest ID and button index
-function VoiceOverSoundQueue:PlayQuestSoundByIndex(questID, title, index)
-    -- Set sound data for the given quest ID
-    soundData = {
-        ["fileName"] = questID .. "-accept",
-        ["questId"] = questID,
-        ["title"] = title,
-        ["index"] = index,
-        ["questLogButton"] = VoiceOverSoundQueue.questPlayButtons[index]
-    }
-
-    -- Add file path to sound data
-    VoiceOverUtils:addFilePathToSoundData(soundData)
-
-    -- Play the sound
-    --soundQueue:playSound(soundData)
-    self:addSoundToQueue(soundData)
-
-    -- Update the quest play button for the given index
-    if #self.sounds > 0 then
-        soundData.questLogButton:SetNormalTexture("Interface\\TIMEMANAGER\\ResetButton")
-        soundData.questLogButton:SetScript("OnClick", function() end)
-    end
-end
-
--- Stop sound for a given quest ID and button index
-function VoiceOverSoundQueue:StopQuestSoundByIndex(soundData)
-    --StopSound(soundData.handle)
-    self:removeSoundFromQueue(soundData)
-
-    -- Update the quest play button for
-    soundData.questLogButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
-    soundData.questLogButton:SetScript("OnClick",
-        function() self:PlayQuestSoundByIndex(soundData.questId, soundData.title, soundData.index) end)
 end
 
 function VoiceOverSoundQueue:addSoundToQueue(soundData)
@@ -71,7 +30,7 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
         self.soundIdCounter = self.soundIdCounter + 1
         soundData.id = self.soundIdCounter
 
-        VoiceOverUtils:addFilePathToSoundData(soundData)
+        VoiceOverUtils:addGossipFilePathToSoundData(soundData)
         local willPlay, handle = PlaySoundFile(soundData.filePath)
         if not willPlay then
             print("Sound does not exist for: ", soundData.title)
@@ -93,38 +52,10 @@ function VoiceOverSoundQueue:playSound(soundData)
     local willPlay, handle = PlaySoundFile(soundData.filePath)
     local nextSoundTimer = C_Timer.NewTimer(VOICEOVERSoundLengthTable[soundData.fileName] + 1, function()
         self:removeSoundFromQueue(soundData)
-
-        if soundData.questLogButton then
-            soundData.questLogButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
-            soundData.questLogButton:SetScript("OnClick",
-                function() self:PlayQuestSoundByIndex(soundData.questId, soundData.title, soundData.index) end)
-        end
     end)
 
     soundData.nextSoundTimer = nextSoundTimer
     soundData.handle = handle
-
-    if not soundData.questLogButton then
-        local numEntries, numQuests = GetNumQuestLogEntries()
-        -- Traverse quests in log
-        for i = 1, numEntries do
-            local questIndex = i + FauxScrollFrame_GetOffset(QuestLogListScrollFrame)
-            if questIndex <= numEntries then
-                local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID =
-                    GetQuestLogTitle(questIndex)
-
-                if soundData.questId == questID then
-                    soundData.index = i
-                    soundData.questLogButton = VoiceOverSoundQueue.questPlayButtons[i]
-                end
-            end
-        end
-    end
-
-    if soundData.questLogButton then
-        soundData.questLogButton:SetNormalTexture("Interface\\TIMEMANAGER\\PauseButton")
-        soundData.questLogButton:SetScript("OnClick", function() self:StopQuestSoundByIndex(soundData) end)
-    end
 end
 
 function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
@@ -133,13 +64,6 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
         if queuedSound.id == soundData.id then
             removedIndex = index
             table.remove(self.sounds, index)
-
-            if soundData.questLogButton then
-                soundData.questLogButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
-                soundData.questLogButton:SetScript("OnClick",
-                    function() self:PlayQuestSoundByIndex(soundData.questId, soundData.title, soundData.index) end)
-            end
-
             break
         end
     end

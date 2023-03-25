@@ -1,13 +1,13 @@
 import argparse
 from prompt_toolkit.shortcuts import checkboxlist_dialog, radiolist_dialog, message_dialog, yes_no_dialog
-from tts_cli.sql_queries import get_gossip_dataframe, get_quest_dataframe, query_dataframe_for_area
+from tts_cli.sql_queries import get_gossip_dataframe, get_quest_dataframe, query_dataframe_for_all_quests_and_gossip, query_dataframe_for_area
 from tts_cli.tts_utils import TTSProcessor
 from tts_cli.init_db import download_and_extract_latest_db_dump, import_sql_files_to_database
 from tts_cli.consts import RACE_DICT_INV, GENDER_DICT_INV, race_gender_tuple_to_strings
 from tts_cli.zone_selector import KalimdorZoneSelector, EasternKingdomsZoneSelector
 
 
-def interactive_mode(tts_processor):
+def prompt_user(tts_processor):
 
     #map
     map_choices = [
@@ -39,10 +39,10 @@ def interactive_mode(tts_processor):
 
 
     #voices
+    voice_map = tts_processor.get_voice_map()
     required_voices_for_zone_complete = race_gender_tuple_to_strings(
         race_gender_tuple)
 
-    voice_map = tts_processor.get_voice_map()
     available_voices = set(voice_map.keys())
     required_voices = set(required_voices_for_zone_complete)
     missing_voices = required_voices - available_voices
@@ -116,19 +116,26 @@ parser = argparse.ArgumentParser(
 subparsers = parser.add_subparsers(dest="mode", help="Available modes")
 subparsers.add_parser("init-db", help="Initialize the database")
 subparsers.add_parser("interactive", help="Interactive mode")
+subparsers.add_parser("gen_lookup_tables", help="Generate the lookup tables for all quests and gossip in the game. Also recomputes the sound length table.")
 
 args = parser.parse_args()
+
+def interactive_mode():
+    tts_processor = TTSProcessor()
+    df, selected_voice_names = prompt_user(tts_processor)
+    tts_processor.tts_dataframe(df, selected_voice_names)
+
 
 if args.mode == "init-db":
     download_and_extract_latest_db_dump()
     import_sql_files_to_database()
     print("Database initialized successfully.")
 elif args.mode == "interactive":
+    interactive_mode()
+elif args.mode == "gen_lookup_tables":
     tts_processor = TTSProcessor()
-    df, selected_voice_names = interactive_mode(tts_processor)
-    tts_processor.process_all_data(df, selected_voice_names)
+    df = query_dataframe_for_all_quests_and_gossip()
+    df = tts_processor.preprocess_dataframe(df)
+    tts_processor.generate_lookup_tables(df)
 else:
-    tts_processor = TTSProcessor()
-    df, selected_voice_names = interactive_mode(tts_processor)
-    tts_processor.process_all_data(df, selected_voice_names)
-
+    interactive_mode()

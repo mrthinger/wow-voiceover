@@ -28,6 +28,7 @@ def create_output_subdirs(subdir: str):
 class TTSProcessor:
     def __init__(self):
         self.voice_map = self.fetch_voice_map()
+        self.preprocessed = False
 
     def get_voice_map(self):
         return self.voice_map
@@ -89,6 +90,10 @@ class TTSProcessor:
 
 
     def preprocess_dataframe(self, df):
+        if self.preprocessed:
+            print("ALREADY PREPROCESSED A DATAFRAME. RUNNING THIS TWICE ON THE SAME DF CAUSES HASHING ISSUES. SKIPPING THIS CALL")
+            return
+
         df['race'] = df['DisplayRaceID'].map(RACE_DICT)
         df['gender'] = df['DisplaySexID'].map(GENDER_DICT)
         df['voice_name'] =  df['race'] + '-' + df['gender']
@@ -102,6 +107,7 @@ class TTSProcessor:
 
         df['text'] = df['text'].str.replace(r'<.*?>\s', '', regex=True)
 
+        self.preprocessed = True
         return df
 
 
@@ -144,6 +150,9 @@ class TTSProcessor:
     def read_gossip_file_lookups_table(self, file_path):
         gossip_table = {}
         
+        if not os.path.exists(file_path):
+            return gossip_table
+
         with open(file_path, "r") as f:
             contents = f.read()
             try:
@@ -177,14 +186,51 @@ class TTSProcessor:
             f.write("\n")
 
 
+    def read_questlog_npc_lookups_table(self, file_path):
+        questlog_table = {}
+
+        if not os.path.exists(file_path):
+            return questlog_table
+
+        with open(file_path, "r") as f:
+            contents = f.read()
+            try:
+                # Remove the assignment part of the Lua table and parse the table
+                contents = contents.replace("QuestlogNpcGuidTable = ", "")
+                questlog_table = lua.decode(contents)
+            except Exception as e:
+                print(f"Error while reading questlog_npc_lookups.lua: {e}")
+                return {}
+
+        return questlog_table
+
+    def write_questlog_npc_lookups_table(self, df):
+        output_file = OUTPUT_FOLDER + "/questlog_npc_lookups.lua"
+        questlog_table = self.read_questlog_npc_lookups_table(output_file)
+
+        accept_df = df[df['source'] == 'accept']
+
+        for i, row in tqdm(accept_df.iterrows()):
+            questlog_table[int(row['quest'])] = row['id']
+
+        with open(output_file, "w") as f:
+            f.write("QuestlogNpcGuidTable = ")
+            f.write(lua.encode(questlog_table))
+            f.write("\n")
 
 
-    def process_all_data(self, df, selected_voices):
-        df = self.preprocess_dataframe(df)
+    def tts_dataframe(self, df, selected_voices):
         self.create_output_dirs()
         self.process_rows_in_parallel(df, self.process_row, selected_voices, max_workers=5)
         print("Audio finished generating.")
+        self.generate_lookup_tables(df)
+
+    def generate_lookup_tables(self, df):
         self.write_gossip_file_lookups_table(df)
         print("Added new entries to gossip_file_lookups.lua")
+
+     
+        self.write_questlog_npc_lookups_table(df)
+        print("Added new entries to questlog_npc_lookups.lua")
         write_sound_length_table_lua(SOUND_OUTPUT_FOLDER, OUTPUT_FOLDER)
         print("Updated sound_length_table.lua")

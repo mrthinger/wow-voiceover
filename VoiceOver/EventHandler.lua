@@ -1,12 +1,13 @@
 VoiceOverEventHandler = {}
 VoiceOverEventHandler.__index = VoiceOverEventHandler
 
-function VoiceOverEventHandler:new(soundQueue)
+function VoiceOverEventHandler:new(soundQueue, questOverlayUI)
     local eventHandler = {}
     setmetatable(eventHandler, VoiceOverEventHandler)
 
     eventHandler.soundQueue = soundQueue
     eventHandler.frame = CreateFrame("FRAME", "VoiceOver")
+    eventHandler.questOverlayUI = questOverlayUI
 
     return eventHandler
 end
@@ -20,6 +21,20 @@ function VoiceOverEventHandler:RegisterEvents()
     self.frame:SetScript("OnEvent", function(self, event, ...)
         eventHandler[event](eventHandler)
     end)
+
+    hooksecurefunc("AbandonQuest", function()
+        local questName = GetAbandonQuestName()
+
+        for index, soundData in ipairs(self.soundQueue.sounds) do
+            if soundData.title == questName then
+                self.soundQueue:removeSoundFromQueue(soundData)
+            end
+        end
+    end)
+
+    hooksecurefunc("QuestLog_Update", function()
+        self.questOverlayUI:updateQuestOverlayUI()
+    end)
 end
 
 function VoiceOverEventHandler:QUEST_DETAIL()
@@ -28,9 +43,9 @@ function VoiceOverEventHandler:QUEST_DETAIL()
     local questText = GetQuestText()
     local guid
     if UnitExists("target") then
-        guid = UnitGUID("target")
+        guid = select(6, strsplit("-", UnitGUID("target")))
     end
-    print("QUEST_DETAIL", questId, questTitle);
+    -- print("QUEST_DETAIL", questId, questTitle);
     local soundData = {
         ["fileName"] = questId .. "-accept",
         ["questId"] = questId,
@@ -47,9 +62,9 @@ function VoiceOverEventHandler:QUEST_COMPLETE()
     local questText = GetQuestText()
     local guid
     if UnitExists("target") then
-        guid = UnitGUID("target")
+        guid = select(6, strsplit("-", UnitGUID("target")))
     end
-    print("QUEST_COMPLETE", questId, questTitle);
+    -- print("QUEST_COMPLETE", questId, questTitle);
     local soundData = {
         ["fileName"] = questId .. "-complete",
         ["questId"] = questId,
@@ -65,10 +80,10 @@ function VoiceOverEventHandler:GOSSIP_SHOW()
     local gossipText = GetGossipText()
     local guid, targetName
     if UnitExists("target") then
-        guid = UnitGUID("target")
+        guid = select(6, strsplit("-", UnitGUID("target")))
         targetName = UnitName("target")
     end
-    print("GOSSIP_SHOW", guid, targetName);
+    -- print("GOSSIP_SHOW", guid, targetName);
     local soundData = {
         ["title"] = targetName,
         ["text"] = gossipText,
@@ -77,3 +92,4 @@ function VoiceOverEventHandler:GOSSIP_SHOW()
     VoiceOverUtils:addGossipFileName(soundData)
     self.soundQueue:addSoundToQueue(soundData)
 end
+
