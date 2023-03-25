@@ -14,12 +14,12 @@ function SoundQueueUI:new(soundQueue)
     soundQueueUI:initDisplay()
     soundQueueUI:initNPCHead()
     soundQueueUI:initBookTexture()
+    soundQueueUI:initControlButtons()
 
     soundQueueUI.isDragging = false
 
     return soundQueueUI
 end
-
 
 function SoundQueueUI:initDisplay()
     self.soundQueueFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
@@ -29,7 +29,7 @@ function SoundQueueUI:initDisplay()
     self.soundQueueFrame:SetHeight(300)
     self.soundQueueFrame:SetPoint("BOTTOMRIGHT", 0, 0)
     self.soundQueueFrame.buttons = {}
-    self.soundQueueFrame:SetMovable(true) -- Allow the frame to be moved
+    self.soundQueueFrame:SetMovable(true)  -- Allow the frame to be moved
     self.soundQueueFrame:EnableMouse(true) -- Allow the frame to be clicked on
 
     -- Create a local variable to track whether the frame is being dragged
@@ -71,7 +71,7 @@ function SoundQueueUI:initNPCHead()
     end)
 
     self.npcHead:SetScript("OnUpdate", function(self)
-        if self:IsShown() and time() - soundQueueUI.animtimer >= 2 then
+        if self:IsShown() and time() - soundQueueUI.animtimer >= 2 and not soundQueueUI.soundQueue.isPaused then
             self:SetAnimation(60)
             soundQueueUI.animtimer = time()
         end
@@ -87,6 +87,50 @@ function SoundQueueUI:initBookTexture()
     bookTexture:SetAllPoints(self.bookTextureFrame)
 
     self.bookTextureFrame:Hide()
+end
+
+function SoundQueueUI:initControlButtons()
+    self.resumeButton = CreateFrame("Button", nil, self.soundQueueFrame)
+    self.resumeButton:SetSize(32, 32)
+    self.resumeButton:SetPoint("TOPLEFT", self.soundQueueFrame, "TOPLEFT", 10, -5)
+
+    self.resumeButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    self.resumeButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    
+    local resumeButtonPushed = self.resumeButton:CreateTexture(nil, "ARTWORK")
+    resumeButtonPushed:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    resumeButtonPushed:SetAllPoints()
+    resumeButtonPushed:SetPoint("TOPLEFT", 1, -1)
+    self.resumeButton:SetPushedTexture(resumeButtonPushed)
+
+
+    self.stopButton = CreateFrame("Button", nil, self.soundQueueFrame)
+    self.stopButton:SetSize(32, 32)
+    self.stopButton:SetPoint("TOPLEFT", self.resumeButton, "TOPRIGHT", 0, 0)
+
+    self.stopButton:SetNormalTexture("Interface\\TIMEMANAGER\\PauseButton")
+    self.stopButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+
+    local stopButtonPushed = self.stopButton:CreateTexture(nil, "ARTWORK")
+    stopButtonPushed:SetTexture("Interface\\TIMEMANAGER\\PauseButton")
+    stopButtonPushed:SetAllPoints()
+    stopButtonPushed:SetPoint("TOPLEFT", 1, -1)
+    self.stopButton:SetPushedTexture(stopButtonPushed)
+
+
+
+    self.stopButton:SetScript("OnClick", function()
+        PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+        self.soundQueue:pauseQueue()
+    end)
+
+    self.resumeButton:SetScript("OnClick", function()
+        PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+        self.soundQueue:resumeQueue()
+    end)
+
+    self.resumeButton:Hide()
+    self.stopButton:Hide()
 end
 
 function SoundQueueUI:createButton(i)
@@ -126,7 +170,6 @@ function SoundQueueUI:configureButton(button, soundData, i, yPos)
     return yPos
 end
 
-
 function SoundQueueUI:configureFirstButton(button, soundData)
     if not soundData.unitGuid then
         if self.npcHead:IsShown() then
@@ -151,7 +194,10 @@ function SoundQueueUI:configureFirstButton(button, soundData)
         if creatureID ~= self.oldCreatureId then
             self.npcHead:SetCreature(creatureID)
             self.npcHead:SetCustomCamera(0)
-            self.npcHead:SetAnimation(60)
+
+            if not self.soundQueue.isPaused then
+                self.npcHead:SetAnimation(60)
+            end
 
             self.oldCreatureId = creatureID
         else
@@ -175,6 +221,11 @@ function SoundQueueUI:updateSoundQueueDisplay()
     if #self.soundQueue.sounds == 0 then
         self.npcHead:Hide()
         self.bookTextureFrame:Hide()
+        self.stopButton:Hide()
+        self.resumeButton:Hide()
+    else
+        self.stopButton:Show()
+        self.resumeButton:Show()
     end
 
     for i = #self.soundQueue.sounds + 1, #self.soundQueueFrame.buttons do

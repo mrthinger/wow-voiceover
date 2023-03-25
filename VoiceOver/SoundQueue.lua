@@ -9,6 +9,7 @@ function VoiceOverSoundQueue:new()
     soundQueue.soundIdCounter = 0
     soundQueue.addSoundDebounceTimers = {}
     soundQueue.sounds = {}
+    soundQueue.isPaused = false
 
     return soundQueue
 end
@@ -58,6 +59,23 @@ function VoiceOverSoundQueue:playSound(soundData)
     soundData.handle = handle
 end
 
+function VoiceOverSoundQueue:pauseQueue()
+    if #self.sounds > 0 and not self.isPaused then
+        local currentSound = self.sounds[1]
+        StopSound(currentSound.handle)
+        currentSound.nextSoundTimer:Cancel()
+        self.isPaused = true
+    end
+end
+
+function VoiceOverSoundQueue:resumeQueue()
+    if #self.sounds > 0 and self.isPaused then
+        local currentSound = self.sounds[1]
+        self:playSound(currentSound)
+        self.isPaused = false
+    end
+end
+
 function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
     local removedIndex = nil
     for index, queuedSound in ipairs(self.sounds) do
@@ -71,10 +89,11 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
     if removedIndex == 1 then
         StopSound(soundData.handle)
         soundData.nextSoundTimer:Cancel()
-    end
-    if removedIndex == 1 and #self.sounds > 0 then
-        local nextSoundData = self.sounds[1]
-        self:playSound(nextSoundData)
+
+        if #self.sounds > 0 and not self.isPaused then
+            local nextSoundData = self.sounds[1]
+            self:playSound(nextSoundData)
+        end
     end
 
     self.ui:updateSoundQueueDisplay()
