@@ -80,7 +80,7 @@ end
 
 function SoundQueueUI:initBookTexture()
     self.bookTextureFrame = CreateFrame("Frame", nil, self.soundQueueButtonContainer)
-    self.bookTextureFrame:SetSize(32, 32)
+    self.bookTextureFrame:SetSize(64, 64)
 
     local bookTexture = self.bookTextureFrame:CreateTexture(nil, "ARTWORK")
     bookTexture:SetTexture("Interface\\ICONS\\INV_Misc_Book_09")
@@ -90,47 +90,37 @@ function SoundQueueUI:initBookTexture()
 end
 
 function SoundQueueUI:initControlButtons()
-    self.resumeButton = CreateFrame("Button", nil, self.soundQueueFrame)
-    self.resumeButton:SetSize(32, 32)
-    self.resumeButton:SetPoint("TOPLEFT", self.soundQueueFrame, "TOPLEFT", 10, -5)
+    self.toggleButton = CreateFrame("Button", nil, self.soundQueueFrame)
+    self.toggleButton:SetSize(32, 32)
+    self.toggleButton:SetPoint("TOPLEFT", self.soundQueueFrame, "TOPLEFT", 10, -5)
 
-    self.resumeButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
-    self.resumeButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-    
-    local resumeButtonPushed = self.resumeButton:CreateTexture(nil, "ARTWORK")
-    resumeButtonPushed:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
-    resumeButtonPushed:SetAllPoints()
-    resumeButtonPushed:SetPoint("TOPLEFT", 1, -1)
-    self.resumeButton:SetPushedTexture(resumeButtonPushed)
+    self.toggleButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    self.toggleButtonPushedTexture = self.toggleButton:CreateTexture(nil, "ARTWORK")
 
 
-    self.stopButton = CreateFrame("Button", nil, self.soundQueueFrame)
-    self.stopButton:SetSize(32, 32)
-    self.stopButton:SetPoint("TOPLEFT", self.resumeButton, "TOPRIGHT", 0, 0)
-
-    self.stopButton:SetNormalTexture("Interface\\TIMEMANAGER\\PauseButton")
-    self.stopButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-
-    local stopButtonPushed = self.stopButton:CreateTexture(nil, "ARTWORK")
-    stopButtonPushed:SetTexture("Interface\\TIMEMANAGER\\PauseButton")
-    stopButtonPushed:SetAllPoints()
-    stopButtonPushed:SetPoint("TOPLEFT", 1, -1)
-    self.stopButton:SetPushedTexture(stopButtonPushed)
-
-
-
-    self.stopButton:SetScript("OnClick", function()
+    self.toggleButton:SetScript("OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-        self.soundQueue:pauseQueue()
+        if self.soundQueue.isPaused then
+            self.soundQueue:resumeQueue()
+        else
+            self.soundQueue:pauseQueue()
+        end
+        self:updateToggleButtonTexture()
     end)
 
-    self.resumeButton:SetScript("OnClick", function()
-        PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-        self.soundQueue:resumeQueue()
-    end)
+    self:updateToggleButtonTexture()
+    self.toggleButton:Hide()
+end
 
-    self.resumeButton:Hide()
-    self.stopButton:Hide()
+function SoundQueueUI:updateToggleButtonTexture()
+    local texturePath = self.soundQueue.isPaused and "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up" or
+    "Interface\\TIMEMANAGER\\PauseButton"
+    self.toggleButton:SetNormalTexture(texturePath)
+
+    self.toggleButtonPushedTexture:SetTexture(texturePath)
+    self.toggleButtonPushedTexture:SetAllPoints()
+    self.toggleButtonPushedTexture:SetPoint("TOPLEFT", 1, -1)
+    self.toggleButton:SetPushedTexture(self.toggleButtonPushedTexture)
 end
 
 function SoundQueueUI:createButton(i)
@@ -221,11 +211,10 @@ function SoundQueueUI:updateSoundQueueDisplay()
     if #self.soundQueue.sounds == 0 then
         self.npcHead:Hide()
         self.bookTextureFrame:Hide()
-        self.stopButton:Hide()
-        self.resumeButton:Hide()
+        self.toggleButton:Hide()
     else
-        self.stopButton:Show()
-        self.resumeButton:Show()
+        self.toggleButton:Show()
+        self:updateToggleButtonTexture()
     end
 
     for i = #self.soundQueue.sounds + 1, #self.soundQueueFrame.buttons do

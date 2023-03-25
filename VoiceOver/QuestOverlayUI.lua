@@ -9,6 +9,7 @@ function QuestOverlayUI:new(soundQueue)
 
     questOverlayUI.soundQueue = soundQueue
     questOverlayUI.questPlayButtons = {}
+    questOverlayUI.playingStates = {}
 
     return questOverlayUI
 end
@@ -22,15 +23,35 @@ function QuestOverlayUI:createPlayButton(questIndex, questLogTitleFrame)
     self.questPlayButtons[questIndex] = playButton
 end
 
+function QuestOverlayUI:updatePlayButtonTexture(questIndex, isPlaying)
+    local texturePath = isPlaying and "Interface\\TIMEMANAGER\\ResetButton" or
+    "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up"
+    self.questPlayButtons[questIndex]:SetNormalTexture(texturePath)
+end
+
 function QuestOverlayUI:updatePlayButton(soundTitle, questID, questIndex)
+    local soundData = {
+        ["fileName"] = questID .. "-accept",
+        ["questId"] = questID,
+        ["title"] = soundTitle,
+        ["unitGuid"] = QuestlogNpcGuidTable[questID]
+    }
+
     self.questPlayButtons[questIndex]:SetScript("OnClick", function()
-        local soundData = {
-            ["fileName"] = questID .. "-accept",
-            ["questId"] = questID,
-            ["title"] = soundTitle,
-            ["unitGuid"] = QuestlogNpcGuidTable[questID]
-        }
-        self.soundQueue:addSoundToQueue(soundData)
+        local isPlaying = self.playingStates[questIndex] or false
+
+        if not isPlaying then
+            self.soundQueue:addSoundToQueue(soundData)
+            self.playingStates[questIndex] = true
+            self:updatePlayButtonTexture(questIndex, true)
+
+            soundData.stopCallback = function()
+                self.playingStates[questIndex] = false
+                self:updatePlayButtonTexture(questIndex, false)
+            end
+        else
+            self.soundQueue:removeSoundFromQueue(soundData)
+        end
     end)
 end
 
@@ -64,6 +85,5 @@ function QuestOverlayUI:updateQuestOverlayUI()
             self:updatePlayButton(title, questID, questIndex)
             self.questPlayButtons[questIndex]:Show()
         end
-
     end
 end

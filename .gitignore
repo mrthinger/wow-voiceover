@@ -7,3 +7,4 @@ sql-data
 sql/db_dump
 assets/sql/db_dump
 generated
+.vscode/settings.json

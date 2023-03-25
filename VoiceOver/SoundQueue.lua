@@ -86,6 +86,10 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
         end
     end
 
+    if soundData.stopCallback then
+        soundData.stopCallback()
+    end
+
     if removedIndex == 1 and not self.isPaused then
 
         StopSound(soundData.handle)
