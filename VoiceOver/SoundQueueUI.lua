@@ -13,6 +13,7 @@ function SoundQueueUI:new(soundQueue)
 
     soundQueueUI:initDisplay()
     soundQueueUI:initNPCHead()
+    soundQueueUI:initBookTexture()
 
     soundQueueUI.isDragging = false
 
@@ -77,6 +78,16 @@ function SoundQueueUI:initNPCHead()
     end)
 end
 
+function SoundQueueUI:initBookTexture()
+    self.bookTextureFrame = CreateFrame("Frame", nil, self.soundQueueButtonContainer)
+    self.bookTextureFrame:SetSize(32, 32)
+
+    local bookTexture = self.bookTextureFrame:CreateTexture(nil, "ARTWORK")
+    bookTexture:SetTexture("Interface\\ICONS\\INV_Misc_Book_09")
+    bookTexture:SetAllPoints(self.bookTextureFrame)
+
+    self.bookTextureFrame:Hide()
+end
 
 function SoundQueueUI:createButton(i)
     local button = CreateFrame("Button", nil, self.soundQueueButtonContainer)
@@ -115,26 +126,43 @@ function SoundQueueUI:configureButton(button, soundData, i, yPos)
     return yPos
 end
 
+
 function SoundQueueUI:configureFirstButton(button, soundData)
-    if self.npcHead:IsShown() == false then
-        self.npcHead:Show()
+    if not soundData.unitGuid then
+        if self.npcHead:IsShown() then
+            self.npcHead:Hide()
+        end
+        if not self.bookTextureFrame:IsShown() then
+            self.bookTextureFrame:Show()
+        end
+
+        self.bookTextureFrame:SetPoint("LEFT", button.iconWidget, "RIGHT", 0, 0)
+    else
+        if self.bookTextureFrame:IsShown() then
+            self.bookTextureFrame:Hide()
+        end
+
+        if self.npcHead:IsShown() == false then
+            self.npcHead:Show()
+        end
+
+        local creatureID = soundData.unitGuid
+
+        if creatureID ~= self.oldCreatureId then
+            self.npcHead:SetCreature(creatureID)
+            self.npcHead:SetCustomCamera(0)
+            self.npcHead:SetAnimation(60)
+
+            self.oldCreatureId = creatureID
+        else
+            self.npcHead:SetCustomCamera(0)
+        end
+
+        self.npcHead:SetPoint("LEFT", button.iconWidget, "RIGHT", 0, 0)
     end
 
     button:SetSize(300, 64)
     button.textWidget:SetPoint("LEFT", button.iconWidget, "RIGHT", 70, 0)
-
-    local creatureID = select(6, strsplit("-", soundData.unitGuid))
-    if creatureID ~= self.oldCreatureId then
-        self.npcHead:SetCreature(creatureID)
-        self.npcHead:SetCustomCamera(0)
-        self.npcHead:SetAnimation(60)
-
-        self.oldCreatureId = creatureID
-    else
-        self.npcHead:SetCustomCamera(0)
-    end
-
-    self.npcHead:SetPoint("LEFT", button.iconWidget, "RIGHT", 0, 0)
 end
 
 function SoundQueueUI:updateSoundQueueDisplay()
@@ -146,6 +174,7 @@ function SoundQueueUI:updateSoundQueueDisplay()
 
     if #self.soundQueue.sounds == 0 then
         self.npcHead:Hide()
+        self.bookTextureFrame:Hide()
     end
 
     for i = #self.soundQueue.sounds + 1, #self.soundQueueFrame.buttons do

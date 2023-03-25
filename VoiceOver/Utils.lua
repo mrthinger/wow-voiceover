@@ -4,7 +4,7 @@ local SOUNDS_BASE_DIR = "Interface\\AddOns\\VoiceOver\\generated\\sounds\\"
 local QUEST_SOUNDS_BASE_DIR = SOUNDS_BASE_DIR .. "quests\\"
 local GOSSIP_SOUNDS_BASE_DIR = SOUNDS_BASE_DIR .. "gossip\\"
 
-function VoiceOverUtils:addFilePathToSoundData(soundData)
+function VoiceOverUtils:addGossipFilePathToSoundData(soundData)
     if soundData["questId"] == nil then
         soundData.filePath = GOSSIP_SOUNDS_BASE_DIR .. soundData.fileName .. ".mp3"
     else
@@ -12,9 +12,8 @@ function VoiceOverUtils:addFilePathToSoundData(soundData)
     end
 end
 
-
 function VoiceOverUtils:addGossipFileName(soundData)
-    local npcIdString = select(6, strsplit("-", soundData.unitGuid))
+    local npcIdString = soundData.unitGuid
     local npcId = tonumber(npcIdString)
     local fileNameHash = VoiceOverUtils:getClosestTextHash(npcId, soundData.text)
     if fileNameHash == nil then

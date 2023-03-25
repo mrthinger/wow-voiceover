@@ -1,4 +1,6 @@
 local soundQueue = VoiceOverSoundQueue:new()
-local eventHandler = VoiceOverEventHandler:new(soundQueue)
+local questOverlayUI = QuestOverlayUI:new(soundQueue)
+local eventHandler = VoiceOverEventHandler:new(soundQueue, questOverlayUI)
 
 eventHandler:RegisterEvents()
+

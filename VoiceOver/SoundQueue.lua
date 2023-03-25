@@ -5,8 +5,6 @@ function VoiceOverSoundQueue:new()
     local soundQueue = {}
     setmetatable(soundQueue, VoiceOverSoundQueue)
 
-
-
     soundQueue.ui = SoundQueueUI:new(soundQueue)
     soundQueue.soundIdCounter = 0
     soundQueue.addSoundDebounceTimers = {}
@@ -32,7 +30,7 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
         self.soundIdCounter = self.soundIdCounter + 1
         soundData.id = self.soundIdCounter
 
-        VoiceOverUtils:addFilePathToSoundData(soundData)
+        VoiceOverUtils:addGossipFilePathToSoundData(soundData)
         local willPlay, handle = PlaySoundFile(soundData.filePath)
         if not willPlay then
             print("Sound does not exist for: ", soundData.title)
@@ -81,4 +79,3 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
 
     self.ui:updateSoundQueueDisplay()
 end
-
