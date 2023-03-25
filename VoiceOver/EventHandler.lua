@@ -24,11 +24,15 @@ function VoiceOverEventHandler:RegisterEvents()
 
     hooksecurefunc("AbandonQuest", function()
         local questName = GetAbandonQuestName()
-
-        for index, soundData in ipairs(self.soundQueue.sounds) do
+        local soundsToRemove = {}
+        for _, soundData in pairs(self.soundQueue.sounds) do
             if soundData.title == questName then
-                self.soundQueue:removeSoundFromQueue(soundData)
+                table.insert(soundsToRemove, soundData)
             end
+        end
+
+        for _, soundData in pairs(soundsToRemove) do
+            self.soundQueue:removeSoundFromQueue(soundData)
         end
     end)
 
@@ -73,7 +77,6 @@ function VoiceOverEventHandler:QUEST_COMPLETE()
         ["unitGuid"] = guid
     }
     self.soundQueue:addSoundToQueue(soundData)
-
 end
 
 function VoiceOverEventHandler:GOSSIP_SHOW()
@@ -92,4 +95,3 @@ function VoiceOverEventHandler:GOSSIP_SHOW()
     VoiceOverUtils:addGossipFileName(soundData)
     self.soundQueue:addSoundToQueue(soundData)
 end
-
