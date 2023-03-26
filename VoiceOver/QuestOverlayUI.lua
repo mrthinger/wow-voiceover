@@ -78,7 +78,6 @@ function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame
         local soundData = button.soundData
         local questID = soundData.questId
         local isPlaying = questOverlayUI.playingStates[questID] or false
-        print('clicked', questID, soundTitle, isPlaying, soundData.id)
 
         if not isPlaying then
             questOverlayUI.soundQueue:addSoundToQueue(soundData)
@@ -110,7 +109,6 @@ function QuestOverlayUI:updateQuestOverlayUI()
 
     -- Clear displayedButtons
     self.displayedButtons = {}
-    -- print("---")
 
     -- Traverse through the quests displayed in the UI
     for i = 1, QUESTS_DISPLAYED do
@@ -129,7 +127,6 @@ function QuestOverlayUI:updateQuestOverlayUI()
                 self:createPlayButton(questID)
             end
 
-            -- print(questIndex, title)
             self:updatePlayButton(title, questID, questLogTitleFrame)
             self.questPlayButtons[questID]:Show()
             local isPlaying = self.playingStates[questID] or false
