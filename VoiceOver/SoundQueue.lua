@@ -50,7 +50,7 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
 end
 
 function VoiceOverSoundQueue:playSound(soundData)
-    local willPlay, handle = PlaySoundFile(soundData.filePath)
+    local willPlay, handle = PlaySoundFile(soundData.filePath, "Dialog")
     local nextSoundTimer = C_Timer.NewTimer(VOICEOVERSoundLengthTable[soundData.fileName] + 1, function()
         self:removeSoundFromQueue(soundData)
     end)
