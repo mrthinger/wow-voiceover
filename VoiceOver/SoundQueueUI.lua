@@ -17,13 +17,11 @@ function SoundQueueUI:new(soundQueue)
     soundQueueUI:initBookTexture()
     soundQueueUI:initControlButtons()
 
-    soundQueueUI.isDragging = false
-
     return soundQueueUI
 end
 
 function SoundQueueUI:initDisplay()
-    self.soundQueueFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    self.soundQueueFrame = CreateFrame("Frame", "VoiceOverSoundQueueFrame", UIParent, "BackdropTemplate")
     self.soundQueueScrollFrame = CreateFrame("ScrollFrame", nil, self.soundQueueFrame)
     self.soundQueueButtonContainer = CreateFrame("Frame", nil, self.soundQueueScrollFrame)
     self.soundQueueFrame:SetWidth(300)
@@ -31,34 +29,88 @@ function SoundQueueUI:initDisplay()
     self.soundQueueFrame:SetPoint("BOTTOMRIGHT", 0, 0)
     self.soundQueueFrame.buttons = {}
     self.soundQueueFrame:SetMovable(true)  -- Allow the frame to be moved
-    self.soundQueueFrame:EnableMouse(true) -- Allow the frame to be clicked on
-
-    -- Create a local variable to track whether the frame is being dragged
-    local soundQueueUI = self
-
-    -- Register the OnMouseDown event handler for the frame
-    self.soundQueueFrame:SetScript("OnMouseDown", function(self, button)
-        if button == "LeftButton" and not soundQueueUI.isDragging then
-            self:StartMoving()
-            soundQueueUI.isDragging = true
+    self.soundQueueFrame:SetResizable(true)  -- Allow the frame to be resized
+    self.soundQueueFrame:SetClampedToScreen(true) -- Prevent from being dragged off-screen
+    self.soundQueueFrame:SetUserPlaced(true)
+    self.soundQueueFrame:SetResizeBounds(200, 40 + 64 + 10)
+    self.soundQueueFrame:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 14, edgeSize = 14,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 }
+    })
+    self.soundQueueFrame:HookScript("OnUpdate", function() -- OnEnter/OnLeave cannot be used, because child elements steal mouse focus
+        if MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or self.soundQueueFrame.isResizing then
+            self.soundQueueFrame:SetBackdropColor(0, 0, 0, 0.5)
+            self.soundQueueFrame:SetBackdropBorderColor(0xFF/0xFF, 0xD2/0xFF, 0x00/0xFF, 1)
+            self.soundQueueMover:Show()
+            self.soundQueueResizer:Show()
+        else
+            self.soundQueueFrame:SetBackdropColor(0, 0, 0, 0)
+            self.soundQueueFrame:SetBackdropBorderColor(0, 0, 0, 0)
+            self.soundQueueMover:Hide()
+            self.soundQueueResizer:Hide()
         end
     end)
 
-    -- Register the OnMouseUp event handler for the frame
-    self.soundQueueFrame:SetScript("OnMouseUp", function(self, button)
-        if button == "LeftButton" and soundQueueUI.isDragging then
-            self:StopMovingOrSizing()
-            soundQueueUI.isDragging = false
-        end
+    -- Create a button to drag the main frame
+    self.soundQueueMover = CreateFrame("Button", nil, self.soundQueueFrame, "BackdropTemplate")
+    self.soundQueueMover:SetPoint("TOP", 0, -8)
+    self.soundQueueMover:SetPoint("LEFT", 10 + 32, 0)
+    self.soundQueueMover:SetPoint("RIGHT", -(10 + 32), 0)
+    self.soundQueueMover:SetHeight(26)
+    self.soundQueueMover:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 14, edgeSize = 14,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 }
+    })
+    self.soundQueueMover:SetBackdropColor(0, 0, 0, 0.5)
+    self.soundQueueMover:SetBackdropBorderColor(0xFF/0xFF, 0xD2/0xFF, 0x00/0xFF, 1)
+    self.soundQueueMover:HookScript("OnEnter", function() SetCursor("interface\\cursor\\ui-cursor-move") end)
+    self.soundQueueMover:HookScript("OnLeave", function() SetCursor(nil) end)
+    self.soundQueueMover:HookScript("OnMouseDown", function()
+        self.soundQueueFrame:StartMoving()
+        self.soundQueueFrame.isDragging = true
+    end)
+    self.soundQueueMover:HookScript("OnMouseUp", function()
+        self.soundQueueFrame:StopMovingOrSizing()
+        self.soundQueueFrame.isDragging = nil
+    end)
+    self.soundQueueTitle = self.soundQueueMover:CreateFontString(nil, nil, "GameFontNormalMed3")
+    self.soundQueueTitle:SetText("VoiceOver")
+    self.soundQueueTitle:SetAllPoints(true)
+
+    -- Create a button to resize the main frame
+    self.soundQueueResizer = CreateFrame("Button", nil, self.soundQueueFrame)
+    self.soundQueueResizer:SetPoint("BOTTOMRIGHT", -2, 2)
+    self.soundQueueResizer:SetSize(16, 16)
+    self.soundQueueResizer:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    self.soundQueueResizer:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    self.soundQueueResizer:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    self.soundQueueResizer:HookScript("OnEnter", function() SetCursor("interface\\cursor\\ui-cursor-sizeright") end)
+    self.soundQueueResizer:HookScript("OnLeave", function() SetCursor(nil) end)
+    self.soundQueueResizer:HookScript("OnMouseDown", function()
+        self.soundQueueResizer:GetHighlightTexture():Hide()
+        self.soundQueueFrame:StartSizing("BOTTOMRIGHT")
+        self.soundQueueFrame.isResizing = true
+    end)
+    self.soundQueueResizer:HookScript("OnMouseUp", function()
+        self.soundQueueResizer:GetHighlightTexture():Show()
+        self.soundQueueFrame:StopMovingOrSizing()
+        self.soundQueueFrame.isResizing = nil
     end)
 
     -- Create a scroll frame to hold the sound queue contents
-    self.soundQueueScrollFrame:SetPoint("TOPLEFT", self.soundQueueFrame, "TOPLEFT", 10, -30)
-    self.soundQueueScrollFrame:SetPoint("BOTTOMRIGHT", self.soundQueueFrame, "BOTTOMRIGHT", -30, 10)
+    self.soundQueueScrollFrame:SetPoint("TOPLEFT", self.soundQueueFrame, "TOPLEFT", 10, -40)
+    self.soundQueueScrollFrame:SetPoint("BOTTOMRIGHT", self.soundQueueFrame, "BOTTOMRIGHT", -10, 10)
 
     -- Create a container frame to hold the sound queue buttons
     self.soundQueueButtonContainer:SetSize(200, 300)
     self.soundQueueScrollFrame:SetScrollChild(self.soundQueueButtonContainer)
+    self.soundQueueScrollFrame:HookScript("OnSizeChanged", function()
+        self.soundQueueButtonContainer:SetWidth(self.soundQueueScrollFrame:GetWidth())
+    end)
 end
 
 function SoundQueueUI:initNPCHead()
@@ -119,8 +171,8 @@ function SoundQueueUI:updateToggleButtonTexture()
     self.toggleButton:SetNormalTexture(texturePath)
 
     self.toggleButtonPushedTexture:SetTexture(texturePath)
-    self.toggleButtonPushedTexture:SetAllPoints()
-    self.toggleButtonPushedTexture:SetPoint("TOPLEFT", 1, -1)
+    self.toggleButtonPushedTexture:SetPoint("TOPLEFT", 2, -2)
+    self.toggleButtonPushedTexture:SetPoint("BOTTOMRIGHT", -2, 2)
     self.toggleButton:SetPushedTexture(self.toggleButtonPushedTexture)
 end
 
@@ -134,6 +186,8 @@ function SoundQueueUI:createButton(i)
     speakerIcon:SetPoint("LEFT", button, "LEFT", 0, 0)
 
     local questTitle = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    questTitle:SetPoint("RIGHT")
+    questTitle:SetJustifyH("LEFT")
 
     button.textWidget = questTitle
     button.iconWidget = speakerIcon
@@ -142,6 +196,7 @@ end
 
 function SoundQueueUI:configureButton(button, soundData, i, yPos)
     button:SetPoint("TOPLEFT", self.soundQueueButtonContainer, "TOPLEFT", 0, yPos)
+    button:SetPoint("RIGHT")
     button:SetScript("OnClick", function()
         self.soundQueue:removeSoundFromQueue(soundData)
     end)
@@ -156,6 +211,7 @@ function SoundQueueUI:configureButton(button, soundData, i, yPos)
         button.textWidget:SetPoint("LEFT", button.iconWidget, "RIGHT", 5, 0)
         yPos = yPos - 20
     end
+    button.textWidget:SetWordWrap(i == 1)
     button:Show()
 
     return yPos
@@ -204,7 +260,7 @@ function SoundQueueUI:configureFirstButton(button, soundData)
 end
 
 function SoundQueueUI:updateSoundQueueDisplay()
-    local yPos = -10
+    local yPos = 0
     for i, soundData in ipairs(self.soundQueue.sounds) do
         local button = self.soundQueueFrame.buttons[i] or self:createButton(i)
         yPos = self:configureButton(button, soundData, i, yPos)
