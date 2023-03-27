@@ -14,11 +14,12 @@ function QuestOverlayUI:new(soundQueue)
 end
 
 function QuestOverlayUI:createPlayButton(questID)
-    local playButton = CreateFrame("Button", nil, QuestLogFrame, "UIPanelButtonTemplate")
-    playButton:SetWidth(15)
-    playButton:SetHeight(15)
+    local playButton = CreateFrame("Button", nil, QuestLogFrame)
+    playButton:SetWidth(20)
+    playButton:SetHeight(20)
+    playButton:SetHitRectInsets(2, 2, 2, 2)
     playButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
-    playButton:SetFrameLevel(QuestLogFrame:GetFrameLevel() + 5)
+    playButton:SetHighlightTexture("Interface\\BUTTONS\\UI-Panel-MinimizeButton-Highlight")
     self.questPlayButtons[questID] = playButton
 end
 
@@ -60,6 +61,8 @@ end
 -- end
 
 function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame)
+    self.questPlayButtons[questID]:SetParent(questLogTitleFrame:GetParent())
+    self.questPlayButtons[questID]:SetFrameLevel(questLogTitleFrame:GetFrameLevel() + 2)
     self.questPlayButtons[questID]:SetPoint("LEFT", questLogTitleFrame, "LEFT", 215, 0)
 
     local questOverlayUI = self
