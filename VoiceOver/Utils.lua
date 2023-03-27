@@ -14,8 +14,7 @@ function VoiceOverUtils:addGossipFilePathToSoundData(soundData)
 end
 
 function VoiceOverUtils:addGossipFileName(soundData)
-    local npcIdString = soundData.unitGuid
-    local npcId = tonumber(npcIdString)
+    local npcId = VoiceOverUtils:getIdFromGuid(soundData.unitGuid)
     local fileNameHash = VoiceOverUtils:getClosestTextHash(npcId, soundData.text)
     if fileNameHash == nil then
         soundData.fileName = "missingSound"
@@ -43,4 +42,12 @@ function VoiceOverUtils:getClosestTextHash(npcId, query_text)
     else
         return nil
     end
+end
+
+function VoiceOverUtils:getIdFromGuid(guid)
+    return guid and tonumber((select(6, strsplit("-", guid))))
+end
+
+function VoiceOverUtils:getGuidFromId(id)
+    return format("Creature-%d-%d-%d-%d-%d-%d", 0, 0, 0, 0, id, 0)
 end

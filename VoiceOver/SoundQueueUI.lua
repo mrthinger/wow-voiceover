@@ -180,7 +180,7 @@ function SoundQueueUI:configureFirstButton(button, soundData)
             self.npcHead:Show()
         end
 
-        local creatureID = soundData.unitGuid
+        local creatureID = VoiceOverUtils:getIdFromGuid(soundData.unitGuid)
 
         if creatureID ~= self.oldCreatureId then
             self.npcHead:SetCreature(creatureID)
