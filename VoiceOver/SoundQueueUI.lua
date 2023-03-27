@@ -39,17 +39,22 @@ function SoundQueueUI:initDisplay()
         tile = true, tileSize = 14, edgeSize = 14,
         insets = { left = 3, right = 3, top = 3, bottom = 3 }
     })
-    self.soundQueueFrame:HookScript("OnUpdate", function() -- OnEnter/OnLeave cannot be used, because child elements steal mouse focus
-        if MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or self.soundQueueFrame.isResizing then
-            self.soundQueueFrame:SetBackdropColor(0, 0, 0, 0.5)
-            self.soundQueueFrame:SetBackdropBorderColor(0xFF/0xFF, 0xD2/0xFF, 0x00/0xFF, 1)
-            self.soundQueueMover:Show()
-            self.soundQueueResizer:Show()
-        else
-            self.soundQueueFrame:SetBackdropColor(0, 0, 0, 0)
-            self.soundQueueFrame:SetBackdropBorderColor(0, 0, 0, 0)
-            self.soundQueueMover:Hide()
-            self.soundQueueResizer:Hide()
+    self.soundQueueFrame:HookScript("OnUpdate", function(_, elapsed) -- OnEnter/OnLeave cannot be used, because child elements steal mouse focus
+        local targetAlpha = (MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or self.soundQueueFrame.isResizing) and 1 or 0
+
+        local alpha = self.soundQueueFrame.currentAlpha or targetAlpha
+        alpha = alpha + (targetAlpha - alpha) * elapsed * 10
+        if math.abs(alpha - targetAlpha) < 0.001 then
+            alpha = targetAlpha
+        end
+        if self.soundQueueFrame.currentAlpha ~= alpha then
+            self.soundQueueFrame.currentAlpha = alpha
+            self.soundQueueFrame:SetBackdropColor(0, 0, 0, alpha * 0.5)
+            self.soundQueueFrame:SetBackdropBorderColor(0xFF/0xFF, 0xD2/0xFF, 0x00/0xFF, alpha * 1)
+            self.soundQueueMover:SetShown(alpha > 0)
+            self.soundQueueMover:SetAlpha(alpha)
+            self.soundQueueResizer:SetShown(alpha > 0)
+            self.soundQueueResizer:SetAlpha(alpha)
         end
     end)
 
