@@ -1,5 +1,4 @@
-local _G = _G
-
+setfenv(1, select(2, ...))
 QuestOverlayUI = {}
 QuestOverlayUI.__index = QuestOverlayUI
 

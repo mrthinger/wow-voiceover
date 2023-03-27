@@ -3,6 +3,7 @@
 ## Notes: Adds voiceovers to npcs
 ## Version: 0.2
 
+Environment.lua
 generated/gossip_file_lookups.lua
 generated/questlog_npc_lookups.lua
 generated/sound_length_table.lua

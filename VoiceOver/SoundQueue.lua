@@ -1,3 +1,4 @@
+setfenv(1, select(2, ...))
 VoiceOverSoundQueue = {}
 VoiceOverSoundQueue.__index = VoiceOverSoundQueue
 

@@ -1,3 +1,4 @@
+setfenv(1, select(2, ...))
 VoiceOverUtils = {}
 
 local SOUNDS_BASE_DIR = "Interface\\AddOns\\VoiceOver\\generated\\sounds\\"
