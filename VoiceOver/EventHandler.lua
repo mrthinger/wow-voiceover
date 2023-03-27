@@ -46,7 +46,8 @@ function VoiceOverEventHandler:QUEST_DETAIL()
     local questId = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
-    local guid = UnitGUID("npc")
+    local guid = UnitGUID("npc") or UnitGUID("target")
+    local targetName = UnitName("npc") or UnitName("target")
     -- print("QUEST_DETAIL", questId, questTitle);
     local soundData = {
         ["fileName"] = questId .. "-accept",
@@ -62,7 +63,8 @@ function VoiceOverEventHandler:QUEST_COMPLETE()
     local questId = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetRewardText()
-    local guid = UnitGUID("npc")
+    local guid = UnitGUID("npc") or UnitGUID("target")
+    local targetName = UnitName("npc") or UnitName("target")
     -- print("QUEST_COMPLETE", questId, questTitle);
     local soundData = {
         ["fileName"] = questId .. "-complete",
@@ -76,8 +78,8 @@ end
 
 function VoiceOverEventHandler:GOSSIP_SHOW()
     local gossipText = GetGossipText()
-    local guid = UnitGUID("npc")
-    local targetName = UnitName("npc")
+    local guid = UnitGUID("npc") or UnitGUID("target")
+    local targetName = UnitName("npc") or UnitName("target")
     -- print("GOSSIP_SHOW", guid, targetName);
     local soundData = {
         ["title"] = targetName,
