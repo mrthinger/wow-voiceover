@@ -1,3 +1,4 @@
+setfenv(1, select(2, ...))
 VoiceOverUtils = {}
 
 local SOUNDS_BASE_DIR = "Interface\\AddOns\\VoiceOver\\generated\\sounds\\"
@@ -13,8 +14,7 @@ function VoiceOverUtils:addGossipFilePathToSoundData(soundData)
 end
 
 function VoiceOverUtils:addGossipFileName(soundData)
-    local npcIdString = soundData.unitGuid
-    local npcId = tonumber(npcIdString)
+    local npcId = VoiceOverUtils:getIdFromGuid(soundData.unitGuid)
     local fileNameHash = VoiceOverUtils:getClosestTextHash(npcId, soundData.text)
     if fileNameHash == nil then
         soundData.fileName = "missingSound"
@@ -42,4 +42,28 @@ function VoiceOverUtils:getClosestTextHash(npcId, query_text)
     else
         return nil
     end
+end
+
+function VoiceOverUtils:getIdFromGuid(guid)
+    return guid and tonumber((select(6, strsplit("-", guid))))
+end
+
+function VoiceOverUtils:getGuidFromId(id)
+    return format("Creature-%d-%d-%d-%d-%d-%d", 0, 0, 0, 0, id, 0)
+end
+
+function VoiceOverUtils:willSoundPlay(soundData)
+    local willPlay, handle = PlaySoundFile(soundData.filePath)
+    if willPlay then
+        StopSound(handle)
+    end
+    return willPlay
+end
+
+function VoiceOverUtils:getQuestLogScrollOffset()
+    return FauxScrollFrame_GetOffset(QuestLogListScrollFrame)
+end
+
+function VoiceOverUtils:getQuestLogTitleFrame(index)
+    return _G["QuestLogTitle" .. index]
 end

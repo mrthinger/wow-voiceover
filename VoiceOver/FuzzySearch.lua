@@ -1,3 +1,5 @@
+setfenv(1, select(2, ...))
+
 -- Calculate the Levenshtein distance between two strings
 local function levenshtein_distance(a, b)
     local len_a, len_b = #a, #b

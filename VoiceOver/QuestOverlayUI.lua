@@ -1,5 +1,4 @@
-local _G = _G
-
+setfenv(1, select(2, ...))
 QuestOverlayUI = {}
 QuestOverlayUI.__index = QuestOverlayUI
 
@@ -15,11 +14,12 @@ function QuestOverlayUI:new(soundQueue)
 end
 
 function QuestOverlayUI:createPlayButton(questID)
-    local playButton = CreateFrame("Button", nil, QuestLogFrame, "UIPanelButtonTemplate")
-    playButton:SetWidth(15)
-    playButton:SetHeight(15)
+    local playButton = CreateFrame("Button", nil, QuestLogFrame)
+    playButton:SetWidth(20)
+    playButton:SetHeight(20)
+    playButton:SetHitRectInsets(2, 2, 2, 2)
     playButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
-    playButton:SetFrameLevel(QuestLogFrame:GetFrameLevel() + 5)
+    playButton:SetHighlightTexture("Interface\\BUTTONS\\UI-Panel-MinimizeButton-Highlight")
     self.questPlayButtons[questID] = playButton
 end
 
@@ -61,16 +61,19 @@ end
 -- end
 
 function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame)
+    self.questPlayButtons[questID]:SetParent(questLogTitleFrame:GetParent())
+    self.questPlayButtons[questID]:SetFrameLevel(questLogTitleFrame:GetFrameLevel() + 2)
     self.questPlayButtons[questID]:SetPoint("LEFT", questLogTitleFrame, "LEFT", 215, 0)
 
     local questOverlayUI = self
     self.questPlayButtons[questID]:SetScript("OnClick", function(self)
         if questOverlayUI.questPlayButtons[questID].soundData == nil then
+            local id = QuestlogNpcGuidTable[questID]
             questOverlayUI.questPlayButtons[questID].soundData = {
                 ["fileName"] = questID .. "-accept",
                 ["questId"] = questID,
                 ["title"] = soundTitle,
-                ["unitGuid"] = QuestlogNpcGuidTable[questID]
+                ["unitGuid"] = id and VoiceOverUtils:getGuidFromId(id)
             }
         end
 
@@ -108,17 +111,17 @@ function QuestOverlayUI:updateQuestOverlayUI()
     end
 
     -- Clear displayedButtons
-    self.displayedButtons = {}
+    table.wipe(self.displayedButtons)
 
     -- Traverse through the quests displayed in the UI
     for i = 1, QUESTS_DISPLAYED do
-        local questIndex = i + FauxScrollFrame_GetOffset(QuestLogListScrollFrame)
+        local questIndex = i + VoiceOverUtils:getQuestLogScrollOffset();
         if questIndex > numEntries then
             break
         end
 
         -- Get quest title
-        local questLogTitleFrame = _G["QuestLogTitle" .. i]
+        local questLogTitleFrame = VoiceOverUtils:getQuestLogTitleFrame(i)
         local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID = GetQuestLogTitle(
             questIndex)
 

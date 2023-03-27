@@ -1,3 +1,4 @@
+setfenv(1, select(2, ...))
 SoundQueueUI = {}
 SoundQueueUI.__index = SoundQueueUI
 
@@ -175,11 +176,11 @@ function SoundQueueUI:configureFirstButton(button, soundData)
             self.bookTextureFrame:Hide()
         end
 
-        if self.npcHead:IsShown() == false then
+        if not self.npcHead:IsShown() then
             self.npcHead:Show()
         end
 
-        local creatureID = soundData.unitGuid
+        local creatureID = VoiceOverUtils:getIdFromGuid(soundData.unitGuid)
 
         if creatureID ~= self.oldCreatureId then
             self.npcHead:SetCreature(creatureID)

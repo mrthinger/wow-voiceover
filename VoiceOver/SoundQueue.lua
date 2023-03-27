@@ -1,3 +1,4 @@
+setfenv(1, select(2, ...))
 VoiceOverSoundQueue = {}
 VoiceOverSoundQueue.__index = VoiceOverSoundQueue
 
@@ -32,13 +33,11 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
         soundData.id = self.soundIdCounter
 
         VoiceOverUtils:addGossipFilePathToSoundData(soundData)
-        local willPlay, handle = PlaySoundFile(soundData.filePath)
-        if not willPlay then
+        if not VoiceOverUtils:willSoundPlay(soundData) then
             print("Sound does not exist for: ", soundData.title)
             return
         end
 
-        StopSound(handle)
         table.insert(self.sounds, soundData)
         self.ui:updateSoundQueueDisplay()
 

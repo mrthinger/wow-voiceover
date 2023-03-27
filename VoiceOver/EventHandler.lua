@@ -1,3 +1,4 @@
+setfenv(1, select(2, ...))
 VoiceOverEventHandler = {}
 VoiceOverEventHandler.__index = VoiceOverEventHandler
 
@@ -45,10 +46,7 @@ function VoiceOverEventHandler:QUEST_DETAIL()
     local questId = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
-    local guid
-    if UnitExists("target") then
-        guid = select(6, strsplit("-", UnitGUID("target")))
-    end
+    local guid = UnitGUID("npc")
     -- print("QUEST_DETAIL", questId, questTitle);
     local soundData = {
         ["fileName"] = questId .. "-accept",
@@ -63,11 +61,8 @@ end
 function VoiceOverEventHandler:QUEST_COMPLETE()
     local questId = GetQuestID()
     local questTitle = GetTitleText()
-    local questText = GetQuestText()
-    local guid
-    if UnitExists("target") then
-        guid = select(6, strsplit("-", UnitGUID("target")))
-    end
+    local questText = GetRewardText()
+    local guid = UnitGUID("npc")
     -- print("QUEST_COMPLETE", questId, questTitle);
     local soundData = {
         ["fileName"] = questId .. "-complete",
@@ -81,11 +76,8 @@ end
 
 function VoiceOverEventHandler:GOSSIP_SHOW()
     local gossipText = GetGossipText()
-    local guid, targetName
-    if UnitExists("target") then
-        guid = select(6, strsplit("-", UnitGUID("target")))
-        targetName = UnitName("target")
-    end
+    local guid = UnitGUID("npc")
+    local targetName = UnitName("npc")
     -- print("GOSSIP_SHOW", guid, targetName);
     local soundData = {
         ["title"] = targetName,
