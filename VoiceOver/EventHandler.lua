@@ -61,7 +61,7 @@ end
 function VoiceOverEventHandler:QUEST_COMPLETE()
     local questId = GetQuestID()
     local questTitle = GetTitleText()
-    local questText = GetQuestText()
+    local questText = GetRewardText()
     local guid = UnitGUID("npc")
     -- print("QUEST_COMPLETE", questId, questTitle);
     local soundData = {
