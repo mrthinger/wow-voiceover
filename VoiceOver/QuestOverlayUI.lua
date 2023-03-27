@@ -108,17 +108,17 @@ function QuestOverlayUI:updateQuestOverlayUI()
     end
 
     -- Clear displayedButtons
-    self.displayedButtons = {}
+    table.wipe(self.displayedButtons)
 
     -- Traverse through the quests displayed in the UI
     for i = 1, QUESTS_DISPLAYED do
-        local questIndex = i + FauxScrollFrame_GetOffset(QuestLogListScrollFrame)
+        local questIndex = i + VoiceOverUtils:getQuestLogScrollOffset();
         if questIndex > numEntries then
             break
         end
 
         -- Get quest title
-        local questLogTitleFrame = _G["QuestLogTitle" .. i]
+        local questLogTitleFrame = VoiceOverUtils:getQuestLogTitleFrame(i)
         local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID = GetQuestLogTitle(
             questIndex)
 

@@ -176,7 +176,7 @@ function SoundQueueUI:configureFirstButton(button, soundData)
             self.bookTextureFrame:Hide()
         end
 
-        if self.npcHead:IsShown() == false then
+        if not self.npcHead:IsShown() then
             self.npcHead:Show()
         end
 
