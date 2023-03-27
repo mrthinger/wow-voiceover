@@ -52,7 +52,8 @@ function VoiceOverEventHandler:QUEST_DETAIL()
     local soundData = {
         ["fileName"] = questId .. "-accept",
         ["questId"] = questId,
-        ["title"] = questTitle,
+        ["title"] = format("%s %s", VoiceOverUtils:getEmbeddedIcon("detail"), questTitle),
+        ["fullTitle"] = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("detail"), questTitle),
         ["text"] = questText,
         ["unitGuid"] = guid
     }
@@ -69,7 +70,8 @@ function VoiceOverEventHandler:QUEST_COMPLETE()
     local soundData = {
         ["fileName"] = questId .. "-complete",
         ["questId"] = questId,
-        ["title"] = questTitle,
+        ["title"] = format("%s %s", VoiceOverUtils:getEmbeddedIcon("reward"), questTitle),
+        ["fullTitle"] = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("reward"), questTitle),
         ["text"] = questText,
         ["unitGuid"] = guid
     }

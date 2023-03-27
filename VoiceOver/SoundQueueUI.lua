@@ -200,6 +200,7 @@ function SoundQueueUI:configureFirstButton(button, soundData)
 
     button:SetSize(300, 64)
     button.textWidget:SetPoint("LEFT", button.iconWidget, "RIGHT", 70, 0)
+    button.textWidget:SetText(soundData.fullTitle or soundData.title)
 end
 
 function SoundQueueUI:updateSoundQueueDisplay()
