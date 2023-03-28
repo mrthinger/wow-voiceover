@@ -33,7 +33,11 @@ function SoundQueueUI:initDisplay()
     self.soundQueueFrame:SetResizable(true)  -- Allow the frame to be resized
     self.soundQueueFrame:SetClampedToScreen(true) -- Prevent from being dragged off-screen
     self.soundQueueFrame:SetUserPlaced(true)
-    self.soundQueueFrame:SetResizeBounds(200, 40 + 64 + 10)
+    if self.soundQueueFrame.SetResizeBounds then
+        self.soundQueueFrame:SetResizeBounds(200, 40 + 64 + 10)
+    elseif self.soundQueueFrame.SetMinResize then
+        self.soundQueueFrame:SetMinResize(200, 40 + 64 + 10)
+    end
     self.soundQueueFrame:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
