@@ -13,6 +13,12 @@ function VoiceOverUtils:addGossipFilePathToSoundData(soundData)
     end
 end
 
+function VoiceOverUtils:questExist(questID)
+    local soundData = {}
+    soundData.filePath = QUEST_SOUNDS_BASE_DIR .. questID .. "-accept" .. ".mp3"
+    return VoiceOverUtils:willSoundPlay(soundData)
+end
+
 function VoiceOverUtils:addGossipFileName(soundData)
     local npcId = VoiceOverUtils:getIdFromGuid(soundData.unitGuid)
     local fileNameHash = VoiceOverUtils:getClosestTextHash(npcId, soundData.text)
