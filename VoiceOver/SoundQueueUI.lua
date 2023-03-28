@@ -45,10 +45,10 @@ function SoundQueueUI:initDisplay()
         local targetAlpha
         if VoiceOverSettings.SoundQueueUI_ShowFrameBackground == 0 then
             targetAlpha = 0
-        elseif VoiceOverSettings.SoundQueueUI_ShowFrameBackground == 1 then
-            targetAlpha = isHovered and 1 or 0
         elseif VoiceOverSettings.SoundQueueUI_ShowFrameBackground == 2 then
             targetAlpha = 1
+        else
+            targetAlpha = isHovered and 1 or 0
         end
 
         local alpha = self.soundQueueFrame.currentAlpha or targetAlpha
