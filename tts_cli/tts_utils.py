@@ -157,7 +157,7 @@ class TTSProcessor:
             contents = f.read()
             try:
                 # Remove the assignment part of the Lua table and parse the table
-                contents = contents.replace("NPCToTextToTemplateHash = ", "")
+                contents = contents.replace("select(2, ...).NPCToTextToTemplateHash = ", "")
                 gossip_table = lua.decode(contents)
             except Exception as e:
                 print(f"Error while reading gossip_file_lookups.lua: {e}")
@@ -181,7 +181,7 @@ class TTSProcessor:
             gossip_table[row['id']][cleaned_text] = row['templateText_race_gender_hash']
 
         with open(output_file, "w") as f:
-            f.write("NPCToTextToTemplateHash = ")
+            f.write("select(2, ...).NPCToTextToTemplateHash = ")
             f.write(lua.encode(gossip_table))
             f.write("\n")
 
@@ -196,7 +196,7 @@ class TTSProcessor:
             contents = f.read()
             try:
                 # Remove the assignment part of the Lua table and parse the table
-                contents = contents.replace("QuestlogNpcGuidTable = ", "")
+                contents = contents.replace("select(2, ...).QuestlogNpcGuidTable = ", "")
                 questlog_table = lua.decode(contents)
             except Exception as e:
                 print(f"Error while reading questlog_npc_lookups.lua: {e}")
@@ -214,7 +214,7 @@ class TTSProcessor:
             questlog_table[int(row['quest'])] = row['id']
 
         with open(output_file, "w") as f:
-            f.write("QuestlogNpcGuidTable = ")
+            f.write("select(2, ...).QuestlogNpcGuidTable = ")
             f.write(lua.encode(questlog_table))
             f.write("\n")
 

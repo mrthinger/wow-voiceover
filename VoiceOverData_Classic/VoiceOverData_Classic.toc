@@ -1,0 +1,10 @@
+## Interface: 30400
+## Title: VoiceOver Data - Classic
+## Version: 0.1
+## RequiredDeps: VoiceOver
+## X-VoiceOver-Module-Version: 1
+
+generated\gossip_file_lookups.lua
+generated\questlog_npc_lookups.lua
+generated\sound_length_table.lua
+Module.lua

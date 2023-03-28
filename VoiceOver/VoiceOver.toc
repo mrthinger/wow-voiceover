@@ -12,6 +12,7 @@ FuzzySearch.lua
 SoundQueue.lua
 SoundQueueUI.lua
 QuestOverlayUI.lua
+DataModules.lua
 Utils.lua
 Compatibility.lua
 Main.lua

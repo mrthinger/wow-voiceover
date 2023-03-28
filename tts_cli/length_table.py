@@ -14,14 +14,14 @@ def write_sound_length_table_lua(sound_folder_path: str, output_folder_path: str
     soundDict = {}
     for mp3_file in mp3_files:
         audio = mutagen.mp3.MP3(mp3_file)
-        length = int(audio.info.length)
+        length = audio.info.length
         soundDict[os.path.splitext(os.path.basename(mp3_file))[0]] = length
 
     
 
     # Write the dictionary to the output file in Lua table format
     with open(output_folder_path + '/sound_length_table.lua', "w") as f:
-        f.write("VOICEOVERSoundLengthTable = {\n")
+        f.write("select(2, ...).SoundLengthTable = {\n")
         for key, value in soundDict.items():
             f.write(f"    [\"{key}\"] = {value},\n")
         f.write("}\n")
