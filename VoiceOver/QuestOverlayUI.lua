@@ -63,7 +63,11 @@ end
 function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame)
     self.questPlayButtons[questID]:SetParent(questLogTitleFrame:GetParent())
     self.questPlayButtons[questID]:SetFrameLevel(questLogTitleFrame:GetFrameLevel() + 2)
-    self.questPlayButtons[questID]:SetPoint("LEFT", questLogTitleFrame, "LEFT", 215, 0)
+
+    self.questPlayButtons[questID]:SetPoint("LEFT", questLogTitleFrame.normalText, "LEFT", 0, 0)
+    questLogTitleFrame.normalText:SetText("|TInterface\\Common\\spacer:1:20|t" ..
+    (questLogTitleFrame.normalText:GetText() or ""):trim())
+    QuestLogTitleButton_Resize(questLogTitleFrame)
 
     local questOverlayUI = self
     self.questPlayButtons[questID]:SetScript("OnClick", function(self)
