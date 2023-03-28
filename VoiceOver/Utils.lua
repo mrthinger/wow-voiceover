@@ -1,9 +1,8 @@
 setfenv(1, select(2, ...))
 VoiceOverUtils = {}
 
-local SOUNDS_BASE_DIR = "Interface\\AddOns\\VoiceOver\\generated\\sounds\\"
-local QUEST_SOUNDS_BASE_DIR = SOUNDS_BASE_DIR .. "quests\\"
-local GOSSIP_SOUNDS_BASE_DIR = SOUNDS_BASE_DIR .. "gossip\\"
+local QUEST_SOUNDS_BASE_DIR = VoiceOverConstants.SOUNDS_BASE_DIR .. "quests\\"
+local GOSSIP_SOUNDS_BASE_DIR = VoiceOverConstants.SOUNDS_BASE_DIR .. "gossip\\"
 
 function VoiceOverUtils:addGossipFilePathToSoundData(soundData)
     if soundData["questId"] == nil then

@@ -1,0 +1,9 @@
+## Interface: 11403
+## Title: VoiceOver Base Sound Pack
+## Notes: Contains all the sounds for vanilla
+## Version: 0.2
+
+generated/gossip_file_lookups.lua
+generated/questlog_npc_lookups.lua
+generated/sound_length_table.lua
+Main.lua
