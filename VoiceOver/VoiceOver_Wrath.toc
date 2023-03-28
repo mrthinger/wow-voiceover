@@ -2,6 +2,7 @@
 ## Title: VoiceOver
 ## Notes: Adds voiceovers to npcs
 ## Version: 0.2
+## SavedVariables: VoiceOverSettings
 
 Environment.lua
 generated\gossip_file_lookups.lua

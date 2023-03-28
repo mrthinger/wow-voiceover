@@ -2,6 +2,8 @@ setfenv(1, select(2, ...))
 VoiceOverEventHandler = {}
 VoiceOverEventHandler.__index = VoiceOverEventHandler
 
+local ADDON_NAME = ...
+
 function VoiceOverEventHandler:new(soundQueue, questOverlayUI)
     local eventHandler = {}
     setmetatable(eventHandler, VoiceOverEventHandler)
@@ -14,13 +16,14 @@ function VoiceOverEventHandler:new(soundQueue, questOverlayUI)
 end
 
 function VoiceOverEventHandler:RegisterEvents()
+    self.frame:RegisterEvent("ADDON_LOADED")
     self.frame:RegisterEvent("QUEST_DETAIL")
     self.frame:RegisterEvent("GOSSIP_SHOW")
     self.frame:RegisterEvent("QUEST_COMPLETE")
     -- self.frame:RegisterEvent("QUEST_PROGRESS")
     local eventHandler = self
     self.frame:SetScript("OnEvent", function(self, event, ...)
-        eventHandler[event](eventHandler)
+        eventHandler[event](eventHandler, ...)
     end)
 
     hooksecurefunc("AbandonQuest", function()
@@ -40,6 +43,12 @@ function VoiceOverEventHandler:RegisterEvents()
     hooksecurefunc("QuestLog_Update", function()
         self.questOverlayUI:updateQuestOverlayUI()
     end)
+end
+
+function VoiceOverEventHandler:ADDON_LOADED(addon)
+    if addon == ADDON_NAME then
+        self.soundQueue.ui.refreshSettings()
+    end
 end
 
 function VoiceOverEventHandler:QUEST_DETAIL()

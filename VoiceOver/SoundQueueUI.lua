@@ -16,6 +16,7 @@ function SoundQueueUI:new(soundQueue)
     soundQueueUI:initNPCHead()
     soundQueueUI:initBookTexture()
     soundQueueUI:initControlButtons()
+    soundQueueUI:initSettingsButton()
 
     return soundQueueUI
 end
@@ -40,7 +41,15 @@ function SoundQueueUI:initDisplay()
         insets = { left = 3, right = 3, top = 3, bottom = 3 }
     })
     self.soundQueueFrame:HookScript("OnUpdate", function(_, elapsed) -- OnEnter/OnLeave cannot be used, because child elements steal mouse focus
-        local targetAlpha = (MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or self.soundQueueFrame.isResizing) and 1 or 0
+        local isHovered = MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or self.soundQueueFrame.isResizing
+        local targetAlpha
+        if VoiceOverSettings.SoundQueueUI_ShowFrameBackground == 0 then
+            targetAlpha = 0
+        elseif VoiceOverSettings.SoundQueueUI_ShowFrameBackground == 1 then
+            targetAlpha = isHovered and 1 or 0
+        elseif VoiceOverSettings.SoundQueueUI_ShowFrameBackground == 2 then
+            targetAlpha = 1
+        end
 
         local alpha = self.soundQueueFrame.currentAlpha or targetAlpha
         alpha = alpha + (targetAlpha - alpha) * elapsed * 10
@@ -48,13 +57,24 @@ function SoundQueueUI:initDisplay()
             alpha = targetAlpha
         end
         if self.soundQueueFrame.currentAlpha ~= alpha then
+            if alpha > 1 then alpha = 1 elseif alpha < 0 then alpha = 0 end
             self.soundQueueFrame.currentAlpha = alpha
             self.soundQueueFrame:SetBackdropColor(0, 0, 0, alpha * 0.5)
             self.soundQueueFrame:SetBackdropBorderColor(0xFF/0xFF, 0xD2/0xFF, 0x00/0xFF, alpha * 1)
-            self.soundQueueMover:SetShown(alpha > 0)
+            self.soundQueueMover:SetShown(alpha > 0 or self.soundQueueFrame.isDragging)
             self.soundQueueMover:SetAlpha(alpha)
-            self.soundQueueResizer:SetShown(alpha > 0)
+            self.soundQueueMover:EnableMouse(alpha >= 0.75 and not VoiceOverSettings.SoundQueueUI_LockFrame)
+            self.soundQueueResizer:SetShown((alpha > 0 or self.soundQueueFrame.isResizing) and not VoiceOverSettings.SoundQueueUI_LockFrame)
             self.soundQueueResizer:SetAlpha(alpha)
+            self.soundQueueResizer:EnableMouse(alpha >= 0.75 and not VoiceOverSettings.SoundQueueUI_LockFrame)
+            self.settingsButton:SetShown(alpha > 0)
+            self.settingsButton:SetAlpha(alpha)
+        end
+
+        -- Force show settings button on hover, otherwise it would be impossible to change settings
+        if VoiceOverSettings.SoundQueueUI_ShowFrameBackground == 0 then
+            self.settingsButton:SetShown(isHovered)
+            self.settingsButton:SetAlpha(isHovered and 1 or 0)
         end
     end)
 
@@ -116,6 +136,11 @@ function SoundQueueUI:initDisplay()
     self.soundQueueScrollFrame:HookScript("OnSizeChanged", function()
         self.soundQueueButtonContainer:SetWidth(self.soundQueueScrollFrame:GetWidth())
     end)
+
+    function self.refreshSettings()
+        self.soundQueueFrame.currentAlpha = (self.soundQueueFrame.currentAlpha or 0) + 0.002 -- To trigger hover transition handler
+        self:updateSoundQueueDisplay()
+    end
 end
 
 function SoundQueueUI:initNPCHead()
@@ -150,11 +175,12 @@ end
 function SoundQueueUI:initControlButtons()
     self.toggleButton = CreateFrame("Button", nil, self.soundQueueFrame)
     self.toggleButton:SetSize(32, 32)
-    self.toggleButton:SetPoint("TOPLEFT", self.soundQueueFrame, "TOPLEFT", 10, -5)
+    self.toggleButton:SetPoint("TOPLEFT", 10, -5)
 
+    self:updateToggleButtonTexture()
     self.toggleButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-    self.toggleButtonPushedTexture = self.toggleButton:CreateTexture(nil, "ARTWORK")
-
+    self.toggleButton:GetPushedTexture():SetPoint("TOPLEFT", 2, -2)
+    self.toggleButton:GetPushedTexture():SetPoint("BOTTOMRIGHT", -2, 2)
 
     self.toggleButton:SetScript("OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
@@ -166,19 +192,71 @@ function SoundQueueUI:initControlButtons()
         self:updateToggleButtonTexture()
     end)
 
-    self:updateToggleButtonTexture()
     self.toggleButton:Hide()
+end
+
+function SoundQueueUI:initSettingsButton()
+    self.settingsButton = CreateFrame("Button", nil, self.soundQueueFrame)
+    self.settingsButton:SetSize(32, 32)
+    self.settingsButton:SetPoint("TOPRIGHT", -10, -5)
+
+    self.settingsButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    self.settingsButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    self.settingsButton:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    self.settingsButton:GetPushedTexture():SetPoint("TOPLEFT", 2, -2)
+    self.settingsButton:GetPushedTexture():SetPoint("BOTTOMRIGHT", -2, 2)
+
+    self.settingsButton:HookScript("OnClick", function()
+        PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+
+        if UIDROPDOWNMENU_OPEN_MENU == self.settingsButton.menuFrame then
+            CloseMenus()
+            return
+        end
+
+        local function MakeCheck(text, key, callback)
+            return
+            {
+                text = text,
+                isNotRadio = true,
+                keepShownOnClick = true,
+                checked = function() return VoiceOverSettings[key] end,
+                func = function(_, _, _, checked) VoiceOverSettings[key] = checked if callback then callback() end end,
+            }
+        end
+        local function MakeRadio(text, key, value)
+            return
+            {
+                text = text,
+                keepShownOnClick = true,
+                checked = function() return VoiceOverSettings[key] == value end,
+                func = function(_, _, _, checked) VoiceOverSettings[key] = value UIDropDownMenu_Refresh(self.settingsButton.menuFrame) end,
+            }
+        end
+        local menu =
+        {
+            MakeCheck("Lock Frame", "SoundQueueUI_LockFrame", self.refreshSettings),
+            MakeCheck("Hide When Not Playing", "SoundQueueUI_HideFrameWhenIdle", self.refreshSettings),
+            { text = "Show Background", notCheckable = true, keepShownOnClick = true, hasArrow = true, menuList =
+            {
+                MakeRadio("Always", "SoundQueueUI_ShowFrameBackground", 2),
+                MakeRadio("When Hovered", "SoundQueueUI_ShowFrameBackground", 1),
+                MakeRadio("Never", "SoundQueueUI_ShowFrameBackground", 0),
+            } },
+        }
+        EasyMenu(menu, self.settingsButton.menuFrame, self.settingsButton, 0, 0, "MENU")
+    end)
+
+    self.settingsButton.menuFrame = CreateFrame("Frame", "VoiceOverSettingsMenu", self.settingsButton, "UIDropDownMenuTemplate")
+    self.settingsButton.menuFrame:SetPoint("BOTTOMLEFT")
+    self.settingsButton.menuFrame:Hide()
 end
 
 function SoundQueueUI:updateToggleButtonTexture()
     local texturePath = self.soundQueue.isPaused and "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up" or
     "Interface\\TIMEMANAGER\\PauseButton"
     self.toggleButton:SetNormalTexture(texturePath)
-
-    self.toggleButtonPushedTexture:SetTexture(texturePath)
-    self.toggleButtonPushedTexture:SetPoint("TOPLEFT", 2, -2)
-    self.toggleButtonPushedTexture:SetPoint("BOTTOMRIGHT", -2, 2)
-    self.toggleButton:SetPushedTexture(self.toggleButtonPushedTexture)
+    self.toggleButton:SetPushedTexture(texturePath)
 end
 
 function SoundQueueUI:createButton(i)
@@ -265,6 +343,8 @@ function SoundQueueUI:configureFirstButton(button, soundData)
 end
 
 function SoundQueueUI:updateSoundQueueDisplay()
+    self.soundQueueFrame:SetShown(#self.soundQueue.sounds > 0 or not VoiceOverSettings.SoundQueueUI_HideFrameWhenIdle)
+
     local yPos = 0
     for i, soundData in ipairs(self.soundQueue.sounds) do
         local button = self.soundQueueFrame.buttons[i] or self:createButton(i)

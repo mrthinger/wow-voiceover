@@ -1,3 +1,5 @@
+VoiceOverSettings = VoiceOverSettings or {}
+
 setfenv(1, select(2, ...))
 
 local soundQueue = VoiceOverSoundQueue:new()
