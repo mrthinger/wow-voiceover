@@ -206,50 +206,46 @@ function SoundQueueUI:initSettingsButton()
     self.settingsButton:GetPushedTexture():SetPoint("TOPLEFT", 2, -2)
     self.settingsButton:GetPushedTexture():SetPoint("BOTTOMRIGHT", -2, 2)
 
-    self.settingsButton:HookScript("OnClick", function()
-        PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-
-        if UIDROPDOWNMENU_OPEN_MENU == self.settingsButton.menuFrame then
-            CloseMenus()
-            return
-        end
-
-        local function MakeCheck(text, key, callback)
-            return
-            {
-                text = text,
-                isNotRadio = true,
-                keepShownOnClick = true,
-                checked = function() return VoiceOverSettings[key] end,
-                func = function(_, _, _, checked) VoiceOverSettings[key] = checked if callback then callback() end end,
-            }
-        end
-        local function MakeRadio(text, key, value)
-            return
-            {
-                text = text,
-                keepShownOnClick = true,
-                checked = function() return VoiceOverSettings[key] == value end,
-                func = function(_, _, _, checked) VoiceOverSettings[key] = value UIDropDownMenu_Refresh(self.settingsButton.menuFrame) end,
-            }
-        end
-        local menu =
-        {
-            MakeCheck("Lock Frame", "SoundQueueUI_LockFrame", self.refreshSettings),
-            MakeCheck("Hide When Not Playing", "SoundQueueUI_HideFrameWhenIdle", self.refreshSettings),
-            { text = "Show Background", notCheckable = true, keepShownOnClick = true, hasArrow = true, menuList =
-            {
-                MakeRadio("Always", "SoundQueueUI_ShowFrameBackground", 2),
-                MakeRadio("When Hovered", "SoundQueueUI_ShowFrameBackground", 1),
-                MakeRadio("Never", "SoundQueueUI_ShowFrameBackground", 0),
-            } },
-        }
-        EasyMenu(menu, self.settingsButton.menuFrame, self.settingsButton, 0, 0, "MENU")
-    end)
-
     self.settingsButton.menuFrame = CreateFrame("Frame", "VoiceOverSettingsMenu", self.settingsButton, "UIDropDownMenuTemplate")
     self.settingsButton.menuFrame:SetPoint("BOTTOMLEFT")
     self.settingsButton.menuFrame:Hide()
+
+    local function MakeCheck(text, key, callback)
+        return
+        {
+            text = text,
+            isNotRadio = true,
+            keepShownOnClick = true,
+            checked = function() return VoiceOverSettings[key] end,
+            func = function(_, _, _, checked) VoiceOverSettings[key] = checked if callback then callback() end end,
+        }
+    end
+    local function MakeRadio(text, key, value)
+        return
+        {
+            text = text,
+            keepShownOnClick = true,
+            checked = function() return VoiceOverSettings[key] == value end,
+            func = function(_, _, _, checked) VoiceOverSettings[key] = value UIDropDownMenu_Refresh(self.settingsButton.menuFrame) end,
+        }
+    end
+    local menu =
+    {
+        MakeCheck("Lock Frame", "SoundQueueUI_LockFrame", self.refreshSettings),
+        MakeCheck("Hide When Not Playing", "SoundQueueUI_HideFrameWhenIdle", self.refreshSettings),
+        { text = "Show Background", notCheckable = true, keepShownOnClick = true, hasArrow = true, menuList =
+        {
+            MakeRadio("Always", "SoundQueueUI_ShowFrameBackground", 2),
+            MakeRadio("When Hovered", "SoundQueueUI_ShowFrameBackground", 1),
+            MakeRadio("Never", "SoundQueueUI_ShowFrameBackground", 0),
+        } },
+    }
+    UIDropDownMenu_Initialize(self.settingsButton.menuFrame, EasyMenu_Initialize, "MENU", nil, menu)
+
+    self.settingsButton:HookScript("OnClick", function()
+        PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+        ToggleDropDownMenu(1, nil, self.settingsButton.menuFrame, self.settingsButton, 0, 0, menu)
+    end)
 end
 
 function SoundQueueUI:updateToggleButtonTexture()
