@@ -10,6 +10,10 @@ function VoiceOverUtils:getGuidFromId(id)
 end
 
 function VoiceOverUtils:willSoundPlay(soundData)
+    if not soundData.filePath then
+        return false
+    end
+
     local willPlay, handle = PlaySoundFile(soundData.filePath)
     if willPlay then
         StopSound(handle)

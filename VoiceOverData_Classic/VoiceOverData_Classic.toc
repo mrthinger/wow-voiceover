@@ -1,8 +1,13 @@
-## Interface: 30400
+## Interface: 11403
 ## Title: VoiceOver Data - Classic
 ## Version: 0.1
+## LoadOnDemand: 1
 ## RequiredDeps: VoiceOver
-## X-VoiceOver-Module-Version: 1
+## X-Part-Of: VoiceOver
+## X-Child-Of: VoiceOver
+## X-VoiceOver-DataModule-Version: 1
+## X-VoiceOver-DataModule-Priority: 0
+## X-VoiceOver-DataModule-Maps: 0, 1, 30, 33, 43, 47, 48, 70, 90, 109, 129, 189, 209, 229, 230, 289, 309, 329, 349, 369, 389, 429, 469, 509, 531, 533
 
 generated\gossip_file_lookups.lua
 generated\questlog_npc_lookups.lua

@@ -5,6 +5,7 @@ local CURRENT_MODULE_VERSION = 1
 DataModules =
 {
     registeredModules = { }, -- To keep track of which module names were already registered
+    availableModules = { }, -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
     orderedModules = { }, -- To have a consistent ordering of modules (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
 }
 
@@ -14,7 +15,7 @@ function DataModules:Register(name, module)
         return
     end
 
-    local moduleVersion = tonumber(GetAddOnMetadata(name, "X-VoiceOver-Module-Version"))
+    local moduleVersion = tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Version"))
     if not moduleVersion then
         error(format([[Module "%s" is missing data format version]], name))
         return
@@ -28,10 +29,55 @@ function DataModules:Register(name, module)
 
     module.MODULE_NAME = name
     module.MODULE_VERSION = moduleVersion
-    module.VERSION = GetAddOnMetadata(name, "Version")
+    module.MODULE_PRIORITY = tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Priority")) or 0
+    module.MODULE_TITLE = GetAddOnMetadata(name, "Title") or name
+    module.CONTENT_VERSION = GetAddOnMetadata(name, "Version")
 
     self.registeredModules[name] = module
     table.insert(self.orderedModules, module)
+
+    -- Order the modules by priority (higher first) then by name (case-sensitive alphabetical)
+    -- Modules with higher priority will be iterated through first, so one can create a module with "overrides" for data in other modules by simply giving it a higher priority
+    table.sort(self.orderedModules, function(a, b)
+        if a.MODULE_PRIORITY ~= b.MODULE_PRIORITY then
+            return a.MODULE_PRIORITY > b.MODULE_PRIORITY
+        end
+        return a.MODULE_NAME < b.MODULE_NAME
+    end)
+end
+
+function DataModules:GetModules()
+    return ipairs(self.orderedModules)
+end
+
+function DataModules:EnumerateAddons()
+    local playerName = UnitName("player")
+    for i = 1, GetNumAddOns() do
+        if GetAddOnMetadata(i, "X-VoiceOver-DataModule-Version") and GetAddOnEnableState(playerName, i) ~= 0 then
+            local name = GetAddOnInfo(i)
+            local mapsString = GetAddOnMetadata(i, "X-VoiceOver-DataModule-Maps")
+            local maps = { }
+            if mapsString then
+                for _, mapString in ipairs({ strsplit(",", mapsString) }) do
+                    local map = tonumber(mapString)
+                    if map then
+                        maps[map] = true
+                    end
+                end
+            end
+            self.availableModules[name] =
+            {
+                Name = name,
+                Maps = maps,
+                LoadOnDemand = IsAddOnLoadOnDemand(name),
+            }
+
+            -- Maybe in the future we can load modules based on the map the player is in (select(8, GetInstanceInfo())), but for now - just load everything
+            if IsAddOnLoadOnDemand(name) then
+                LoadAddOn(name)
+            end
+        end
+    end
 end
 
 function DataModules:GetNPCGossipTextHash(soundData)
@@ -40,7 +86,7 @@ function DataModules:GetNPCGossipTextHash(soundData)
 
     local best_result
 
-    for _, module in ipairs(self.orderedModules) do
+    for _, module in self:GetModules() do
         local data = module.NPCToTextToTemplateHash
         if data then
             local npc_gossip_table = data[npcId]
@@ -63,7 +109,7 @@ function DataModules:GetNPCGossipTextHash(soundData)
 end
 
 function DataModules:GetQuestLogNPCID(questId)
-    for _, module in ipairs(self.orderedModules) do
+    for _, module in self:GetModules() do
         local data = module.QuestlogNpcGuidTable
         if data then
             local npcId = data[questId]
@@ -76,7 +122,7 @@ end
 
 function DataModules:GetQuestIDByQuestTextHash(hash, npcId)
     local hashWithNpc = format("%s:%d", hash, npcId)
-    for _, module in ipairs(self.orderedModules) do
+    for _, module in self:GetModules() do
         local data = module.QuestTextHashToQuestID
         if data then
             local questId = data[hashWithNpc] or data[hash]
@@ -97,7 +143,7 @@ local getFileNameForEvent =
 
 function DataModules:PrepareSound(soundData)
     soundData.fileName = getFileNameForEvent[soundData.event](soundData) or error([[Unhandled VoiceOver sound event "%s"]], soundData.event)
-    for _, module in ipairs(self.orderedModules) do
+    for _, module in self:GetModules() do
         local data = module.SoundLengthTable
         if data then
             local length = data[soundData.fileName]
