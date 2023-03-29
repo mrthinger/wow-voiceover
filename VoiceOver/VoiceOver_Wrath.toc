@@ -10,10 +10,11 @@ Environment.lua
 generated\gossip_file_lookups.lua
 generated\questlog_npc_lookups.lua
 generated\sound_length_table.lua
-EventHandler.lua
 FuzzySearch.lua
 SoundQueue.lua
 SoundQueueUI.lua
 QuestOverlayUI.lua
 Utils.lua
+VoiceOver.lua
+
 Compatibility.lua
