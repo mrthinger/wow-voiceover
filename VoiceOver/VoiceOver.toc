@@ -2,7 +2,9 @@
 ## Title: VoiceOver
 ## Notes: Adds voiceovers to npcs
 ## Version: 0.2
-## SavedVariables: VoiceOverSettings
+## SavedVariables: VoiceOverDB
+
+embeds.xml
 
 Environment.lua
 generated\gossip_file_lookups.lua
@@ -15,4 +17,3 @@ SoundQueueUI.lua
 QuestOverlayUI.lua
 Utils.lua
 Compatibility.lua
-Main.lua

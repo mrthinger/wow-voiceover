@@ -1,30 +1,31 @@
 setfenv(1, select(2, ...))
-VoiceOverEventHandler = {}
-VoiceOverEventHandler.__index = VoiceOverEventHandler
 
-local ADDON_NAME = ...
+Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0")
 
-function VoiceOverEventHandler:new(soundQueue, questOverlayUI)
-    local eventHandler = {}
-    setmetatable(eventHandler, VoiceOverEventHandler)
+local defaults =
+{
+    profile =
+    {
+        SoundQueueUI =
+        {
+            LockFrame = false,
+            HideWhenIdle = false,
+            ShowFrameBackground = 2,
+        },
+    }
+}
 
-    eventHandler.soundQueue = soundQueue
-    eventHandler.frame = CreateFrame("FRAME", "VoiceOver")
-    eventHandler.questOverlayUI = questOverlayUI
+function Addon:OnInitialize()
+    self.db = LibStub("AceDB-3.0"):New("VoiceOverDB", defaults)
+    self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
 
-    return eventHandler
-end
+    self.soundQueue = VoiceOverSoundQueue:new()
+    self.questOverlayUI = QuestOverlayUI:new(self.soundQueue)
 
-function VoiceOverEventHandler:RegisterEvents()
-    self.frame:RegisterEvent("ADDON_LOADED")
-    self.frame:RegisterEvent("QUEST_DETAIL")
-    self.frame:RegisterEvent("GOSSIP_SHOW")
-    self.frame:RegisterEvent("QUEST_COMPLETE")
-    -- self.frame:RegisterEvent("QUEST_PROGRESS")
-    local eventHandler = self
-    self.frame:SetScript("OnEvent", function(self, event, ...)
-        eventHandler[event](eventHandler, ...)
-    end)
+    self:RegisterEvent("QUEST_DETAIL")
+    self:RegisterEvent("GOSSIP_SHOW")
+    self:RegisterEvent("QUEST_COMPLETE")
+    -- self:RegisterEvent("QUEST_PROGRESS")
 
     hooksecurefunc("AbandonQuest", function()
         local questName = GetAbandonQuestName()
@@ -45,13 +46,11 @@ function VoiceOverEventHandler:RegisterEvents()
     end)
 end
 
-function VoiceOverEventHandler:ADDON_LOADED(addon)
-    if addon == ADDON_NAME then
-        self.soundQueue.ui.refreshSettings()
-    end
+function Addon:RefreshConfig()
+    self.soundQueue.ui.refreshConfig()
 end
 
-function VoiceOverEventHandler:QUEST_DETAIL()
+function Addon:QUEST_DETAIL()
     local questId = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
@@ -69,7 +68,7 @@ function VoiceOverEventHandler:QUEST_DETAIL()
     self.soundQueue:addSoundToQueue(soundData)
 end
 
-function VoiceOverEventHandler:QUEST_COMPLETE()
+function Addon:QUEST_COMPLETE()
     local questId = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetRewardText()
@@ -87,7 +86,7 @@ function VoiceOverEventHandler:QUEST_COMPLETE()
     self.soundQueue:addSoundToQueue(soundData)
 end
 
-function VoiceOverEventHandler:GOSSIP_SHOW()
+function Addon:GOSSIP_SHOW()
     local gossipText = GetGossipText()
     local guid = UnitGUID("npc") or UnitGUID("target")
     local targetName = UnitName("npc") or UnitName("target")

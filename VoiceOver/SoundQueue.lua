@@ -6,11 +6,11 @@ function VoiceOverSoundQueue:new()
     local soundQueue = {}
     setmetatable(soundQueue, VoiceOverSoundQueue)
 
-    soundQueue.ui = SoundQueueUI:new(soundQueue)
     soundQueue.soundIdCounter = 0
     soundQueue.addSoundDebounceTimers = {}
     soundQueue.sounds = {}
     soundQueue.isPaused = false
+    soundQueue.ui = SoundQueueUI:new(soundQueue)
 
     return soundQueue
 end

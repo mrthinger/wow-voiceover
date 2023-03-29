@@ -21,7 +21,7 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
         return _G["QuestLogListScrollFrameButton" .. index]
     end
 
-    hooksecurefunc(VoiceOverEventHandler, "RegisterEvents", function()
+    hooksecurefunc(Addon, "OnInitialize", function()
         QuestLogListScrollFrame.update = QuestLog_Update
     end)
 

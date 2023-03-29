@@ -5,20 +5,28 @@ SoundQueueUI.__index = SoundQueueUI
 local SPEAKER_ICON_SIZE = 16
 
 function SoundQueueUI:new(soundQueue)
-    local soundQueueUI = {}
-    setmetatable(soundQueueUI, SoundQueueUI)
+    local self = {}
+    setmetatable(self, SoundQueueUI)
 
-    soundQueueUI.soundQueue = soundQueue
+    self.db = Addon.db.profile.SoundQueueUI
 
-    soundQueueUI.animtimer = time()
+    self.soundQueue = soundQueue
 
-    soundQueueUI:initDisplay()
-    soundQueueUI:initNPCHead()
-    soundQueueUI:initBookTexture()
-    soundQueueUI:initControlButtons()
-    soundQueueUI:initSettingsButton()
+    self.animtimer = time()
 
-    return soundQueueUI
+    self:initDisplay()
+    self:initNPCHead()
+    self:initBookTexture()
+    self:initControlButtons()
+    self:initSettingsButton()
+
+    function self.refreshConfig()
+        self.soundQueueFrame.forceRefreshAlpha = true
+        self:updateSoundQueueDisplay()
+    end
+    self.refreshConfig()
+
+    return self
 end
 
 function SoundQueueUI:initDisplay()
@@ -44,15 +52,18 @@ function SoundQueueUI:initDisplay()
         tile = true, tileSize = 14, edgeSize = 14,
         insets = { left = 3, right = 3, top = 3, bottom = 3 }
     })
+    self.soundQueueFrame:HookScript("OnHide", function()
+        self.soundQueueFrame.currentAlpha = nil
+    end)
     self.soundQueueFrame:HookScript("OnUpdate", function(_, elapsed) -- OnEnter/OnLeave cannot be used, because child elements steal mouse focus
         local isHovered = MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or self.soundQueueFrame.isResizing
-        local targetAlpha
-        if VoiceOverSettings.SoundQueueUI_ShowFrameBackground == 0 then
+        local targetAlpha = 1
+        if self.db.ShowFrameBackground == 1 then
             targetAlpha = 0
-        elseif VoiceOverSettings.SoundQueueUI_ShowFrameBackground == 2 then
-            targetAlpha = 1
-        else
+        elseif self.db.ShowFrameBackground == 2 then
             targetAlpha = isHovered and 1 or 0
+        elseif self.db.ShowFrameBackground == 3 then
+            targetAlpha = 1
         end
 
         local alpha = self.soundQueueFrame.currentAlpha or targetAlpha
@@ -60,23 +71,24 @@ function SoundQueueUI:initDisplay()
         if math.abs(alpha - targetAlpha) < 0.001 then
             alpha = targetAlpha
         end
-        if self.soundQueueFrame.currentAlpha ~= alpha then
+        if self.soundQueueFrame.currentAlpha ~= alpha or self.soundQueueFrame.forceRefreshAlpha then
             if alpha > 1 then alpha = 1 elseif alpha < 0 then alpha = 0 end
             self.soundQueueFrame.currentAlpha = alpha
+            self.soundQueueFrame.forceRefreshAlpha = nil
             self.soundQueueFrame:SetBackdropColor(0, 0, 0, alpha * 0.5)
             self.soundQueueFrame:SetBackdropBorderColor(0xFF/0xFF, 0xD2/0xFF, 0x00/0xFF, alpha * 1)
             self.soundQueueMover:SetShown(alpha > 0 or self.soundQueueFrame.isDragging)
             self.soundQueueMover:SetAlpha(alpha)
-            self.soundQueueMover:EnableMouse(alpha >= 0.75 and not VoiceOverSettings.SoundQueueUI_LockFrame)
-            self.soundQueueResizer:SetShown((alpha > 0 or self.soundQueueFrame.isResizing) and not VoiceOverSettings.SoundQueueUI_LockFrame)
+            self.soundQueueMover:EnableMouse(alpha >= 0.75 and not self.db.LockFrame)
+            self.soundQueueResizer:SetShown((alpha > 0 or self.soundQueueFrame.isResizing) and not self.db.LockFrame)
             self.soundQueueResizer:SetAlpha(alpha)
-            self.soundQueueResizer:EnableMouse(alpha >= 0.75 and not VoiceOverSettings.SoundQueueUI_LockFrame)
+            self.soundQueueResizer:EnableMouse(alpha >= 0.75 and not self.db.LockFrame)
             self.settingsButton:SetShown(alpha > 0)
             self.settingsButton:SetAlpha(alpha)
         end
 
         -- Force show settings button on hover, otherwise it would be impossible to change settings
-        if VoiceOverSettings.SoundQueueUI_ShowFrameBackground == 0 then
+        if self.db.ShowFrameBackground == 1 then
             self.settingsButton:SetShown(isHovered)
             self.settingsButton:SetAlpha(isHovered and 1 or 0)
         end
@@ -140,11 +152,6 @@ function SoundQueueUI:initDisplay()
     self.soundQueueScrollFrame:HookScript("OnSizeChanged", function()
         self.soundQueueButtonContainer:SetWidth(self.soundQueueScrollFrame:GetWidth())
     end)
-
-    function self.refreshSettings()
-        self.soundQueueFrame.currentAlpha = (self.soundQueueFrame.currentAlpha or 0) + 0.002 -- To trigger hover transition handler
-        self:updateSoundQueueDisplay()
-    end
 end
 
 function SoundQueueUI:initNPCHead()
@@ -220,28 +227,35 @@ function SoundQueueUI:initSettingsButton()
             text = text,
             isNotRadio = true,
             keepShownOnClick = true,
-            checked = function() return VoiceOverSettings[key] end,
-            func = function(_, _, _, checked) VoiceOverSettings[key] = checked if callback then callback() end end,
+            checked = function() return self.db[key] end,
+            func = function(_, _, _, checked)
+                self.db[key] = checked
+                self.refreshConfig()
+            end,
         }
     end
-    local function MakeRadio(text, key, value)
+    local function MakeRadio(text, key, value, callback)
         return
         {
             text = text,
             keepShownOnClick = true,
-            checked = function() return VoiceOverSettings[key] == value end,
-            func = function(_, _, _, checked) VoiceOverSettings[key] = value UIDropDownMenu_Refresh(self.settingsButton.menuFrame) end,
+            checked = function() return self.db[key] == value end,
+            func = function()
+                self.db[key] = value
+                self.refreshConfig()
+                UIDropDownMenu_Refresh(self.settingsButton.menuFrame)
+            end,
         }
     end
     local menu =
     {
-        MakeCheck("Lock Frame", "SoundQueueUI_LockFrame", self.refreshSettings),
-        MakeCheck("Hide When Not Playing", "SoundQueueUI_HideFrameWhenIdle", self.refreshSettings),
+        MakeCheck("Lock Frame", "LockFrame"),
+        MakeCheck("Hide When Not Playing", "HideWhenIdle"),
         { text = "Show Background", notCheckable = true, keepShownOnClick = true, hasArrow = true, menuList =
         {
-            MakeRadio("Always", "SoundQueueUI_ShowFrameBackground", 2),
-            MakeRadio("When Hovered", "SoundQueueUI_ShowFrameBackground", 1),
-            MakeRadio("Never", "SoundQueueUI_ShowFrameBackground", 0),
+            MakeRadio("Always", "ShowFrameBackground", 3),
+            MakeRadio("When Hovered", "ShowFrameBackground", 2),
+            MakeRadio("Never", "ShowFrameBackground", 1),
         } },
     }
     UIDropDownMenu_Initialize(self.settingsButton.menuFrame, EasyMenu_Initialize, "MENU", nil, menu)
@@ -343,7 +357,7 @@ function SoundQueueUI:configureFirstButton(button, soundData)
 end
 
 function SoundQueueUI:updateSoundQueueDisplay()
-    self.soundQueueFrame:SetShown(#self.soundQueue.sounds > 0 or not VoiceOverSettings.SoundQueueUI_HideFrameWhenIdle)
+    self.soundQueueFrame:SetShown(#self.soundQueue.sounds > 0 or not self.db.HideWhenIdle)
 
     local yPos = 0
     for i, soundData in ipairs(self.soundQueue.sounds) do
