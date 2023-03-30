@@ -84,28 +84,22 @@ function DataModules:GetNPCGossipTextHash(soundData)
     local npcId = VoiceOverUtils:getIdFromGuid(soundData.unitGuid)
     local text = soundData.text
 
-    local best_result
+    local text_entries = {}
 
     for _, module in self:GetModules() do
         local data = module.NPCToTextToTemplateHash
         if data then
             local npc_gossip_table = data[npcId]
             if npc_gossip_table then
-                local text_entries = {}
-                for text, _ in pairs(npc_gossip_table) do
-                    table.insert(text_entries, text)
-                end
-
-                local result = VOICEOVER_fuzzySearchBest(text, text_entries)
-                if result and (not best_result or result.distance < best_result.distance) then
-                    best_result = result
-                    best_result.hash = npc_gossip_table[result.text]
+                for text, hash in pairs(npc_gossip_table) do
+                    text_entries[text] = text_entries[text] or hash -- Respect module priority, don't overwrite the entry if there is already one
                 end
             end
         end
     end
 
-    return best_result and best_result.hash
+    local best_result = VOICEOVER_fuzzySearchBestKeys(text, text_entries)
+    return best_result and best_result.value
 end
 
 function DataModules:GetQuestLogNPCID(questId)

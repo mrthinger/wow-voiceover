@@ -50,6 +50,25 @@ function VOICEOVER_fuzzySearchBest(query, entries)
     return best_result
 end
 
+function VOICEOVER_fuzzySearchBestKeys(query, entries)
+    local best_result = nil
+    local min_distance = math.huge
+
+    for entry, value in pairs(entries) do
+        local distance = levenshtein_distance(query, entry)
+        if distance < min_distance then
+            min_distance = distance
+            best_result = {
+                value = value,
+                text = entry,
+                distance = distance
+            }
+        end
+    end
+
+    return best_result
+end
+
 -- Example usage
 -- local entries = {"apple", "banana", "orange", "pineapple", "grape", "watermelon", "strawberry"}
 
