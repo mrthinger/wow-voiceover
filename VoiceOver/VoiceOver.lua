@@ -22,6 +22,8 @@ function Addon:OnInitialize()
     self.soundQueue = VoiceOverSoundQueue:new()
     self.questOverlayUI = QuestOverlayUI:new(self.soundQueue)
 
+    DataModules:EnumerateAddons()
+
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("GOSSIP_SHOW")
     self:RegisterEvent("QUEST_COMPLETE")
