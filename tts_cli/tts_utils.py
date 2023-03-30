@@ -157,7 +157,8 @@ class TTSProcessor:
             contents = f.read()
             try:
                 # Remove the assignment part of the Lua table and parse the table
-                contents = contents.replace("select(2, ...).NPCToTextToTemplateHash = ", "")
+                contents = contents.replace("NPCToTextToTemplateHash = ", "")
+                contents = contents.replace("select(2, ...).", "")
                 gossip_table = lua.decode(contents)
             except Exception as e:
                 print(f"Error while reading gossip_file_lookups.lua: {e}")
@@ -196,7 +197,8 @@ class TTSProcessor:
             contents = f.read()
             try:
                 # Remove the assignment part of the Lua table and parse the table
-                contents = contents.replace("select(2, ...).QuestlogNpcGuidTable = ", "")
+                contents = contents.replace("QuestlogNpcGuidTable = ", "")
+                contents = contents.replace("select(2, ...).", "")
                 questlog_table = lua.decode(contents)
             except Exception as e:
                 print(f"Error while reading questlog_npc_lookups.lua: {e}")
