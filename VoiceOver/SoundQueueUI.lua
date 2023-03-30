@@ -212,8 +212,8 @@ function SoundQueueUI:initSettingsButton()
     self.settingsButton:SetPoint("TOPRIGHT", -10, -5)
 
     self.settingsButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-    self.settingsButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
-    self.settingsButton:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    self.settingsButton:SetNormalTexture("Interface\\AddOns\\VoiceOver\\Textures\\SettingsButton")
+    self.settingsButton:SetPushedTexture("Interface\\AddOns\\VoiceOver\\Textures\\SettingsButton")
     self.settingsButton:GetPushedTexture():SetPoint("TOPLEFT", 2, -2)
     self.settingsButton:GetPushedTexture():SetPoint("BOTTOMRIGHT", -2, 2)
 
