@@ -31,7 +31,7 @@ local function levenshtein_distance(a, b)
 end
 
 -- Fuzzy search function returning the best result
-function VOICEOVER_fuzzySearchBest(query, entries)
+function fuzzySearchBest(query, entries)
     local best_result = nil
     local min_distance = math.huge
 
@@ -50,7 +50,7 @@ function VOICEOVER_fuzzySearchBest(query, entries)
     return best_result
 end
 
-function VOICEOVER_fuzzySearchBestKeys(query, entries)
+function fuzzySearchBestKeys(query, entries)
     local best_result = nil
     local min_distance = math.huge
 

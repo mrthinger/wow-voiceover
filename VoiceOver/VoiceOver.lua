@@ -61,11 +61,11 @@ function Addon:QUEST_DETAIL()
     -- print("QUEST_DETAIL", questId, questTitle);
     local soundData = {
         event = "accept",
-        ["questId"] = questId,
-        ["title"] = format("%s %s", VoiceOverUtils:getEmbeddedIcon("detail"), questTitle),
-        ["fullTitle"] = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("detail"), questTitle),
-        ["text"] = questText,
-        ["unitGuid"] = guid
+        questId = questId,
+        title = format("%s %s", VoiceOverUtils:getEmbeddedIcon("accept"), questTitle),
+        fullTitle = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("accept"), questTitle),
+        text = questText,
+        unitGuid = guid
     }
     self.soundQueue:addSoundToQueue(soundData)
 end
@@ -79,11 +79,11 @@ function Addon:QUEST_COMPLETE()
     -- print("QUEST_COMPLETE", questId, questTitle);
     local soundData = {
         event = "complete",
-        ["questId"] = questId,
-        ["title"] = format("%s %s", VoiceOverUtils:getEmbeddedIcon("reward"), questTitle),
-        ["fullTitle"] = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("reward"), questTitle),
-        ["text"] = questText,
-        ["unitGuid"] = guid
+        questId = questId,
+        title = format("%s %s", VoiceOverUtils:getEmbeddedIcon("complete"), questTitle),
+        fullTitle = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("complete"), questTitle),
+        text = questText,
+        unitGuid = guid
     }
     self.soundQueue:addSoundToQueue(soundData)
 end
@@ -95,9 +95,9 @@ function Addon:GOSSIP_SHOW()
     -- print("GOSSIP_SHOW", guid, targetName);
     local soundData = {
         event = "gossip",
-        ["title"] = targetName,
-        ["text"] = gossipText,
-        ["unitGuid"] = guid
+        title = targetName,
+        text = gossipText,
+        unitGuid = guid
     }
     self.soundQueue:addSoundToQueue(soundData)
 end

@@ -98,7 +98,7 @@ function DataModules:GetNPCGossipTextHash(soundData)
         end
     end
 
-    local best_result = VOICEOVER_fuzzySearchBestKeys(text, text_entries)
+    local best_result = fuzzySearchBestKeys(text, text_entries)
     return best_result and best_result.value
 end
 
