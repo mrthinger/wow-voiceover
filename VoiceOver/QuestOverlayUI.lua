@@ -72,7 +72,8 @@ function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame
             questOverlayUI.questPlayButtons[questID].soundData = {
                 ["fileName"] = questID .. "-accept",
                 ["questId"] = questID,
-                ["title"] = soundTitle,
+                ["title"] = format("%s %s", VoiceOverUtils:getEmbeddedIcon("detail"), soundTitle),
+                ["text"] = GetQuestLogQuestText(),
                 ["unitGuid"] = id and VoiceOverUtils:getGuidFromId(id)
             }
         end
