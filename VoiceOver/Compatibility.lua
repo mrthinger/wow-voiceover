@@ -11,6 +11,8 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
 
     GetGossipText = C_GossipInfo.GetText
+    GetNumGossipActiveQuests = C_GossipInfo.GetNumActiveQuests
+    GetNumGossipAvailableQuests = C_GossipInfo.GetNumAvailableQuests
 
     function VoiceOverUtils:getQuestLogScrollOffset()
         return HybridScrollFrame_GetOffset(QuestLogListScrollFrame)

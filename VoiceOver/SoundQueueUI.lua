@@ -8,7 +8,7 @@ function SoundQueueUI:new(soundQueue)
     local self = {}
     setmetatable(self, SoundQueueUI)
 
-    self.db = Addon.db.profile.SoundQueueUI
+    self.db = Addon.db.profile.main
 
     self.soundQueue = soundQueue
 
@@ -251,12 +251,27 @@ function SoundQueueUI:initSettingsButton()
     local menu =
     {
         MakeCheck("Lock Frame", "LockFrame"),
-        MakeCheck("Hide When Not Playing", "HideWhenIdle"),
+        MakeCheck("Auto-Hide UI During Silence", "HideWhenIdle"),
         { text = "Show Background", notCheckable = true, keepShownOnClick = true, hasArrow = true, menuList =
         {
             MakeRadio("Always", "ShowFrameBackground", 3),
             MakeRadio("When Hovered", "ShowFrameBackground", 2),
             MakeRadio("Never", "ShowFrameBackground", 1),
+        } },
+        { text = "Gossip Playback Frequency", notCheckable = true, keepShownOnClick = true, hasArrow = true, menuList =
+        {
+            MakeRadio("Always Play", "GossipFrequency", "Always"),
+            MakeRadio("Play Once for Quest NPCs", "GossipFrequency", "OncePerQuestNpc"),
+            MakeRadio("Play Once for All NPCs", "GossipFrequency", "OncePerNpc"),
+        } },
+
+        { text = "Sound Playback Channel", notCheckable = true, keepShownOnClick = true, hasArrow = true, menuList =
+        {
+            MakeRadio("Master", "SoundChannel", "Master"),
+            MakeRadio("Sound", "SoundChannel", "Sound"),
+            MakeRadio("Music", "SoundChannel", "Music"),
+            MakeRadio("Ambience", "SoundChannel", "Ambience"),
+            MakeRadio("Dialog", "SoundChannel", "Dialog"),
         } },
     }
     UIDropDownMenu_Initialize(self.settingsButton.menuFrame, EasyMenu_Initialize, "MENU", nil, menu)

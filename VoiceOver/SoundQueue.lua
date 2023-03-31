@@ -7,7 +7,6 @@ function VoiceOverSoundQueue:new()
     setmetatable(soundQueue, VoiceOverSoundQueue)
 
     soundQueue.soundIdCounter = 0
-    soundQueue.addSoundDebounceTimers = {}
     soundQueue.sounds = {}
     soundQueue.isPaused = false
     soundQueue.ui = SoundQueueUI:new(soundQueue)
@@ -18,42 +17,44 @@ end
 function VoiceOverSoundQueue:addSoundToQueue(soundData)
     DataModules:PrepareSound(soundData)
 
-    local existingTimer = self.addSoundDebounceTimers[soundData.fileName]
-    if existingTimer ~= nil then
-        existingTimer:Cancel()
+    -- Check if the sound is already in the queue
+    for _, queuedSound in ipairs(self.sounds) do
+        if queuedSound.fileName == soundData.fileName then
+            return
+        end
     end
 
-    self.addSoundDebounceTimers[soundData.fileName] = C_Timer.NewTimer(0.3, function()
-        self.addSoundDebounceTimers[soundData.fileName] = nil
+    -- Don't play gossip if there are already sounds in the queue
+    if soundData.questId == nil and #self.sounds > 0 then
+        return
+    end
 
-        -- dont play gossip if there are already sounds in the queue
-        if soundData.questId == nil and #self.sounds > 0 then
-            return
+    self.soundIdCounter = self.soundIdCounter + 1
+    soundData.id = self.soundIdCounter
+
+    if not VoiceOverUtils:willSoundPlay(soundData) then
+        print("Sound does not exist for: ", soundData.title)
+        if soundData.stopCallback then
+            soundData.stopCallback()
         end
+        return
+    end
 
-        self.soundIdCounter = self.soundIdCounter + 1
-        soundData.id = self.soundIdCounter
+    table.insert(self.sounds, soundData)
+    self.ui:updateSoundQueueDisplay()
 
-        if not VoiceOverUtils:willSoundPlay(soundData) then
-            print("Sound does not exist for: ", soundData.title)
-            if soundData.stopCallback then
-                soundData.stopCallback()
-            end
-            return
-        end
-
-        table.insert(self.sounds, soundData)
-        self.ui:updateSoundQueueDisplay()
-
-        -- If the sound queue only contains one sound, play it immediately
-        if #self.sounds == 1 then
-            self:playSound(soundData)
-        end
-    end)
+    -- If the sound queue only contains one sound, play it immediately
+    if #self.sounds == 1 then
+        self:playSound(soundData)
+    end
 end
 
 function VoiceOverSoundQueue:playSound(soundData)
-    local willPlay, handle = PlaySoundFile(soundData.filePath, "Dialog")
+    local channel = Addon.db.profile.main.SoundChannel
+    local willPlay, handle = PlaySoundFile(soundData.filePath, channel)
+    if soundData.startCallback then
+        soundData.startCallback()
+    end
     local nextSoundTimer = C_Timer.NewTimer(soundData.length + 1, function()
         self:removeSoundFromQueue(soundData)
     end)
@@ -94,7 +95,6 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
     end
 
     if removedIndex == 1 and not self.isPaused then
-
         StopSound(soundData.handle)
         soundData.nextSoundTimer:Cancel()
 

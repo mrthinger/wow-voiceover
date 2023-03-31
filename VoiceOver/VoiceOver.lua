@@ -6,11 +6,13 @@ local defaults =
 {
     profile =
     {
-        SoundQueueUI =
+        main =
         {
             LockFrame = false,
             HideWhenIdle = false,
             ShowFrameBackground = 2,
+            GossipFrequency = "OncePerQuestNpc",
+            SoundChannel = "Master",
         },
     }
 }
@@ -89,15 +91,36 @@ function Addon:QUEST_COMPLETE()
 end
 
 function Addon:GOSSIP_SHOW()
-    local gossipText = GetGossipText()
     local guid = UnitGUID("npc") or UnitGUID("target")
     local targetName = UnitName("npc") or UnitName("target")
-    -- print("GOSSIP_SHOW", guid, targetName);
+    local npcKey = guid or "unknown"
+
+    self.db.char.hasSeenGossipForNPC = self.db.char.hasSeenGossipForNPC or {}
+
+    local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[npcKey]
+
+    if self.db.profile.main.GossipFrequency == "OncePerQuestNpc" then
+        local numActiveQuests = GetNumGossipActiveQuests()
+        local numAvailableQuests = GetNumGossipAvailableQuests()
+        if (numActiveQuests > 0 or numAvailableQuests > 0) and gossipSeenForNPC then
+            return
+        end
+    elseif self.db.profile.main.GossipFrequency == "OncePerNpc" then
+        if gossipSeenForNPC then
+            return
+        end
+    end
+
+    -- Play the gossip sound
+    local gossipText = GetGossipText()
     local soundData = {
         event = "gossip",
         title = targetName,
         text = gossipText,
-        unitGuid = guid
+        unitGuid = guid,
+        startCallback = function()
+            self.db.char.hasSeenGossipForNPC[npcKey] = true
+        end
     }
     self.soundQueue:addSoundToQueue(soundData)
 end
