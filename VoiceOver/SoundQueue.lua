@@ -36,6 +36,9 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
 
         if not VoiceOverUtils:willSoundPlay(soundData) then
             print("Sound does not exist for: ", soundData.title)
+            if soundData.stopCallback then
+                soundData.stopCallback()
+            end
             return
         end
 

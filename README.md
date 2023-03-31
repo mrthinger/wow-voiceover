@@ -49,7 +49,13 @@ python cli-main.py
 The generated TTS audio files will be saved in the sounds folder, with separate subfolders for quests and gossip. Lookup tables and sound length tables will also be generated for use in the addon. 
 
 ## Addon Install
-Copy over the `generated` folder to the VoiceOver folder, then the VoiceOver folder to `World of Warcraft/_classic_era_/Interface/AddOns`
+Copy over the `generated` folder to the VoiceOverData_Vanilla folder, then the VoiceOver and VoiceOverData_Vanilla folder to `World of Warcraft/_classic_era_/Interface/AddOns`. Alternatively, you can syslink instead of copying for faster development.
+Example syslink:
+```bash
+export WOW_DIR=PATH_OF_YOUR_WOW_DIR
+ln -s ./VoiceOver "$WOW_DIR/_classic_era_/Interface/AddOns"
+ln -s ./VoiceOver_Vanilla "$WOW_DIR/_classic_era_/Interface/AddOns"
+```
 ## Contributing
 If you want to contribute to this project, please feel free to open an issue or submit a pull request.
 

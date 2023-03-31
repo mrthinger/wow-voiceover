@@ -98,7 +98,7 @@ function DataModules:GetNPCGossipTextHash(soundData)
         end
     end
 
-    local best_result = fuzzySearchBestKeys(text, text_entries)
+    local best_result = FuzzySearchBestKeys(text, text_entries)
     return best_result and best_result.value
 end
 
@@ -127,16 +127,16 @@ function DataModules:GetQuestIDByQuestTextHash(hash, npcId)
     end
 end
 
-local getFileNameForEvent =
+local getFileNameForEvent = setmetatable(
 {
     accept = function(soundData) return format("%d-%s", soundData.questId, "accept") end,
     progress = function(soundData) return format("%d-%s", soundData.questId, "progress") end,
     complete = function(soundData) return format("%d-%s", soundData.questId, "complete") end,
     gossip = function(soundData) return DataModules:GetNPCGossipTextHash(soundData) end,
-}
+}, { __index = function(self, event) error(format([[Unhandled VoiceOver sound event "%s"]], event)) end })
 
 function DataModules:PrepareSound(soundData)
-    soundData.fileName = getFileNameForEvent[soundData.event](soundData) or error([[Unhandled VoiceOver sound event "%s"]], soundData.event)
+    soundData.fileName = getFileNameForEvent[soundData.event](soundData)
     for _, module in self:GetModules() do
         local data = module.SoundLengthTable
         if data then

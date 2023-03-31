@@ -1,5 +1,5 @@
 ## Interface: 11403
-## Title: VoiceOver Data - Classic
+## Title: VoiceOver Data - Vanilla
 ## Version: 0.1
 ## LoadOnDemand: 1
 ## RequiredDeps: VoiceOver
