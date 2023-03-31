@@ -16,6 +16,8 @@ function VoiceOverSoundQueue:new()
 end
 
 function VoiceOverSoundQueue:addSoundToQueue(soundData)
+    DataModules:PrepareSound(soundData)
+
     local existingTimer = self.addSoundDebounceTimers[soundData.fileName]
     if existingTimer ~= nil then
         existingTimer:Cancel()
@@ -32,9 +34,11 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
         self.soundIdCounter = self.soundIdCounter + 1
         soundData.id = self.soundIdCounter
 
-        VoiceOverUtils:addGossipFilePathToSoundData(soundData)
         if not VoiceOverUtils:willSoundPlay(soundData) then
             print("Sound does not exist for: ", soundData.title)
+            if soundData.stopCallback then
+                soundData.stopCallback()
+            end
             return
         end
 
@@ -50,7 +54,7 @@ end
 
 function VoiceOverSoundQueue:playSound(soundData)
     local willPlay, handle = PlaySoundFile(soundData.filePath, "Dialog")
-    local nextSoundTimer = C_Timer.NewTimer(VOICEOVERSoundLengthTable[soundData.fileName] + 1, function()
+    local nextSoundTimer = C_Timer.NewTimer(soundData.length + 1, function()
         self:removeSoundFromQueue(soundData)
     end)
 

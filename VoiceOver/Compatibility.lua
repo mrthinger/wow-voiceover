@@ -1,4 +1,3 @@
-local _OG = _G
 setfenv(1, select(2, ...))
 
 local CLIENT_VERSION = GetBuildInfo()

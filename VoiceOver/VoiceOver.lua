@@ -22,6 +22,8 @@ function Addon:OnInitialize()
     self.soundQueue = VoiceOverSoundQueue:new()
     self.questOverlayUI = QuestOverlayUI:new(self.soundQueue)
 
+    DataModules:EnumerateAddons()
+
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("GOSSIP_SHOW")
     self:RegisterEvent("QUEST_COMPLETE")
@@ -58,12 +60,12 @@ function Addon:QUEST_DETAIL()
     local targetName = UnitName("npc") or UnitName("target")
     -- print("QUEST_DETAIL", questId, questTitle);
     local soundData = {
-        ["fileName"] = questId .. "-accept",
-        ["questId"] = questId,
-        ["title"] = format("%s %s", VoiceOverUtils:getEmbeddedIcon("detail"), questTitle),
-        ["fullTitle"] = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("detail"), questTitle),
-        ["text"] = questText,
-        ["unitGuid"] = guid
+        event = "accept",
+        questId = questId,
+        title = format("%s %s", VoiceOverUtils:getEmbeddedIcon("accept"), questTitle),
+        fullTitle = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("accept"), questTitle),
+        text = questText,
+        unitGuid = guid
     }
     self.soundQueue:addSoundToQueue(soundData)
 end
@@ -76,12 +78,12 @@ function Addon:QUEST_COMPLETE()
     local targetName = UnitName("npc") or UnitName("target")
     -- print("QUEST_COMPLETE", questId, questTitle);
     local soundData = {
-        ["fileName"] = questId .. "-complete",
-        ["questId"] = questId,
-        ["title"] = format("%s %s", VoiceOverUtils:getEmbeddedIcon("reward"), questTitle),
-        ["fullTitle"] = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("reward"), questTitle),
-        ["text"] = questText,
-        ["unitGuid"] = guid
+        event = "complete",
+        questId = questId,
+        title = format("%s %s", VoiceOverUtils:getEmbeddedIcon("complete"), questTitle),
+        fullTitle = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("complete"), questTitle),
+        text = questText,
+        unitGuid = guid
     }
     self.soundQueue:addSoundToQueue(soundData)
 end
@@ -92,10 +94,10 @@ function Addon:GOSSIP_SHOW()
     local targetName = UnitName("npc") or UnitName("target")
     -- print("GOSSIP_SHOW", guid, targetName);
     local soundData = {
-        ["title"] = targetName,
-        ["text"] = gossipText,
-        ["unitGuid"] = guid
+        event = "gossip",
+        title = targetName,
+        text = gossipText,
+        unitGuid = guid
     }
-    VoiceOverUtils:addGossipFileName(soundData)
     self.soundQueue:addSoundToQueue(soundData)
 end
