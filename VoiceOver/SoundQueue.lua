@@ -44,7 +44,7 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
     self.ui:updateSoundQueueDisplay()
 
     -- If the sound queue only contains one sound, play it immediately
-    if #self.sounds == 1 then
+    if #self.sounds == 1 and not Addon.db.char.isPaused then
         self:playSound(soundData)
     end
 end
@@ -64,19 +64,28 @@ function VoiceOverSoundQueue:playSound(soundData)
 end
 
 function VoiceOverSoundQueue:pauseQueue()
-    if #self.sounds > 0 and not self.isPaused then
+    if Addon.db.char.isPaused then
+        return
+    end
+
+    Addon.db.char.isPaused = true
+
+    if #self.sounds > 0 then
         local currentSound = self.sounds[1]
         StopSound(currentSound.handle)
         currentSound.nextSoundTimer:Cancel()
-        self.isPaused = true
     end
 end
 
 function VoiceOverSoundQueue:resumeQueue()
-    if #self.sounds > 0 and self.isPaused then
+    if not Addon.db.char.isPaused then
+        return
+    end
+
+    Addon.db.char.isPaused = false
+    if #self.sounds > 0 then
         local currentSound = self.sounds[1]
         self:playSound(currentSound)
-        self.isPaused = false
     end
 end
 
@@ -94,7 +103,7 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
         soundData.stopCallback()
     end
 
-    if removedIndex == 1 and not self.isPaused then
+    if removedIndex == 1 and not Addon.db.char.isPaused then
         StopSound(soundData.handle)
         soundData.nextSoundTimer:Cancel()
 
@@ -102,10 +111,6 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
             local nextSoundData = self.sounds[1]
             self:playSound(nextSoundData)
         end
-    end
-
-    if #self.sounds == 0 then
-        self.isPaused = false
     end
 
     self.ui:updateSoundQueueDisplay()

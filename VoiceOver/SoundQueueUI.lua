@@ -24,6 +24,7 @@ function SoundQueueUI:new(soundQueue)
         self.soundQueueFrame.forceRefreshAlpha = true
         self:updateSoundQueueDisplay()
     end
+
     self.refreshConfig()
 
     return self
@@ -37,8 +38,8 @@ function SoundQueueUI:initDisplay()
     self.soundQueueFrame:SetHeight(300)
     self.soundQueueFrame:SetPoint("BOTTOMRIGHT", 0, 0)
     self.soundQueueFrame.buttons = {}
-    self.soundQueueFrame:SetMovable(true)  -- Allow the frame to be moved
-    self.soundQueueFrame:SetResizable(true)  -- Allow the frame to be resized
+    self.soundQueueFrame:SetMovable(true)         -- Allow the frame to be moved
+    self.soundQueueFrame:SetResizable(true)       -- Allow the frame to be resized
     self.soundQueueFrame:SetClampedToScreen(true) -- Prevent from being dragged off-screen
     self.soundQueueFrame:SetUserPlaced(true)
     if self.soundQueueFrame.SetResizeBounds then
@@ -49,14 +50,18 @@ function SoundQueueUI:initDisplay()
     self.soundQueueFrame:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileSize = 14, edgeSize = 14,
+        tile = true,
+        tileSize = 14,
+        edgeSize = 14,
         insets = { left = 3, right = 3, top = 3, bottom = 3 }
     })
     self.soundQueueFrame:HookScript("OnHide", function()
         self.soundQueueFrame.currentAlpha = nil
     end)
-    self.soundQueueFrame:HookScript("OnUpdate", function(_, elapsed) -- OnEnter/OnLeave cannot be used, because child elements steal mouse focus
-        local isHovered = MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or self.soundQueueFrame.isResizing
+    self.soundQueueFrame:HookScript("OnUpdate",
+    function(_, elapsed)                                             -- OnEnter/OnLeave cannot be used, because child elements steal mouse focus
+        local isHovered = MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or
+        self.soundQueueFrame.isResizing
         local targetAlpha = 1
         if self.db.ShowFrameBackground == 1 then
             targetAlpha = 0
@@ -76,7 +81,7 @@ function SoundQueueUI:initDisplay()
             self.soundQueueFrame.currentAlpha = alpha
             self.soundQueueFrame.forceRefreshAlpha = nil
             self.soundQueueFrame:SetBackdropColor(0, 0, 0, alpha * 0.5)
-            self.soundQueueFrame:SetBackdropBorderColor(0xFF/0xFF, 0xD2/0xFF, 0x00/0xFF, alpha * 1)
+            self.soundQueueFrame:SetBackdropBorderColor(0xFF / 0xFF, 0xD2 / 0xFF, 0x00 / 0xFF, alpha * 1)
             self.soundQueueMover:SetShown(alpha > 0 or self.soundQueueFrame.isDragging)
             self.soundQueueMover:SetAlpha(alpha)
             self.soundQueueMover:EnableMouse(alpha >= 0.75 and not self.db.LockFrame)
@@ -105,11 +110,13 @@ function SoundQueueUI:initDisplay()
     self.soundQueueMover:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileSize = 14, edgeSize = 14,
+        tile = true,
+        tileSize = 14,
+        edgeSize = 14,
         insets = { left = 3, right = 3, top = 3, bottom = 3 }
     })
     self.soundQueueMover:SetBackdropColor(0, 0, 0, 0.5)
-    self.soundQueueMover:SetBackdropBorderColor(0xFF/0xFF, 0xD2/0xFF, 0x00/0xFF, 1)
+    self.soundQueueMover:SetBackdropBorderColor(0xFF / 0xFF, 0xD2 / 0xFF, 0x00 / 0xFF, 1)
     self.soundQueueMover:HookScript("OnEnter", function() SetCursor("interface\\cursor\\ui-cursor-move") end)
     self.soundQueueMover:HookScript("OnLeave", function() SetCursor(nil) end)
     self.soundQueueMover:HookScript("OnMouseDown", function()
@@ -167,7 +174,7 @@ function SoundQueueUI:initNPCHead()
     end)
 
     self.npcHead:SetScript("OnUpdate", function(self)
-        if self:IsShown() and time() - soundQueueUI.animtimer >= 2 and not soundQueueUI.soundQueue.isPaused then
+        if self:IsShown() and time() - soundQueueUI.animtimer >= 2 and not Addon.db.char.isPaused then
             self:SetAnimation(60)
             soundQueueUI.animtimer = time()
         end
@@ -197,14 +204,13 @@ function SoundQueueUI:initControlButtons()
 
     self.toggleButton:SetScript("OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-        if self.soundQueue.isPaused then
+        if Addon.db.char.isPaused then
             self.soundQueue:resumeQueue()
         else
             self.soundQueue:pauseQueue()
         end
         self:updateToggleButtonTexture()
     end)
-
 end
 
 function SoundQueueUI:initSettingsButton()
@@ -218,7 +224,8 @@ function SoundQueueUI:initSettingsButton()
     self.settingsButton:GetPushedTexture():SetPoint("TOPLEFT", 2, -2)
     self.settingsButton:GetPushedTexture():SetPoint("BOTTOMRIGHT", -2, 2)
 
-    self.settingsButton.menuFrame = CreateFrame("Frame", "VoiceOverSettingsMenu", self.settingsButton, "UIDropDownMenuTemplate")
+    self.settingsButton.menuFrame = CreateFrame("Frame", "VoiceOverSettingsMenu", self.settingsButton,
+    "UIDropDownMenuTemplate")
     self.settingsButton.menuFrame:SetPoint("BOTTOMLEFT")
     self.settingsButton.menuFrame:Hide()
 
@@ -252,27 +259,45 @@ function SoundQueueUI:initSettingsButton()
     {
         MakeCheck("Lock Frame", "LockFrame"),
         MakeCheck("Auto-Hide UI During Silence", "HideWhenIdle"),
-        { text = "Show Background", notCheckable = true, keepShownOnClick = true, hasArrow = true, menuList =
         {
-            MakeRadio("Always", "ShowFrameBackground", 3),
-            MakeRadio("When Hovered", "ShowFrameBackground", 2),
-            MakeRadio("Never", "ShowFrameBackground", 1),
-        } },
-        { text = "Gossip Playback Frequency", notCheckable = true, keepShownOnClick = true, hasArrow = true, menuList =
+            text = "Show Background",
+            notCheckable = true,
+            keepShownOnClick = true,
+            hasArrow = true,
+            menuList =
+            {
+                MakeRadio("Always", "ShowFrameBackground", 3),
+                MakeRadio("When Hovered", "ShowFrameBackground", 2),
+                MakeRadio("Never", "ShowFrameBackground", 1),
+            }
+        },
         {
-            MakeRadio("Always Play", "GossipFrequency", "Always"),
-            MakeRadio("Play Once for Quest NPCs", "GossipFrequency", "OncePerQuestNpc"),
-            MakeRadio("Play Once for All NPCs", "GossipFrequency", "OncePerNpc"),
-        } },
+            text = "Gossip Playback Frequency",
+            notCheckable = true,
+            keepShownOnClick = true,
+            hasArrow = true,
+            menuList =
+            {
+                MakeRadio("Always Play", "GossipFrequency", "Always"),
+                MakeRadio("Play Once for Quest NPCs", "GossipFrequency", "OncePerQuestNpc"),
+                MakeRadio("Play Once for All NPCs", "GossipFrequency", "OncePerNpc"),
+            }
+        },
 
-        { text = "Sound Playback Channel", notCheckable = true, keepShownOnClick = true, hasArrow = true, menuList =
         {
-            MakeRadio("Master", "SoundChannel", "Master"),
-            MakeRadio("Sound", "SoundChannel", "Sound"),
-            MakeRadio("Music", "SoundChannel", "Music"),
-            MakeRadio("Ambience", "SoundChannel", "Ambience"),
-            MakeRadio("Dialog", "SoundChannel", "Dialog"),
-        } },
+            text = "Sound Playback Channel",
+            notCheckable = true,
+            keepShownOnClick = true,
+            hasArrow = true,
+            menuList =
+            {
+                MakeRadio("Master", "SoundChannel", "Master"),
+                MakeRadio("Sound", "SoundChannel", "Sound"),
+                MakeRadio("Music", "SoundChannel", "Music"),
+                MakeRadio("Ambience", "SoundChannel", "Ambience"),
+                MakeRadio("Dialog", "SoundChannel", "Dialog"),
+            }
+        },
     }
     UIDropDownMenu_Initialize(self.settingsButton.menuFrame, EasyMenu_Initialize, "MENU", nil, menu)
 
@@ -283,8 +308,8 @@ function SoundQueueUI:initSettingsButton()
 end
 
 function SoundQueueUI:updateToggleButtonTexture()
-    local texturePath = self.soundQueue.isPaused and "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up" or
-    "Interface\\TIMEMANAGER\\PauseButton"
+    local texturePath = Addon.db.char.isPaused and "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up" or
+        "Interface\\TIMEMANAGER\\PauseButton"
     self.toggleButton:SetNormalTexture(texturePath)
     self.toggleButton:SetPushedTexture(texturePath)
 end
@@ -355,7 +380,7 @@ function SoundQueueUI:configureFirstButton(button, soundData)
             self.npcHead:SetCreature(creatureID)
             self.npcHead:SetCustomCamera(0)
 
-            if not self.soundQueue.isPaused then
+            if not Addon.db.char.isPaused then
                 self.npcHead:SetAnimation(60)
             end
 

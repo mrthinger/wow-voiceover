@@ -14,6 +14,10 @@ local defaults =
             GossipFrequency = "OncePerQuestNpc",
             SoundChannel = "Master",
         },
+    },
+    char = {
+        isPaused = false,
+        hasSeenGossipForNPC = {},
     }
 }
 
@@ -94,8 +98,6 @@ function Addon:GOSSIP_SHOW()
     local guid = UnitGUID("npc") or UnitGUID("target")
     local targetName = UnitName("npc") or UnitName("target")
     local npcKey = guid or "unknown"
-
-    self.db.char.hasSeenGossipForNPC = self.db.char.hasSeenGossipForNPC or {}
 
     local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[npcKey]
 
