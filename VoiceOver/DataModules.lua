@@ -114,17 +114,57 @@ function DataModules:GetQuestLogNPCID(questId)
     end
 end
 
-function DataModules:GetQuestIDByQuestTextHash(hash, npcId)
+local MD5 = LibStub("MDFive-1.0")
+local race_substitutions = { "human", "orc", "dwarf", "night elf", "undead", "tauren", "gnome", "troll", "goblin", "blood elf", "draenei", "worgen", "pandaren", "nightborne", "void elf", "zandalari", "kul tiran", "mechagnome", "dracthyr" }
+local class_substitutions = { "warrior", "paladin", "hunter", "rogue", "priest", "death knight", "shaman", "mage", "warlock", "monk", "druid", "demon hunter", "evoker" }
+local function AtBoundary(pattern) return format("%%f[%%w_]%s%%f[^%%w_]", pattern) end
+local name_pattern = AtBoundary("[A-Z][a-z]+")
+local function name_replacement(match)
+    local len = string.len(match)
+    return len >= 2 and len <= 12 and "" or match
+end
+for i, value in ipairs(race_substitutions) do race_substitutions[i] = AtBoundary(value) end
+for i, value in ipairs(class_substitutions) do class_substitutions[i] = AtBoundary(value) end
+function DataModules:GetQuestIDByQuestText(title, text, npcId)
+    title = title:lower()
+    -- Replace newline substitutions with a space
+    text = text:gsub("[\r\n]", " ")
+    -- Remove all Capitalized words between 2 and 12 characters in length - to client any of those words
+    -- could potentially be the substituted player's name, if the name is a common english word
+    text = text:gsub(name_pattern, name_replacement)
+    -- Remove player's name (should already have been done by the previous step, but if the player has non-latin letters in their name - this is where it would be removed)
+    text = text:gsub(GetUnitName("player"), "")
+    -- From this point on we can work with lowercase text
+    text = text:lower()
+    -- Remove all name/race/class substitutions (pvp title ($t) not supported)
+    --Already done at this point by the client's native function QuestParserParseText
+    -- Remove all possible race/class occurrences in strings (client cannot distinguish them from $r/$c after formatting)
+    for _, substitution in ipairs(race_substitutions) do
+        text = text:gsub(substitution, "")
+    end
+    for _, substitution in ipairs(class_substitutions) do
+        text = text:gsub(substitution, "")
+    end
+    -- Remove all worldstate substitutions
+    --Effectively done in the next step by stripping all numbers and : characters
+    -- Remove all characters except latin letters
+    text = text:gsub("[^a-z]", "")
+    text = format("%s@%s", title, text)
+    --print(text)
+    local hash = MD5:MD5(text);
+    --print(hash)
     local hashWithNpc = format("%s:%d", hash, npcId)
     for _, module in self:GetModules() do
         local data = module.QuestTextHashToQuestID
         if data then
             local questId = data[hashWithNpc] or data[hash]
             if questId then
+                --print(format("|cFF20FF20Quest detected: %d|r%s", questId, data[hashWithNpc] and " |cFFFF8020(with hash:npc)|r" or ""))
                 return questId
             end
         end
     end
+    --print("|cFFFF2020Quest detection failed|r")
 end
 
 local getFileNameForEvent = setmetatable(

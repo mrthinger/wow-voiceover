@@ -4,4 +4,5 @@
     <Include file="Libs\AceAddon-3.0\AceAddon-3.0.xml"/>
     <Include file="Libs\AceDB-3.0\AceDB-3.0.xml"/>
     <Include file="Libs\AceEvent-3.0\AceEvent-3.0.xml"/>
+    <Script file="Libs\MD5-1.0\MD5-1.0.lua"/>
 </Ui>

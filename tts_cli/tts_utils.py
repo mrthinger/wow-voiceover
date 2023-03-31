@@ -16,6 +16,9 @@ SOUND_OUTPUT_FOLDER = OUTPUT_FOLDER + "/sounds"
 replace_dict = {'$b': '\n', '$B': '\n', '$n': 'Adventurer', '$N': 'Adventurer',
                 '$C': 'adventurer', '$c': 'adventurer', '$R': 'person', '$r': 'person'}
 
+race_substitutions = [ "human", "orc", "dwarf", "night elf", "undead", "tauren", "gnome", "troll", "goblin", "blood elf", "draenei", "worgen", "pandaren", "nightborne", "void elf", "zandalari", "kul tiran", "mechagnome", "dracthyr" ]
+class_substitutions = [ "warrior", "paladin", "hunter", "rogue", "priest", "death knight", "shaman", "mage", "warlock", "monk", "druid", "demon hunter", "evoker" ]
+
 def get_hash(text):
     hash_object = hashlib.md5(text.encode())
     return hash_object.hexdigest()
@@ -102,6 +105,7 @@ class TTSProcessor:
         df['templateText_race_gender_hash'] = df['templateText_race_gender'].apply(
             get_hash)
 
+        df['originalText'] = df['text']
         for k, v in replace_dict.items():
             df['text'] = df['text'].str.replace(k, v, regex=False)
 
@@ -221,6 +225,94 @@ class TTSProcessor:
             f.write("\n")
 
 
+    def read_quest_id_lookups_table(self, file_path):
+        quest_id_table = {}
+
+        if not os.path.exists(file_path):
+            return quest_id_table
+
+        with open(file_path, "r") as f:
+            contents = f.read()
+            try:
+                # Remove the assignment part of the Lua table and parse the table
+                contents = contents.replace("if WOW_PROJECT_ID or select(4, GetBuildInfo()) >= 40000 then return end\n", "")
+                contents = contents.replace("select(2, ...).QuestTextHashToQuestID = ", "")
+                quest_id_table = lua.decode(contents)
+            except Exception as e:
+                print(f"Error while reading quest_id_lookups.lua: {e}")
+                return {}
+
+        return quest_id_table
+
+    def write_quest_id_lookups_table(self, df):
+        output_file = OUTPUT_FOLDER + "/quest_id_lookups.lua"
+        quest_id_table = self.read_quest_id_lookups_table(output_file)
+
+        accept_df = df[(df['source'] == 'accept') | (df['source'] == 'progress') | (df['source'] == 'complete')]
+
+        log = None
+        #log = [] # Uncomment to write a log file with sanitized texts
+
+        for i, row in tqdm(accept_df.iterrows()):
+            title = row['Title'].lower()
+            text = row['originalText']
+            quest = int(row['quest'])
+            npc = int(row['id'])
+
+            # Hash male and female text versions separately
+            texts = []
+            if "$g" in text or "$G" in text:
+                texts.append(re.sub(r'\$[Gg]\s*(.*?)\s*:\s*(.*?)\s*;', r'\1', text))
+                texts.append(re.sub(r'\$[Gg]\s*(.*?)\s*:\s*(.*?)\s*;', r'\2', text))
+            else:
+                texts.append(text)
+
+            text_male = None
+            for text in texts:
+                # Replace newline substitutions with a space
+                text = re.sub(r'\$[Bb]', ' ', text)
+                # Remove all Capitalized words between 2 and 12 characters in length - to client any of those words
+                # could potentially be the substituted player's name, if the name is a common english word
+                text = re.sub(r'\b[A-Z][a-z]{1,11}\b', '', text)
+                # From this point on we can work with lowercase text
+                text = text.lower()
+                # Remove all name/race/class substitutions (pvp title ($t) not supported)
+                text = re.sub(r'\$[nrc]', '', text)
+                # Remove all possible race/class occurrences in strings (client cannot distinguish them from $r/$c after formatting)
+                text = re.sub(fr'\b({"|".join(race_substitutions)}|{"|".join(class_substitutions)})\b', '', text)
+                # Remove all worldstate substitutions
+                text = re.sub(r'\$\d+[wedk]', '', text)
+                # Remove all characters except latin letters
+                text = re.sub(r'[^a-z]', '', text)
+
+                # Skip storing the hash twice if both the male and female sanitized texts end up being the same
+                if text_male is None:
+                    text_male = text
+                else:
+                    if text_male == text:
+                        continue
+
+                # Map MD5("title@text") to quest ID
+                hash = get_hash(f"{title}@{text}")
+                if hash in quest_id_table and quest_id_table[hash] != quest:
+                    quest_id_table[f"{hash}:{npc}"] = quest # If there are multiple quests with the same text - discriminate them by the quest npc id
+                else:
+                    quest_id_table[hash] = quest
+
+                if not log is None:
+                    log.append(f"{hash} = {quest} = {title}@{text}")
+
+        if not log is None:
+            with open(output_file + ".log", "w") as f:
+                f.write("\n".join(log))
+
+        with open(output_file, "w") as f:
+            f.write("if WOW_PROJECT_ID or select(4, GetBuildInfo()) >= 40000 then return end\n")
+            f.write("select(2, ...).QuestTextHashToQuestID = ")
+            f.write(lua.encode(quest_id_table))
+            f.write("\n")
+
+
     def tts_dataframe(self, df, selected_voices):
         self.create_output_dirs()
         self.process_rows_in_parallel(df, self.process_row, selected_voices, max_workers=5)
@@ -234,5 +326,7 @@ class TTSProcessor:
      
         self.write_questlog_npc_lookups_table(df)
         print("Added new entries to questlog_npc_lookups.lua")
+        self.write_quest_id_lookups_table(df)
+        print("Added new entries to quest_id_lookups.lua")
         write_sound_length_table_lua(SOUND_OUTPUT_FOLDER, OUTPUT_FOLDER)
         print("Updated sound_length_table.lua")

@@ -66,6 +66,7 @@ SELECT
     distinct
     qr.source,
     qr.quest,
+    qt.Title,
     CASE
         WHEN qr.source = 'accept' THEN qt.Details
         WHEN qr.source = 'progress' THEN qt.RequestItemsText
@@ -127,6 +128,7 @@ SELECT
     distinct
     qr.source,
     qr.quest,
+    qt.Title,
     CASE
         WHEN qr.source = 'accept' THEN qt.Details
         WHEN qr.source = 'progress' THEN qt.RequestItemsText
@@ -152,6 +154,7 @@ UNION ALL
 SELECT DISTINCT
     'gossip' as source,
     '' as quest,
+    '' as Title,
     IF(cdie.DisplaySexID = 0, bt.male_text, bt.female_text) AS text,
     cdie.DisplayRaceID,
     cdie.DisplaySexID,
@@ -203,6 +206,7 @@ SELECT
     distinct
     qr.source,
     qr.quest,
+    qt.Title,
     CASE
         WHEN qr.source = 'accept' THEN qt.Details
         WHEN qr.source = 'progress' THEN qt.RequestItemsText
@@ -228,6 +232,7 @@ UNION ALL
 SELECT DISTINCT
     'gossip' as source,
     '' as quest,
+    '' as Title,
     IF(cdie.DisplaySexID = 0, bt.male_text, bt.female_text) AS text,
     cdie.DisplayRaceID,
     cdie.DisplaySexID,
