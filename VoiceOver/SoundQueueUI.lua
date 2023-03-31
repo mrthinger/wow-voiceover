@@ -85,6 +85,8 @@ function SoundQueueUI:initDisplay()
             self.soundQueueResizer:EnableMouse(alpha >= 0.75 and not self.db.LockFrame)
             self.settingsButton:SetShown(alpha > 0)
             self.settingsButton:SetAlpha(alpha)
+            self.toggleButton:SetShown(isHovered or not self.db.HideWhenIdle)
+            self.toggleButton:SetAlpha(alpha)
         end
 
         -- Force show settings button on hover, otherwise it would be impossible to change settings
@@ -203,7 +205,6 @@ function SoundQueueUI:initControlButtons()
         self:updateToggleButtonTexture()
     end)
 
-    self.toggleButton:Hide()
 end
 
 function SoundQueueUI:initSettingsButton()
@@ -368,9 +369,7 @@ function SoundQueueUI:updateSoundQueueDisplay()
     if #self.soundQueue.sounds == 0 then
         self.npcHead:Hide()
         self.bookTextureFrame:Hide()
-        self.toggleButton:Hide()
     else
-        self.toggleButton:Show()
         self:updateToggleButtonTexture()
     end
 
