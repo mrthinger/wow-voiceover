@@ -17,6 +17,14 @@ end
 function VoiceOverSoundQueue:addSoundToQueue(soundData)
     DataModules:PrepareSound(soundData)
 
+    if not VoiceOverUtils:willSoundPlay(soundData) or soundData.fileName == nil then
+        print("Sound does not exist for: ", soundData.title)
+        if soundData.stopCallback then
+            soundData.stopCallback()
+        end
+        return
+    end
+
     -- Check if the sound is already in the queue
     for _, queuedSound in ipairs(self.sounds) do
         if queuedSound.fileName == soundData.fileName then
@@ -31,14 +39,6 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
 
     self.soundIdCounter = self.soundIdCounter + 1
     soundData.id = self.soundIdCounter
-
-    if not VoiceOverUtils:willSoundPlay(soundData) then
-        print("Sound does not exist for: ", soundData.title)
-        if soundData.stopCallback then
-            soundData.stopCallback()
-        end
-        return
-    end
 
     table.insert(self.sounds, soundData)
     self.ui:updateSoundQueueDisplay()
