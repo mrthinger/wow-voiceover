@@ -1,8 +1,12 @@
-## Interface: 11403
+## Interface: 30401
 ## Title: VoiceOver
 ## Notes: Adds voiceovers to npcs
 ## Version: 0.2
 ## SavedVariables: VoiceOverDB
+
+VoiceOverData_Vanilla\generated\gossip_file_lookups.lua
+VoiceOverData_Vanilla\generated\questlog_npc_lookups.lua
+VoiceOverData_Vanilla\generated\sound_length_table.lua
 
 embeds.xml
 
@@ -16,3 +20,6 @@ Utils.lua
 VoiceOver.lua
 
 Compatibility.lua
+
+VoiceOverData_Vanilla\Module.lua
+

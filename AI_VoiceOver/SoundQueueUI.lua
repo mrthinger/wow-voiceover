@@ -219,8 +219,8 @@ function SoundQueueUI:initSettingsButton()
     self.settingsButton:SetPoint("TOPRIGHT", -10, -5)
 
     self.settingsButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-    self.settingsButton:SetNormalTexture("Interface\\AddOns\\VoiceOver\\Textures\\SettingsButton")
-    self.settingsButton:SetPushedTexture("Interface\\AddOns\\VoiceOver\\Textures\\SettingsButton")
+    self.settingsButton:SetNormalTexture("Interface\\AddOns\\AI_VoiceOver\\Textures\\SettingsButton")
+    self.settingsButton:SetPushedTexture("Interface\\AddOns\\AI_VoiceOver\\Textures\\SettingsButton")
     self.settingsButton:GetPushedTexture():SetPoint("TOPLEFT", 2, -2)
     self.settingsButton:GetPushedTexture():SetPoint("BOTTOMRIGHT", -2, 2)
 
@@ -263,7 +263,6 @@ function SoundQueueUI:initSettingsButton()
         MakeCheck("Lock Frame", "LockFrame"),
         MakeCheck("Auto-Hide UI", "HideWhenIdle"),
         MakeCheck("Mute NPCs When VoiceOver Is Playing (Auto-Mutes Dialog Channel)", "AutoToggleDialog", function(checked)
-            print(checked)
             if not checked then
                 if Addon.db.profile.main.AutoToggleDialog then
                     SetCVar("Sound_EnableDialog", 1)
