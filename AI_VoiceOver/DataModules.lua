@@ -10,40 +10,40 @@ DataModules =
 }
 
 function DataModules:Register(name, module)
-    if self.registeredModules[name] then
-        error(format([[Module "%s" already registered]], name))
-        return
-    end
+    -- if self.registeredModules[name] then
+    --     error(format([[Module "%s" already registered]], name))
+    --     return
+    -- end
 
-    local moduleVersion = tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Version"))
-    if not moduleVersion then
-        error(format([[Module "%s" is missing data format version]], name))
-        return
-    end
+    -- local moduleVersion = tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Version"))
+    -- if not moduleVersion then
+    --     error(format([[Module "%s" is missing data format version]], name))
+    --     return
+    -- end
 
-    if moduleVersion < CURRENT_MODULE_VERSION then
-        -- Ideally if module format would ever change - there should be fallbacks in place to handle outdated formats
-        error(format([[Module "%s" contains outdated data format (version %d, expected %d)]], name, moduleVersion, CURRENT_MODULE_VERSION))
-        return
-    end
+    -- if moduleVersion < CURRENT_MODULE_VERSION then
+    --     -- Ideally if module format would ever change - there should be fallbacks in place to handle outdated formats
+    --     error(format([[Module "%s" contains outdated data format (version %d, expected %d)]], name, moduleVersion, CURRENT_MODULE_VERSION))
+    --     return
+    -- end
 
     module.MODULE_NAME = name
-    module.MODULE_VERSION = moduleVersion
-    module.MODULE_PRIORITY = tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Priority")) or 0
-    module.MODULE_TITLE = GetAddOnMetadata(name, "Title") or name
-    module.CONTENT_VERSION = GetAddOnMetadata(name, "Version")
+    -- module.MODULE_VERSION = moduleVersion
+    -- module.MODULE_PRIORITY = tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Priority")) or 0
+    -- module.MODULE_TITLE = GetAddOnMetadata(name, "Title") or name
+    -- module.CONTENT_VERSION = GetAddOnMetadata(name, "Version")
 
     self.registeredModules[name] = module
     table.insert(self.orderedModules, module)
 
     -- Order the modules by priority (higher first) then by name (case-sensitive alphabetical)
     -- Modules with higher priority will be iterated through first, so one can create a module with "overrides" for data in other modules by simply giving it a higher priority
-    table.sort(self.orderedModules, function(a, b)
-        if a.MODULE_PRIORITY ~= b.MODULE_PRIORITY then
-            return a.MODULE_PRIORITY > b.MODULE_PRIORITY
-        end
-        return a.MODULE_NAME < b.MODULE_NAME
-    end)
+    -- table.sort(self.orderedModules, function(a, b)
+    --     if a.MODULE_PRIORITY ~= b.MODULE_PRIORITY then
+    --         return a.MODULE_PRIORITY > b.MODULE_PRIORITY
+    --     end
+    --     return a.MODULE_NAME < b.MODULE_NAME
+    -- end)
 end
 
 function DataModules:GetModules()
