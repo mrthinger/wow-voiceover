@@ -49,7 +49,13 @@ python cli-main.py
 The generated TTS audio files will be saved in the sounds folder, with separate subfolders for quests and gossip. Lookup tables and sound length tables will also be generated for use in the addon. 
 
 ## Addon Install
-Copy over the `generated` folder to the VoiceOver folder, then the VoiceOver folder to `World of Warcraft/_classic_era_/Interface/AddOns`
+Copy over the `generated` folder to the VoiceOverData_Vanilla folder, then the VoiceOver and VoiceOverData_Vanilla folder to `World of Warcraft/_classic_era_/Interface/AddOns`. Alternatively, you can syslink instead of copying for faster development.
+Example syslink:
+```bash
+export WOW_DIR=PATH_OF_YOUR_WOW_DIR
+ln -s ./VoiceOver "$WOW_DIR/_classic_era_/Interface/AddOns"
+ln -s ./VoiceOver_Vanilla "$WOW_DIR/_classic_era_/Interface/AddOns"
+```
 ## Contributing
 If you want to contribute to this project, please feel free to open an issue or submit a pull request.
 
@@ -63,7 +69,7 @@ The dataframe schema before calling the `preprocess_dataframe` function consists
 |---------------|--------------------------------------------------------------|
 | `source`      | Indicates the type of interaction, can be 'accept', 'progress', 'complete', or 'gossip' |
 | `quest`       | The quest ID or empty string if it's a gossip interaction    |
-| `text`        | The text content of the interaction                           |
+| `text`        | The text template content of the interaction                           |
 | `DisplayRaceID` | The race ID of the NPC involved in the interaction          |
 | `DisplaySexID`  | The gender ID of the NPC involved in the interaction        |
 | `name`        | The name of the NPC involved in the interaction               |
@@ -80,3 +86,4 @@ The `preprocess_dataframe` function adds the following new fields to the datafra
 | `voice_name`             | The voice name, which is a combination of the race and gender fields |
 | `templateText_race_gender` | A combination of the text, race, and gender fields          |
 | `templateText_race_gender_hash` | A hash of the `templateText_race_gender` field          |
+| `cleanedText` | `text` after rendering template |

@@ -6,51 +6,64 @@ function VoiceOverSoundQueue:new()
     local soundQueue = {}
     setmetatable(soundQueue, VoiceOverSoundQueue)
 
-    soundQueue.ui = SoundQueueUI:new(soundQueue)
     soundQueue.soundIdCounter = 0
-    soundQueue.addSoundDebounceTimers = {}
     soundQueue.sounds = {}
     soundQueue.isPaused = false
+    soundQueue.ui = SoundQueueUI:new(soundQueue)
 
     return soundQueue
 end
 
 function VoiceOverSoundQueue:addSoundToQueue(soundData)
-    local existingTimer = self.addSoundDebounceTimers[soundData.fileName]
-    if existingTimer ~= nil then
-        existingTimer:Cancel()
+    DataModules:PrepareSound(soundData)
+
+    if not VoiceOverUtils:willSoundPlay(soundData) or soundData.fileName == nil then
+        print("Sound does not exist for: ", soundData.title)
+        if soundData.stopCallback then
+            soundData.stopCallback()
+        end
+        return
     end
 
-    self.addSoundDebounceTimers[soundData.fileName] = C_Timer.NewTimer(0.3, function()
-        self.addSoundDebounceTimers[soundData.fileName] = nil
-
-        -- dont play gossip if there are already sounds in the queue
-        if soundData.questId == nil and #self.sounds > 0 then
+    -- Check if the sound is already in the queue
+    for _, queuedSound in ipairs(self.sounds) do
+        if queuedSound.fileName == soundData.fileName then
             return
         end
+    end
 
-        self.soundIdCounter = self.soundIdCounter + 1
-        soundData.id = self.soundIdCounter
-
-        VoiceOverUtils:addGossipFilePathToSoundData(soundData)
-        if not VoiceOverUtils:willSoundPlay(soundData) then
-            print("Sound does not exist for: ", soundData.title)
-            return
+    -- Don't play gossip if there are quest sounds in the queue
+    local questSoundExists = false
+    for _, queuedSound in ipairs(self.sounds) do
+        if queuedSound.questId ~= nil then
+            questSoundExists = true
+            break
         end
+    end
 
-        table.insert(self.sounds, soundData)
-        self.ui:updateSoundQueueDisplay()
+    if soundData.questId == nil and questSoundExists then
+        return
+    end
 
-        -- If the sound queue only contains one sound, play it immediately
-        if #self.sounds == 1 then
-            self:playSound(soundData)
-        end
-    end)
+    self.soundIdCounter = self.soundIdCounter + 1
+    soundData.id = self.soundIdCounter
+
+    table.insert(self.sounds, soundData)
+    self.ui:updateSoundQueueDisplay()
+
+    -- If the sound queue only contains one sound, play it immediately
+    if #self.sounds == 1 and not Addon.db.char.isPaused then
+        self:playSound(soundData)
+    end
 end
 
 function VoiceOverSoundQueue:playSound(soundData)
-    local willPlay, handle = PlaySoundFile(soundData.filePath, "Dialog")
-    local nextSoundTimer = C_Timer.NewTimer(VOICEOVERSoundLengthTable[soundData.fileName] + 1, function()
+    local channel = Addon.db.profile.main.SoundChannel
+    local willPlay, handle = PlaySoundFile(soundData.filePath, channel)
+    if soundData.startCallback then
+        soundData.startCallback()
+    end
+    local nextSoundTimer = C_Timer.NewTimer(soundData.length + 0.55, function()
         self:removeSoundFromQueue(soundData)
     end)
 
@@ -59,19 +72,28 @@ function VoiceOverSoundQueue:playSound(soundData)
 end
 
 function VoiceOverSoundQueue:pauseQueue()
-    if #self.sounds > 0 and not self.isPaused then
+    if Addon.db.char.isPaused then
+        return
+    end
+
+    Addon.db.char.isPaused = true
+
+    if #self.sounds > 0 then
         local currentSound = self.sounds[1]
         StopSound(currentSound.handle)
         currentSound.nextSoundTimer:Cancel()
-        self.isPaused = true
     end
 end
 
 function VoiceOverSoundQueue:resumeQueue()
-    if #self.sounds > 0 and self.isPaused then
+    if not Addon.db.char.isPaused then
+        return
+    end
+
+    Addon.db.char.isPaused = false
+    if #self.sounds > 0 then
         local currentSound = self.sounds[1]
         self:playSound(currentSound)
-        self.isPaused = false
     end
 end
 
@@ -89,8 +111,7 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
         soundData.stopCallback()
     end
 
-    if removedIndex == 1 and not self.isPaused then
-
+    if removedIndex == 1 and not Addon.db.char.isPaused then
         StopSound(soundData.handle)
         soundData.nextSoundTimer:Cancel()
 
@@ -98,10 +119,6 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
             local nextSoundData = self.sounds[1]
             self:playSound(nextSoundData)
         end
-    end
-
-    if #self.sounds == 0 then
-        self.isPaused = false
     end
 
     self.ui:updateSoundQueueDisplay()

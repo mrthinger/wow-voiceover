@@ -123,6 +123,43 @@ quest_relations AS (
     FROM filtered_creatures fc
     JOIN creature_involvedrelation qr ON qr.id = fc.id
 )
+creature_data AS (
+    SELECT
+        filtered_creatures.id,
+        ct.name,
+        gm.entry AS gm_entry,
+        gm.text_id AS gm_text_id,
+        gm2.entry AS gm2_entry,
+        gm2.text_id AS gm2_text_id,
+        gm3.entry AS gm3_entry,
+        gm3.text_id AS gm3_text_id,
+        cdie.DisplaySexID,
+        cdie.DisplayRaceID
+    FROM filtered_creatures
+        JOIN creature_template ct ON filtered_creatures.id = ct.entry
+        JOIN db_CreatureDisplayInfo cdi ON ct.display_id1 = cdi.ID
+        JOIN db_CreatureDisplayInfoExtra cdie ON cdi.ExtendedDisplayInfoID = cdie.ID
+        left JOIN gossip_menu gm ON ct.gossip_menu_id = gm.entry
+        left JOIN gossip_menu_option gmo ON gm.entry = gmo.menu_id
+        left JOIN gossip_menu gm2 ON gmo.action_menu_id = gm2.entry
+        left JOIN gossip_menu_option gmo2 ON gm2.entry = gmo2.menu_id
+        left JOIN gossip_menu gm3 ON gmo2.action_menu_id = gm3.entry
+),
+gossip_levels AS (
+    SELECT 0 AS level
+    UNION ALL SELECT 1
+    UNION ALL SELECT 2
+),
+numbers AS (
+    SELECT 0 AS n
+    UNION ALL SELECT 1
+    UNION ALL SELECT 2
+    UNION ALL SELECT 3
+    UNION ALL SELECT 4
+    UNION ALL SELECT 5
+    UNION ALL SELECT 6
+    UNION ALL SELECT 7
+)
 SELECT
     distinct
     qr.source,
@@ -148,27 +185,42 @@ WHERE
         OR (qr.source = 'progress' AND qt.RequestItemsText IS NOT NULL AND qt.RequestItemsText != '')
         OR (qr.source = 'complete' AND qt.OfferRewardText IS NOT NULL AND qt.OfferRewardText != '')
     )
+
 UNION ALL
-SELECT DISTINCT
+
+SELECT
+    distinct
     'gossip' as source,
     '' as quest,
-    IF(cdie.DisplaySexID = 0, bt.male_text, bt.female_text) AS text,
-    cdie.DisplayRaceID,
-    cdie.DisplaySexID,
-    ct.name,
-    fc.id
-FROM filtered_creatures fc
-    JOIN creature_template ct ON fc.id = ct.entry
-    JOIN gossip_menu gm ON ct.gossip_menu_id = gm.entry
-    JOIN npc_text nt ON gm.text_id = nt.ID
-    JOIN broadcast_text bt ON nt.BroadcastTextID0 = bt.entry
-    JOIN db_CreatureDisplayInfo cdi ON ct.display_id1 = cdi.ID
-    JOIN db_CreatureDisplayInfoExtra cdie ON cdi.ExtendedDisplayInfoID = cdie.ID
+    IF(creature_data.DisplaySexID = 0, bt.male_text, bt.female_text) AS text,
+    creature_data.DisplayRaceID,
+    creature_data.DisplaySexID,
+    creature_data.name,
+    creature_data.id
+FROM creature_data
+    CROSS JOIN gossip_levels
+    CROSS JOIN numbers
+    JOIN npc_text nt ON
+        CASE gossip_levels.level
+            WHEN 0 THEN gm_text_id
+            WHEN 1 THEN gm2_text_id
+            WHEN 2 THEN gm3_text_id
+        END = nt.ID
+    JOIN broadcast_text bt ON
+        CASE numbers.n
+            WHEN 0 THEN nt.BroadcastTextID0
+            WHEN 1 THEN nt.BroadcastTextID1
+            WHEN 2 THEN nt.BroadcastTextID2
+            WHEN 3 THEN nt.BroadcastTextID3
+            WHEN 4 THEN nt.BroadcastTextID4
+            WHEN 5 THEN nt.BroadcastTextID5
+            WHEN 6 THEN nt.BroadcastTextID6
+            WHEN 7 THEN nt.BroadcastTextID7
+        END = bt.entry
 WHERE
-    (
-        (cdie.DisplaySexID = 0 AND bt.male_text IS NOT NULL AND bt.male_text != '')
-        OR (cdie.DisplaySexID = 1 AND bt.female_text IS NOT NULL AND bt.female_text != '')
-    );
+    (DisplaySexID = 0 AND bt.male_text IS NOT NULL AND bt.male_text != '')
+    OR (DisplaySexID = 1 AND bt.female_text IS NOT NULL AND bt.female_text != '')
+;
     '''
 
     with db.cursor() as cursor:
@@ -198,6 +250,43 @@ WITH quest_relations AS (
     SELECT 'progress' as source, qr.quest, c.id as creature_id, c.position_x, c.position_y, c.map
     FROM creature c
     JOIN creature_involvedrelation qr ON qr.id = c.id
+),
+creature_data AS (
+    SELECT
+        creature.id,
+        ct.name,
+        gm.entry AS gm_entry,
+        gm.text_id AS gm_text_id,
+        gm2.entry AS gm2_entry,
+        gm2.text_id AS gm2_text_id,
+        gm3.entry AS gm3_entry,
+        gm3.text_id AS gm3_text_id,
+        cdie.DisplaySexID,
+        cdie.DisplayRaceID
+    FROM creature
+        JOIN creature_template ct ON creature.id = ct.entry
+        JOIN db_CreatureDisplayInfo cdi ON ct.display_id1 = cdi.ID
+        JOIN db_CreatureDisplayInfoExtra cdie ON cdi.ExtendedDisplayInfoID = cdie.ID
+        left JOIN gossip_menu gm ON ct.gossip_menu_id = gm.entry
+        left JOIN gossip_menu_option gmo ON gm.entry = gmo.menu_id
+        left JOIN gossip_menu gm2 ON gmo.action_menu_id = gm2.entry
+        left JOIN gossip_menu_option gmo2 ON gm2.entry = gmo2.menu_id
+        left JOIN gossip_menu gm3 ON gmo2.action_menu_id = gm3.entry
+),
+gossip_levels AS (
+    SELECT 0 AS level
+    UNION ALL SELECT 1
+    UNION ALL SELECT 2
+),
+numbers AS (
+    SELECT 0 AS n
+    UNION ALL SELECT 1
+    UNION ALL SELECT 2
+    UNION ALL SELECT 3
+    UNION ALL SELECT 4
+    UNION ALL SELECT 5
+    UNION ALL SELECT 6
+    UNION ALL SELECT 7
 )
 SELECT
     distinct
@@ -225,26 +314,39 @@ WHERE
         OR (qr.source = 'complete' AND qt.OfferRewardText IS NOT NULL AND qt.OfferRewardText != '')
     )
 UNION ALL
-SELECT DISTINCT
+SELECT
+    distinct
     'gossip' as source,
     '' as quest,
-    IF(cdie.DisplaySexID = 0, bt.male_text, bt.female_text) AS text,
-    cdie.DisplayRaceID,
-    cdie.DisplaySexID,
-    ct.name,
-    c.id
-FROM creature c
-    JOIN creature_template ct ON c.id = ct.entry
-    JOIN gossip_menu gm ON ct.gossip_menu_id = gm.entry
-    JOIN npc_text nt ON gm.text_id = nt.ID
-    JOIN broadcast_text bt ON nt.BroadcastTextID0 = bt.entry
-    JOIN db_CreatureDisplayInfo cdi ON ct.display_id1 = cdi.ID
-    JOIN db_CreatureDisplayInfoExtra cdie ON cdi.ExtendedDisplayInfoID = cdie.ID
+    IF(creature_data.DisplaySexID = 0, bt.male_text, bt.female_text) AS text,
+    creature_data.DisplayRaceID,
+    creature_data.DisplaySexID,
+    creature_data.name,
+    creature_data.id
+FROM creature_data
+    CROSS JOIN gossip_levels
+    CROSS JOIN numbers
+    JOIN npc_text nt ON
+        CASE gossip_levels.level
+            WHEN 0 THEN gm_text_id
+            WHEN 1 THEN gm2_text_id
+            WHEN 2 THEN gm3_text_id
+        END = nt.ID
+    JOIN broadcast_text bt ON
+        CASE numbers.n
+            WHEN 0 THEN nt.BroadcastTextID0
+            WHEN 1 THEN nt.BroadcastTextID1
+            WHEN 2 THEN nt.BroadcastTextID2
+            WHEN 3 THEN nt.BroadcastTextID3
+            WHEN 4 THEN nt.BroadcastTextID4
+            WHEN 5 THEN nt.BroadcastTextID5
+            WHEN 6 THEN nt.BroadcastTextID6
+            WHEN 7 THEN nt.BroadcastTextID7
+        END = bt.entry
 WHERE
-    (
-        (cdie.DisplaySexID = 0 AND bt.male_text IS NOT NULL AND bt.male_text != '')
-        OR (cdie.DisplaySexID = 1 AND bt.female_text IS NOT NULL AND bt.female_text != '')
-    );
+    (DisplaySexID = 0 AND bt.male_text IS NOT NULL AND bt.male_text != '')
+    OR (DisplaySexID = 1 AND bt.female_text IS NOT NULL AND bt.female_text != '')
+;
     '''
 
     with db.cursor() as cursor:

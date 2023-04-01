@@ -1,4 +1,3 @@
-local _OG = _G
 setfenv(1, select(2, ...))
 
 local CLIENT_VERSION = GetBuildInfo()
@@ -12,6 +11,8 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
 
     GetGossipText = C_GossipInfo.GetText
+    GetNumGossipActiveQuests = C_GossipInfo.GetNumActiveQuests
+    GetNumGossipAvailableQuests = C_GossipInfo.GetNumAvailableQuests
 
     function VoiceOverUtils:getQuestLogScrollOffset()
         return HybridScrollFrame_GetOffset(QuestLogListScrollFrame)
@@ -21,7 +22,7 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
         return _G["QuestLogListScrollFrameButton" .. index]
     end
 
-    hooksecurefunc(VoiceOverEventHandler, "RegisterEvents", function()
+    hooksecurefunc(Addon, "OnInitialize", function()
         QuestLogListScrollFrame.update = QuestLog_Update
     end)
 

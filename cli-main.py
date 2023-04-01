@@ -11,6 +11,7 @@ def prompt_user(tts_processor):
 
     #map
     map_choices = [
+        (-1, "All (includes dungeons)"),
         (0, "Eastern Kingdoms"),
         (1, "Kalimdor"),
     ]
@@ -20,16 +21,19 @@ def prompt_user(tts_processor):
         values=map_choices,
     ).run()
 
-    if map_id == 0:
-        zone_selector = EasternKingdomsZoneSelector()
+    if map_id >= 0:
+        if map_id == 0:
+            zone_selector = EasternKingdomsZoneSelector()
+        else:
+            zone_selector = KalimdorZoneSelector()
 
+        #area
+        (xrange, yrange) = zone_selector.select_zone()
+
+        df = query_dataframe_for_area(xrange, yrange, map_id)
     else:
-        zone_selector = KalimdorZoneSelector()
-
-    #area
-    (xrange, yrange) = zone_selector.select_zone()
-
-    df = query_dataframe_for_area(xrange, yrange, map_id)
+        (xrange, yrange) = 'all', 'all'
+        df = query_dataframe_for_all_quests_and_gossip()
     
     # Get unique race-gender combinations
     unique_race_gender_combos = df[[
