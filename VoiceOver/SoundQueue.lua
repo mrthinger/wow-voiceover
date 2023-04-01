@@ -32,8 +32,16 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
         end
     end
 
-    -- Don't play gossip if there are already sounds in the queue
-    if soundData.questId == nil and #self.sounds > 0 then
+    -- Don't play gossip if there are quest sounds in the queue
+    local questSoundExists = false
+    for _, queuedSound in ipairs(self.sounds) do
+        if queuedSound.questId ~= nil then
+            questSoundExists = true
+            break
+        end
+    end
+
+    if soundData.questId == nil and questSoundExists then
         return
     end
 
@@ -55,7 +63,7 @@ function VoiceOverSoundQueue:playSound(soundData)
     if soundData.startCallback then
         soundData.startCallback()
     end
-    local nextSoundTimer = C_Timer.NewTimer(soundData.length + 1, function()
+    local nextSoundTimer = C_Timer.NewTimer(soundData.length + 0.55, function()
         self:removeSoundFromQueue(soundData)
     end)
 
