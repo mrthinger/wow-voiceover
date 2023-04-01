@@ -13,6 +13,7 @@ local defaults =
             ShowFrameBackground = 2,
             GossipFrequency = "OncePerQuestNpc",
             SoundChannel = "Master",
+            AutoToggleDialog = false
         },
     },
     char = {
@@ -111,6 +112,8 @@ function Addon:GOSSIP_SHOW()
         if gossipSeenForNPC then
             return
         end
+    elseif self.db.profile.main.GossipFrequency == "Never" then
+        return
     end
 
     -- Play the gossip sound

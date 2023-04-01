@@ -60,6 +60,11 @@ end
 function VoiceOverSoundQueue:playSound(soundData)
     local channel = Addon.db.profile.main.SoundChannel
     local willPlay, handle = PlaySoundFile(soundData.filePath, channel)
+
+    if Addon.db.profile.main.AutoToggleDialog then
+        SetCVar("Sound_EnableDialog", 0)
+    end
+
     if soundData.startCallback then
         soundData.startCallback()
     end
@@ -119,6 +124,10 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
             local nextSoundData = self.sounds[1]
             self:playSound(nextSoundData)
         end
+    end
+
+    if #self.sounds == 0 and Addon.db.profile.main.AutoToggleDialog then
+        SetCVar("Sound_EnableDialog", 1)
     end
 
     self.ui:updateSoundQueueDisplay()
