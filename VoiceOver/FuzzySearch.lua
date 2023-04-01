@@ -1,67 +1,69 @@
 setfenv(1, select(2, ...))
 
--- Calculate the Levenshtein distance between two strings
-local function levenshtein_distance(a, b)
-    local len_a, len_b = #a, #b
-    local matrix = {}
+-- -- Calculate the Levenshtein distance between two strings
+-- local function levenshtein_distance(a, b)
+--     local len_a, len_b = #a, #b
+--     local matrix = {}
 
-    for i = 0, len_a do
-        matrix[i] = {}
-        for j = 0, len_b do
-            matrix[i][j] = 0
+--     for i = 0, len_a do
+--         matrix[i] = {}
+--         for j = 0, len_b do
+--             matrix[i][j] = 0
+--         end
+--     end
+
+--     for i = 1, len_a do
+--         matrix[i][0] = i
+--     end
+
+--     for j = 1, len_b do
+--         matrix[0][j] = j
+--     end
+
+--     for i = 1, len_a do
+--         for j = 1, len_b do
+--             local cost = (a:sub(i, i) == b:sub(j, j)) and 0 or 1
+--             matrix[i][j] = math.min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j - 1] + cost)
+--         end
+--     end
+
+--     return matrix[len_a][len_b]
+-- end
+
+
+local function jaccard_similarity(a, b)
+    local tokens_a, tokens_b = {}, {}
+    for token in a:gmatch("%S+") do tokens_a[token] = true end
+    for token in b:gmatch("%S+") do tokens_b[token] = true end
+
+    local intersection, union = 0, 0
+    for token in pairs(tokens_a) do
+        union = union + 1
+        if tokens_b[token] then
+            intersection = intersection + 1
+        end
+    end
+    for token in pairs(tokens_b) do
+        if not tokens_a[token] then
+            union = union + 1
         end
     end
 
-    for i = 1, len_a do
-        matrix[i][0] = i
-    end
-
-    for j = 1, len_b do
-        matrix[0][j] = j
-    end
-
-    for i = 1, len_a do
-        for j = 1, len_b do
-            local cost = (a:sub(i, i) == b:sub(j, j)) and 0 or 1
-            matrix[i][j] = math.min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j - 1] + cost)
-        end
-    end
-
-    return matrix[len_a][len_b]
-end
-
--- Fuzzy search function returning the best result
-function FuzzySearchBest(query, arrayVar)
-    local best_result = nil
-    local min_distance = math.huge
-
-    for i, entry in ipairs(arrayVar) do
-        local distance = levenshtein_distance(query, entry)
-        if distance < min_distance then
-            min_distance = distance
-            best_result = {
-                index = i,
-                text = entry,
-                distance = distance
-            }
-        end
-    end
-
-    return best_result
+    return intersection / union
 end
 
 function FuzzySearchBestKeys(query, tableVar)
     local best_result = nil
-    local min_distance = math.huge
+    local max_similarity = -math.huge
 
     for entry, value in pairs(tableVar) do
-        local distance = levenshtein_distance(query, entry)
-        if distance < min_distance then
-            min_distance = distance
+        local similarity = jaccard_similarity(query, entry)
+        if similarity > max_similarity then
+            max_similarity = similarity
             best_result = {
                 value = value,
                 text = entry,
-                distance = distance
+                similarity = similarity
             }
         end
     end
