@@ -9,12 +9,15 @@ from tts_cli.env_vars import ELEVENLABS_API_KEY
 from tts_cli.consts import RACE_DICT, GENDER_DICT
 from tts_cli.length_table import write_sound_length_table_lua
 from slpp import slpp as lua
+            
+# eventual subsitution for gendered text (r'\1') is male, 2 is female
+# escapedText = re.sub(r'\$[Gg]\s?([^:;]+)\s?:\s?([^:;]+);', r'\1', escapedText)
 
 OUTPUT_FOLDER = 'generated'
 SOUND_OUTPUT_FOLDER = OUTPUT_FOLDER + "/sounds"
 
-replace_dict = {'$b': '\n', '$B': '\n', '$n': 'Adventurer', '$N': 'Adventurer',
-                '$C': 'adventurer', '$c': 'adventurer', '$R': 'person', '$r': 'person'}
+replace_dict = {'$b': '\n', '$B': '\n', '$n': 'adventurer', '$N': 'Adventurer',
+                '$C': 'Adventurer', '$c': 'adventurer', '$R': 'Traveler', '$r': 'traveler'}
 
 def get_hash(text):
     hash_object = hashlib.md5(text.encode())
@@ -28,7 +31,6 @@ def create_output_subdirs(subdir: str):
 class TTSProcessor:
     def __init__(self):
         self.voice_map = self.fetch_voice_map()
-        self.preprocessed = False
 
     def get_voice_map(self):
         return self.voice_map
@@ -90,9 +92,6 @@ class TTSProcessor:
 
 
     def preprocess_dataframe(self, df):
-        if self.preprocessed:
-            print("ALREADY PREPROCESSED A DATAFRAME. RUNNING THIS TWICE ON THE SAME DF CAUSES HASHING ISSUES. SKIPPING THIS CALL")
-            return
 
         df['race'] = df['DisplayRaceID'].map(RACE_DICT)
         df['gender'] = df['DisplaySexID'].map(GENDER_DICT)
@@ -102,12 +101,12 @@ class TTSProcessor:
         df['templateText_race_gender_hash'] = df['templateText_race_gender'].apply(
             get_hash)
 
+        df['cleanedText'] = df['text'].copy()
+
         for k, v in replace_dict.items():
-            df['text'] = df['text'].str.replace(k, v, regex=False)
+            df['cleanedText'] = df['cleanedText'].str.replace(k, v, regex=False)
 
-        df['text'] = df['text'].str.replace(r'<.*?>\s', '', regex=True)
-
-        self.preprocessed = True
+        df['cleanedText'] = df['cleanedText'].str.replace(r'<.*?>\s', '', regex=True)
         return df
 
 
@@ -115,17 +114,17 @@ class TTSProcessor:
         row = pd.Series(row_tuple[1:], index=row_tuple._fields[1:])
         voice_name = f'{row["race"]}-{row["gender"]}'
         custom_message = ""
-        if "$" in row["text"] or "<" in row["text"] or ">" in row["text"]:
-            custom_message = f'skipping due to invalid chars: {row["text"]}'
+        if "$" in row["cleanedText"] or "<" in row["cleanedText"] or ">" in row["cleanedText"]:
+            custom_message = f'skipping due to invalid chars: {row["cleanedText"]}'
         elif voice_name not in self.selected_voice_names:
             custom_message = f'skipping due to voice being unselected or unavailable: {voice_name}'
         elif row['source'] == "progress": # skip progress text (progress text is usually better left unread since its always played before quest completion)
             custom_message = f'skipping progress text: {row["quest"]}-{row["source"]}'
         elif not row['quest']: # if quest is missing its a gossip row
-            self.tts(row["text"], voice_name,
+            self.tts(row['cleanedText'], voice_name,
                 f'{row["templateText_race_gender_hash"]}.mp3', 'gossip')
         else:
-            self.tts(row["text"], voice_name,
+            self.tts(row['cleanedText'], voice_name,
                 f'{row["quest"]}-{row["source"]}.mp3', 'quests')
         return custom_message
 
@@ -165,7 +164,6 @@ class TTSProcessor:
                 return {}
         
         return gossip_table
-
     def write_gossip_file_lookups_table(self, df):
         output_file = OUTPUT_FOLDER + "/gossip_file_lookups.lua"
         gossip_table = self.read_gossip_file_lookups_table(output_file)
@@ -174,12 +172,12 @@ class TTSProcessor:
             if row['quest']:
                 continue
 
-            cleaned_text = re.sub(r'\W+', '', row['text'])
-
             if row['id'] not in gossip_table:
                 gossip_table[row['id']] = {}
 
-            gossip_table[row['id']][cleaned_text] = row['templateText_race_gender_hash']
+            escapedText = row['text'].replace('"', '\'').replace('\n','')
+            
+            gossip_table[row['id']][escapedText] = row['templateText_race_gender_hash']
 
         with open(output_file, "w") as f:
             f.write("select(2, ...).NPCToTextToTemplateHash = ")

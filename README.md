@@ -69,7 +69,7 @@ The dataframe schema before calling the `preprocess_dataframe` function consists
 |---------------|--------------------------------------------------------------|
 | `source`      | Indicates the type of interaction, can be 'accept', 'progress', 'complete', or 'gossip' |
 | `quest`       | The quest ID or empty string if it's a gossip interaction    |
-| `text`        | The text content of the interaction                           |
+| `text`        | The text template content of the interaction                           |
 | `DisplayRaceID` | The race ID of the NPC involved in the interaction          |
 | `DisplaySexID`  | The gender ID of the NPC involved in the interaction        |
 | `name`        | The name of the NPC involved in the interaction               |
@@ -86,3 +86,4 @@ The `preprocess_dataframe` function adds the following new fields to the datafra
 | `voice_name`             | The voice name, which is a combination of the race and gender fields |
 | `templateText_race_gender` | A combination of the text, race, and gender fields          |
 | `templateText_race_gender_hash` | A hash of the `templateText_race_gender` field          |
+| `cleanedText` | `text` after rendering template |
