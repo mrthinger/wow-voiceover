@@ -130,7 +130,7 @@ function QuestOverlayUI:updateQuestOverlayUI()
         local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID = GetQuestLogTitle(
             questIndex)
 
-        if not isHeader and VoiceOverUtils:questExist(questID) then
+        if not isHeader and DataModules:PrepareSound({ event = "accept", questId = questID }) then
             if not self.questPlayButtons[questID] then
                 self:createPlayButton(questID)
             end
