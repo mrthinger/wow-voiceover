@@ -229,7 +229,7 @@ function SoundQueueUI:initSettingsButton()
     self.settingsButton.menuFrame:SetPoint("BOTTOMLEFT")
     self.settingsButton.menuFrame:Hide()
 
-    local function MakeCheck(text, key, callback)
+    local function MakeCheck(text, key, callback, tooltipTitle, tooltipText)
         return
         {
             text = text,
@@ -243,6 +243,8 @@ function SoundQueueUI:initSettingsButton()
                     callback(checked)
                 end
             end,
+            tooltipText = tooltipText,
+            tooltipTitle = tooltipTitle
         }
     end
     local function MakeRadio(text, key, value, callback)
@@ -268,7 +270,7 @@ function SoundQueueUI:initSettingsButton()
                     SetCVar("Sound_EnableDialog", 1)
                 end
             end
-        end),
+        end, "How Auto-Mute NPCs Works", "While VoiceOver is playing, the dialog channel is muted"),
         {
             text = "Show Background",
             notCheckable = true,
@@ -309,6 +311,8 @@ function SoundQueueUI:initSettingsButton()
                 MakeRadio("Dialog", "SoundChannel", "Dialog"),
             }
         },
+        MakeCheck("Print Debug Messages", "DebugEnabled"),
+
     }
     UIDropDownMenu_Initialize(self.settingsButton.menuFrame, EasyMenu_Initialize, "MENU", nil, menu)
 

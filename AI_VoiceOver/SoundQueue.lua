@@ -18,7 +18,11 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
     DataModules:PrepareSound(soundData)
 
     if soundData.fileName == nil or not VoiceOverUtils:willSoundPlay(soundData) then
-        print("Sound does not exist for: ", soundData.title)
+
+        if Addon.db.profile.main.DebugEnabled then
+            print("Sound does not exist for: ", soundData.title)
+        end
+        
         if soundData.stopCallback then
             soundData.stopCallback()
         end
