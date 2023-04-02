@@ -1,6 +1,6 @@
 ## Interface: 30401
 ## Title: VoiceOver
-## Notes: Adds voiceovers to npcs. If you see a duplicate, this is the most up to date one. We renamed the folder to fix quest autoaccepting. Delete "VoiceOver" from your Addons folder to fix.
+## Notes: Adds voiceovers to npcs. If you see a duplicate, this is the most up to date one. We renamed the folder to fix quest autoaccepting. Delete "VoiceOver" from your Addons folder to remove the old version.
 ## Version: 0.3
 ## SavedVariables: VoiceOverDB
 
