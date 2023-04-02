@@ -264,7 +264,7 @@ function SoundQueueUI:initSettingsButton()
     {
         MakeCheck("Lock Frame", "LockFrame"),
         MakeCheck("Auto-Hide UI", "HideWhenIdle"),
-        MakeCheck("Mute NPCs When VoiceOver Is Playing (Auto-Mutes Dialog Channel)", "AutoToggleDialog", function(checked)
+        MakeCheck("Mute NPCs While VoiceOver Is Playing", "AutoToggleDialog", function(checked)
             if not checked then
                 if Addon.db.profile.main.AutoToggleDialog then
                     SetCVar("Sound_EnableDialog", 1)
