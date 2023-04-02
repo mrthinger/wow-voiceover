@@ -17,8 +17,12 @@ end
 function VoiceOverSoundQueue:addSoundToQueue(soundData)
     DataModules:PrepareSound(soundData)
 
-    if not VoiceOverUtils:willSoundPlay(soundData) or soundData.fileName == nil then
-        print("Sound does not exist for: ", soundData.title)
+    if soundData.fileName == nil or not VoiceOverUtils:willSoundPlay(soundData) then
+
+        if Addon.db.profile.main.DebugEnabled then
+            print("Sound does not exist for: ", soundData.title)
+        end
+        
         if soundData.stopCallback then
             soundData.stopCallback()
         end
@@ -60,6 +64,11 @@ end
 function VoiceOverSoundQueue:playSound(soundData)
     local channel = Addon.db.profile.main.SoundChannel
     local willPlay, handle = PlaySoundFile(soundData.filePath, channel)
+
+    if Addon.db.profile.main.AutoToggleDialog then
+        SetCVar("Sound_EnableDialog", 0)
+    end
+
     if soundData.startCallback then
         soundData.startCallback()
     end
@@ -119,6 +128,10 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
             local nextSoundData = self.sounds[1]
             self:playSound(nextSoundData)
         end
+    end
+
+    if #self.sounds == 0 and Addon.db.profile.main.AutoToggleDialog then
+        SetCVar("Sound_EnableDialog", 1)
     end
 
     self.ui:updateSoundQueueDisplay()

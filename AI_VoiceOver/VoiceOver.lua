@@ -13,6 +13,8 @@ local defaults =
             ShowFrameBackground = 2,
             GossipFrequency = "OncePerQuestNpc",
             SoundChannel = "Master",
+            AutoToggleDialog = false,
+            DebugEnabled = false,
         },
     },
     char = {
@@ -34,6 +36,25 @@ function Addon:OnInitialize()
     self:RegisterEvent("GOSSIP_SHOW")
     self:RegisterEvent("QUEST_COMPLETE")
     -- self:RegisterEvent("QUEST_PROGRESS")
+
+    StaticPopupDialogs["VOICEOVER_DUPLICATE_ADDON"] =
+    {
+        text =
+        "VoiceOver\n\nTo fix the quest autoaccept bugs we had to rename the addon folder. If you're seeing this popup, it means the old one wasn't automatically removed.\n\nYou can safely delete \"VoiceOver\" from your Addons folder. \"AI_VoiceOver\" is the new folder.",
+        button1 = OKAY,
+        timeout = 0,
+        whileDead = 1,
+        OnAccept = function()
+            self.db.profile.main.SeenDuplicateDialog = true
+        end,
+    };
+
+    if GetAddOnInfo("VoiceOver") then
+        DisableAddOn("VoiceOver")
+        if not self.db.profile.main.SeenDuplicateDialog then
+            StaticPopup_Show("VOICEOVER_DUPLICATE_ADDON")
+        end
+    end
 
     hooksecurefunc("AbandonQuest", function()
         local questName = GetAbandonQuestName()
@@ -111,6 +132,8 @@ function Addon:GOSSIP_SHOW()
         if gossipSeenForNPC then
             return
         end
+    elseif self.db.profile.main.GossipFrequency == "Never" then
+        return
     end
 
     -- Play the gossip sound

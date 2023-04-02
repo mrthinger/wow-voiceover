@@ -59,47 +59,47 @@ function SoundQueueUI:initDisplay()
         self.soundQueueFrame.currentAlpha = nil
     end)
     self.soundQueueFrame:HookScript("OnUpdate",
-    function(_, elapsed)                                             -- OnEnter/OnLeave cannot be used, because child elements steal mouse focus
-        local isHovered = MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or
-        self.soundQueueFrame.isResizing
-        local targetAlpha = 1
-        if self.db.ShowFrameBackground == 1 then
-            targetAlpha = 0
-        elseif self.db.ShowFrameBackground == 2 then
-            targetAlpha = isHovered and 1 or 0
-        elseif self.db.ShowFrameBackground == 3 then
-            targetAlpha = 1
-        end
+        function(_, elapsed) -- OnEnter/OnLeave cannot be used, because child elements steal mouse focus
+            local isHovered = MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or
+                self.soundQueueFrame.isResizing
+            local targetAlpha = 1
+            if self.db.ShowFrameBackground == 1 then
+                targetAlpha = 0
+            elseif self.db.ShowFrameBackground == 2 then
+                targetAlpha = isHovered and 1 or 0
+            elseif self.db.ShowFrameBackground == 3 then
+                targetAlpha = 1
+            end
 
-        local alpha = self.soundQueueFrame.currentAlpha or targetAlpha
-        alpha = alpha + (targetAlpha - alpha) * elapsed * 10
-        if math.abs(alpha - targetAlpha) < 0.001 then
-            alpha = targetAlpha
-        end
-        if self.soundQueueFrame.currentAlpha ~= alpha or self.soundQueueFrame.forceRefreshAlpha then
-            if alpha > 1 then alpha = 1 elseif alpha < 0 then alpha = 0 end
-            self.soundQueueFrame.currentAlpha = alpha
-            self.soundQueueFrame.forceRefreshAlpha = nil
-            self.soundQueueFrame:SetBackdropColor(0, 0, 0, alpha * 0.5)
-            self.soundQueueFrame:SetBackdropBorderColor(0xFF / 0xFF, 0xD2 / 0xFF, 0x00 / 0xFF, alpha * 1)
-            self.soundQueueMover:SetShown(alpha > 0 or self.soundQueueFrame.isDragging)
-            self.soundQueueMover:SetAlpha(alpha)
-            self.soundQueueMover:EnableMouse(alpha >= 0.75 and not self.db.LockFrame)
-            self.soundQueueResizer:SetShown((alpha > 0 or self.soundQueueFrame.isResizing) and not self.db.LockFrame)
-            self.soundQueueResizer:SetAlpha(alpha)
-            self.soundQueueResizer:EnableMouse(alpha >= 0.75 and not self.db.LockFrame)
-            self.settingsButton:SetShown(alpha > 0)
-            self.settingsButton:SetAlpha(alpha)
-            self.toggleButton:SetShown(isHovered or not self.db.HideWhenIdle)
-            self.toggleButton:SetAlpha(alpha)
-        end
+            local alpha = self.soundQueueFrame.currentAlpha or targetAlpha
+            alpha = alpha + (targetAlpha - alpha) * elapsed * 10
+            if math.abs(alpha - targetAlpha) < 0.001 then
+                alpha = targetAlpha
+            end
+            if self.soundQueueFrame.currentAlpha ~= alpha or self.soundQueueFrame.forceRefreshAlpha then
+                if alpha > 1 then alpha = 1 elseif alpha < 0 then alpha = 0 end
+                self.soundQueueFrame.currentAlpha = alpha
+                self.soundQueueFrame.forceRefreshAlpha = nil
+                self.soundQueueFrame:SetBackdropColor(0, 0, 0, alpha * 0.5)
+                self.soundQueueFrame:SetBackdropBorderColor(0xFF / 0xFF, 0xD2 / 0xFF, 0x00 / 0xFF, alpha * 1)
+                self.soundQueueMover:SetShown(alpha > 0 or self.soundQueueFrame.isDragging)
+                self.soundQueueMover:SetAlpha(alpha)
+                self.soundQueueMover:EnableMouse(alpha >= 0.75 and not self.db.LockFrame)
+                self.soundQueueResizer:SetShown((alpha > 0 or self.soundQueueFrame.isResizing) and not self.db.LockFrame)
+                self.soundQueueResizer:SetAlpha(alpha)
+                self.soundQueueResizer:EnableMouse(alpha >= 0.75 and not self.db.LockFrame)
+                self.settingsButton:SetShown(alpha > 0)
+                self.settingsButton:SetAlpha(alpha)
+                self.toggleButton:SetShown(isHovered or not self.db.HideWhenIdle)
+                self.toggleButton:SetAlpha(alpha)
+            end
 
-        -- Force show settings button on hover, otherwise it would be impossible to change settings
-        if self.db.ShowFrameBackground == 1 then
-            self.settingsButton:SetShown(isHovered)
-            self.settingsButton:SetAlpha(isHovered and 1 or 0)
-        end
-    end)
+            -- Force show settings button on hover, otherwise it would be impossible to change settings
+            if self.db.ShowFrameBackground == 1 then
+                self.settingsButton:SetShown(isHovered)
+                self.settingsButton:SetAlpha(isHovered and 1 or 0)
+            end
+        end)
 
     -- Create a button to drag the main frame
     self.soundQueueMover = CreateFrame("Button", nil, self.soundQueueFrame, "BackdropTemplate")
@@ -219,17 +219,17 @@ function SoundQueueUI:initSettingsButton()
     self.settingsButton:SetPoint("TOPRIGHT", -10, -5)
 
     self.settingsButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-    self.settingsButton:SetNormalTexture("Interface\\AddOns\\VoiceOver\\Textures\\SettingsButton")
-    self.settingsButton:SetPushedTexture("Interface\\AddOns\\VoiceOver\\Textures\\SettingsButton")
+    self.settingsButton:SetNormalTexture("Interface\\AddOns\\AI_VoiceOver\\Textures\\SettingsButton")
+    self.settingsButton:SetPushedTexture("Interface\\AddOns\\AI_VoiceOver\\Textures\\SettingsButton")
     self.settingsButton:GetPushedTexture():SetPoint("TOPLEFT", 2, -2)
     self.settingsButton:GetPushedTexture():SetPoint("BOTTOMRIGHT", -2, 2)
 
     self.settingsButton.menuFrame = CreateFrame("Frame", "VoiceOverSettingsMenu", self.settingsButton,
-    "UIDropDownMenuTemplate")
+        "UIDropDownMenuTemplate")
     self.settingsButton.menuFrame:SetPoint("BOTTOMLEFT")
     self.settingsButton.menuFrame:Hide()
 
-    local function MakeCheck(text, key, callback)
+    local function MakeCheck(text, key, callback, tooltipTitle, tooltipText)
         return
         {
             text = text,
@@ -239,7 +239,12 @@ function SoundQueueUI:initSettingsButton()
             func = function(_, _, _, checked)
                 self.db[key] = checked
                 self.refreshConfig()
+                if callback then
+                    callback(checked)
+                end
             end,
+            tooltipText = tooltipText,
+            tooltipTitle = tooltipTitle
         }
     end
     local function MakeRadio(text, key, value, callback)
@@ -258,7 +263,14 @@ function SoundQueueUI:initSettingsButton()
     local menu =
     {
         MakeCheck("Lock Frame", "LockFrame"),
-        MakeCheck("Auto-Hide UI During Silence", "HideWhenIdle"),
+        MakeCheck("Auto-Hide UI", "HideWhenIdle"),
+        MakeCheck("Mute NPCs While VoiceOver Is Playing", "AutoToggleDialog", function(checked)
+            if not checked then
+                if Addon.db.profile.main.AutoToggleDialog then
+                    SetCVar("Sound_EnableDialog", 1)
+                end
+            end
+        end, "How Auto-Mute NPCs Works", "While VoiceOver is playing, the dialog channel is muted"),
         {
             text = "Show Background",
             notCheckable = true,
@@ -281,6 +293,7 @@ function SoundQueueUI:initSettingsButton()
                 MakeRadio("Always Play", "GossipFrequency", "Always"),
                 MakeRadio("Play Once for Quest NPCs", "GossipFrequency", "OncePerQuestNpc"),
                 MakeRadio("Play Once for All NPCs", "GossipFrequency", "OncePerNpc"),
+                MakeRadio("Never Play", "GossipFrequency", "Never"),
             }
         },
 
@@ -298,6 +311,8 @@ function SoundQueueUI:initSettingsButton()
                 MakeRadio("Dialog", "SoundChannel", "Dialog"),
             }
         },
+        MakeCheck("Print Debug Messages", "DebugEnabled"),
+
     }
     UIDropDownMenu_Initialize(self.settingsButton.menuFrame, EasyMenu_Initialize, "MENU", nil, menu)
 

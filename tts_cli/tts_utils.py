@@ -11,7 +11,7 @@ from tts_cli.length_table import write_sound_length_table_lua
 from slpp import slpp as lua
             
 # eventual subsitution for gendered text (r'\1') is male, 2 is female
-# escapedText = re.sub(r'\$[Gg]\s?([^:;]+)\s?:\s?([^:;]+);', r'\1', escapedText)
+# escapedText = re.sub(r'\$[Gg]\s*([^:;]+?)\s*:\s*([^:;]+?)\s*;', r'\1', escapedText)
 
 OUTPUT_FOLDER = 'generated'
 SOUND_OUTPUT_FOLDER = OUTPUT_FOLDER + "/sounds"
@@ -91,15 +91,23 @@ class TTSProcessor:
         return result
 
 
-    def preprocess_dataframe(self, df):
 
+    def handle_gender_options(self, text):
+        pattern = re.compile(r'\$[Gg]\s*([^:;]+?)\s*:\s*([^:;]+?)\s*;')
+
+        male_text = pattern.sub(r'\1', text)
+        female_text = pattern.sub(r'\2', text)
+
+        return male_text, female_text
+
+    def preprocess_dataframe(self, df):
+        df = df.copy() # prevent mutation on original df for safety
         df['race'] = df['DisplayRaceID'].map(RACE_DICT)
         df['gender'] = df['DisplaySexID'].map(GENDER_DICT)
-        df['voice_name'] =  df['race'] + '-' + df['gender']
+        df['voice_name'] = df['race'] + '-' + df['gender']
 
         df['templateText_race_gender'] = df['text'] + df['race'] + df['gender']
-        df['templateText_race_gender_hash'] = df['templateText_race_gender'].apply(
-            get_hash)
+        df['templateText_race_gender_hash'] = df['templateText_race_gender'].apply(get_hash)
 
         df['cleanedText'] = df['text'].copy()
 
@@ -107,7 +115,29 @@ class TTSProcessor:
             df['cleanedText'] = df['cleanedText'].str.replace(k, v, regex=False)
 
         df['cleanedText'] = df['cleanedText'].str.replace(r'<.*?>\s', '', regex=True)
-        return df
+
+        df['player_gender'] = None
+        rows = []
+        for _, row in df.iterrows():
+            if re.search(r'\$[Gg]', row['cleanedText']):
+                male_text, female_text = self.handle_gender_options(row['cleanedText'])
+
+                row_male = row.copy()
+                row_male['cleanedText'] = male_text
+                row_male['player_gender'] = 'm'
+
+                row_female = row.copy()
+                row_female['cleanedText'] = female_text
+                row_female['player_gender'] = 'f'
+
+                rows.extend([row_male, row_female])
+            else:
+                rows.append(row)
+
+        new_df = pd.DataFrame(rows)
+        new_df.reset_index(drop=True, inplace=True)
+
+        return new_df
 
 
     def process_row(self, row_tuple):
@@ -120,13 +150,18 @@ class TTSProcessor:
             custom_message = f'skipping due to voice being unselected or unavailable: {voice_name}'
         elif row['source'] == "progress": # skip progress text (progress text is usually better left unread since its always played before quest completion)
             custom_message = f'skipping progress text: {row["quest"]}-{row["source"]}'
-        elif not row['quest']: # if quest is missing its a gossip row
-            self.tts(row['cleanedText'], voice_name,
-                f'{row["templateText_race_gender_hash"]}.mp3', 'gossip')
         else:
-            self.tts(row['cleanedText'], voice_name,
-                f'{row["quest"]}-{row["source"]}.mp3', 'quests')
+            self.tts_row(row, voice_name)
         return custom_message
+
+    def tts_row(self, row, voice_name):
+        tts_text = row['cleanedText']
+        file_name =  f'{row["quest"]}-{row["source"]}' if row['quest'] else f'{row["templateText_race_gender_hash"]}'
+        if row['player_gender'] is not None:
+            file_name = row['player_gender'] + '-'+ file_name
+        file_name = file_name + '.mp3'
+        subfolder = 'quests' if row['quest'] else 'gossip'
+        self.tts(tts_text, voice_name, file_name, subfolder)
 
     def create_output_dirs(self):
         create_output_subdirs('')
