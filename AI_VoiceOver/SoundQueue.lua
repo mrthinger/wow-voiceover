@@ -17,7 +17,7 @@ end
 function VoiceOverSoundQueue:addSoundToQueue(soundData)
     DataModules:PrepareSound(soundData)
 
-    if not VoiceOverUtils:willSoundPlay(soundData) or soundData.fileName == nil then
+    if soundData.fileName == nil or not VoiceOverUtils:willSoundPlay(soundData) then
         print("Sound does not exist for: ", soundData.title)
         if soundData.stopCallback then
             soundData.stopCallback()

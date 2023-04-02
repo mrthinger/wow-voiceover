@@ -127,6 +127,7 @@ args = parser.parse_args()
 def interactive_mode():
     tts_processor = TTSProcessor()
     df, selected_voice_names = prompt_user(tts_processor)
+    df = tts_processor.preprocess_dataframe(df)
     tts_processor.tts_dataframe(df, selected_voice_names)
 
 

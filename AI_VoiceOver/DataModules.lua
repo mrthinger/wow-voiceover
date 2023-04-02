@@ -4,9 +4,9 @@ local CURRENT_MODULE_VERSION = 1
 
 DataModules =
 {
-    registeredModules = { }, -- To keep track of which module names were already registered
-    availableModules = { }, -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
-    orderedModules = { }, -- To have a consistent ordering of modules (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
+    registeredModules = {}, -- To keep track of which module names were already registered
+    availableModules = {},  -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
+    orderedModules = {},    -- To have a consistent ordering of modules (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
 }
 
 function DataModules:Register(name, module)
@@ -56,7 +56,7 @@ function DataModules:EnumerateAddons()
         if GetAddOnMetadata(i, "X-VoiceOver-DataModule-Version") and GetAddOnEnableState(playerName, i) ~= 0 then
             local name = GetAddOnInfo(i)
             local mapsString = GetAddOnMetadata(i, "X-VoiceOver-DataModule-Maps")
-            local maps = { }
+            local maps = {}
             if mapsString then
                 for _, mapString in ipairs({ strsplit(",", mapsString) }) do
                     local map = tonumber(mapString)
@@ -92,7 +92,8 @@ function DataModules:GetNPCGossipTextHash(soundData)
             local npc_gossip_table = data[npcId]
             if npc_gossip_table then
                 for text, hash in pairs(npc_gossip_table) do
-                    text_entries[text] = text_entries[text] or hash -- Respect module priority, don't overwrite the entry if there is already one
+                    text_entries[text] = text_entries[text] or
+                        hash -- Respect module priority, don't overwrite the entry if there is already one
                 end
             end
         end
@@ -128,27 +129,50 @@ function DataModules:GetQuestIDByQuestTextHash(hash, npcId)
 end
 
 local getFileNameForEvent = setmetatable(
-{
-    accept = function(soundData) return format("%d-%s", soundData.questId, "accept") end,
-    progress = function(soundData) return format("%d-%s", soundData.questId, "progress") end,
-    complete = function(soundData) return format("%d-%s", soundData.questId, "complete") end,
-    gossip = function(soundData) return DataModules:GetNPCGossipTextHash(soundData) end,
-}, { __index = function(self, event) error(format([[Unhandled VoiceOver sound event "%s"]], event)) end })
+    {
+        accept = function(soundData) return format("%d-%s", soundData.questId, "accept") end,
+        progress = function(soundData) return format("%d-%s", soundData.questId, "progress") end,
+        complete = function(soundData) return format("%d-%s", soundData.questId, "complete") end,
+        gossip = function(soundData) return DataModules:GetNPCGossipTextHash(soundData) end,
+    }, { __index = function(self, event) error(format([[Unhandled VoiceOver sound event "%s"]], event)) end })
 
 function DataModules:PrepareSound(soundData)
     soundData.fileName = getFileNameForEvent[soundData.event](soundData)
+
+    if soundData.fileName == nil then
+        return false
+    end
+
     for _, module in self:GetModules() do
         local data = module.SoundLengthTable
         if data then
+            local playerGenderedFileName = DataModules:addPlayerGenderToFilename(soundData.fileName)
+            if data[playerGenderedFileName] then
+                soundData.fileName = playerGenderedFileName
+            end
             local length = data[soundData.fileName]
             if length then
-                soundData.filePath = format([[Interface\AddOns\%s\%s]], module.MODULE_NAME, module.GetSoundPath and module:GetSoundPath(soundData.fileName, soundData.event) or soundData.fileName)
+                soundData.filePath = format([[Interface\AddOns\%s\%s]], module.MODULE_NAME,
+                    module.GetSoundPath and module:GetSoundPath(soundData.fileName, soundData.event) or
+                    soundData.fileName)
                 soundData.length = length
                 soundData.module = module
                 return true
             end
         end
     end
-    soundData.fileName = "missingSound" -- Not sure why this is needed, the presence of the sound file can be checked by whether it has a sound length record
+    
     return false
+end
+
+function DataModules:addPlayerGenderToFilename(fileName)
+    local playerGender = UnitSex("player")
+
+    if playerGender == 2 then     -- male
+        return "m-" .. fileName
+    elseif playerGender == 3 then -- female
+        return "f-" .. fileName
+    else                          -- unknown or error
+        return fileName
+    end
 end
