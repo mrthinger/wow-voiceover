@@ -49,7 +49,7 @@ function Addon:OnInitialize()
         end,
     };
 
-    if GetAddOnInfo("VoiceOver") then
+    if select(5, GetAddOnInfo("VoiceOver")) ~= "MISSING" then
         DisableAddOn("VoiceOver")
         if not self.db.profile.main.SeenDuplicateDialog then
             StaticPopup_Show("VOICEOVER_DUPLICATE_ADDON")
