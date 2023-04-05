@@ -23,6 +23,17 @@ function QuestOverlayUI:createPlayButton(questID)
     self.questPlayButtons[questID] = playButton
 end
 
+function QuestOverlayUI:updateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
+    playButton:SetPoint("LEFT", normalText, "LEFT", 0, 0)
+
+    local formatedText = "|TInterface\\Common\\spacer:1:20|t" .. (normalText:GetText() or ""):trim()
+
+    normalText:SetText(formatedText)
+    QuestLogDummyText:SetText(formatedText)
+
+    questCheck:SetPoint("LEFT", normalText, "LEFT", normalText:GetStringWidth(), 0)
+end
+
 function QuestOverlayUI:updatePlayButtonTexture(questID, isPlaying)
     local texturePath = isPlaying and "Interface\\TIMEMANAGER\\ResetButton" or
     "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up"
@@ -60,14 +71,11 @@ end
 --     end)
 -- end
 
-function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame)
+function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame, normalText, questCheck)
     self.questPlayButtons[questID]:SetParent(questLogTitleFrame:GetParent())
     self.questPlayButtons[questID]:SetFrameLevel(questLogTitleFrame:GetFrameLevel() + 2)
 
-    self.questPlayButtons[questID]:SetPoint("LEFT", questLogTitleFrame.normalText, "LEFT", 0, 0)
-    questLogTitleFrame.normalText:SetText("|TInterface\\Common\\spacer:1:20|t" ..
-    (questLogTitleFrame.normalText:GetText() or ""):trim())
-    QuestLogTitleButton_Resize(questLogTitleFrame)
+    QuestOverlayUI:updateQuestTitle(questLogTitleFrame, self.questPlayButtons[questID], normalText, questCheck)
 
     local questOverlayUI = self
     self.questPlayButtons[questID]:SetScript("OnClick", function(self)
@@ -135,7 +143,10 @@ function QuestOverlayUI:updateQuestOverlayUI()
                 self:createPlayButton(questID)
             end
 
-            self:updatePlayButton(title, questID, questLogTitleFrame)
+            local normalText = VoiceOverUtils:getQuestLogTitleNormalText(i);
+            local questCheck = VoiceOverUtils:getQuestLogTitleCheck(i);
+
+            self:updatePlayButton(title, questID, questLogTitleFrame, normalText, questCheck)
             self.questPlayButtons[questID]:Show()
             local isPlaying = self.playingStates[questID] or false
             self:updatePlayButtonTexture(questID, isPlaying)
