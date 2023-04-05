@@ -32,34 +32,6 @@ function QuestOverlayUI:updatePlayButtonTexture(questID, isPlaying)
     end
 end
 
--- function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame)
---     local soundData = {
---         ["fileName"] = questID .. "-accept",
---         ["questId"] = questID,
---         ["title"] = soundTitle,
---         ["unitGuid"] = QuestlogNpcGuidTable[questID]
---     }
---     self.questPlayButtons[questID]:SetPoint("LEFT", questLogTitleFrame, "LEFT", 215, 0)
-
---     self.questPlayButtons[questID]:SetScript("OnClick", function()
---         local isPlaying = self.playingStates[questID] or false
---         print('clicked', questID, soundTitle, isPlaying, soundData.id)
-
---         if not isPlaying then
---             self.soundQueue:addSoundToQueue(soundData)
---             self.playingStates[questID] = true
---             self:updatePlayButtonTexture(questID, true)
-
---             soundData.stopCallback = function()
---                 self.playingStates[questID] = false
---                 self:updatePlayButtonTexture(questID, false)
---             end
---         else
---             self.soundQueue:removeSoundFromQueue(soundData)
---         end
---     end)
--- end
-
 function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame)
     self.questPlayButtons[questID]:SetParent(questLogTitleFrame:GetParent())
     self.questPlayButtons[questID]:SetFrameLevel(questLogTitleFrame:GetFrameLevel() + 2)
