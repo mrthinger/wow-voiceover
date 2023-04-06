@@ -2,6 +2,9 @@ setfenv(1, select(2, ...))
 SoundQueueUI = {}
 SoundQueueUI.__index = SoundQueueUI
 
+local VoiceOverOptions = VoiceOverLoader:ImportModule("VoiceOverOptions")
+local _LibDBIcon = LibStub("LibDBIcon-1.0") 
+
 local SPEAKER_ICON_SIZE = 16
 
 function SoundQueueUI:new(soundQueue)
@@ -19,6 +22,7 @@ function SoundQueueUI:new(soundQueue)
     self:initBookTexture()
     self:initControlButtons()
     self:initSettingsButton()
+    self:initMinimapButton()
 
     function self.refreshConfig()
         self.soundQueueFrame.forceRefreshAlpha = true
@@ -213,6 +217,58 @@ function SoundQueueUI:initControlButtons()
     end)
 end
 
+function SoundQueueUI:initMinimapButton()
+    _LibDBIcon:Register("VoiceOver", SoundQueueUI:createDataBrokerObj(), Addon.db.profile.minimap)
+    self.minimapConfigIcon = _LibDBIcon
+end
+
+function SoundQueueUI:createDataBrokerObj()
+	local NewDataObject = LibStub("LibDataBroker-1.1"):NewDataObject("VoiceOver", {
+        type = "data source",
+        text = "VoiceOver",
+        icon = "Interface\\AddOns\\AI_VoiceOver\\Textures\\MinimapButton",
+
+        OnClick = function (_, button)
+            -- Left click opens settings menu
+            if (button == "LeftButton") then
+                PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+                VoiceOverOptions:openConfigWindow()  
+                
+            -- Right click stops any playing audio
+            elseif (button == "RightButton") then
+                PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+                Addon.soundQueue:removeAllSoundsFromQueue()
+
+            -- Middle click pause/plays audio
+            elseif (button == "MiddleButton") then
+                PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+                if Addon.db.char.isPaused then
+                    Addon.soundQueue:resumeQueue()
+                else
+                    Addon.soundQueue:pauseQueue()
+                end
+                Addon.soundQueue.ui:updateToggleButtonTexture()
+            end
+        end,
+
+        OnTooltipShow = function (tooltip)
+            tooltip:AddLine("|cFFffd100VoiceOver|r", 1, 1, 1)
+            tooltip:AddLine("|cFFa6a6a6Left Click:|r Toggle Settings")
+            tooltip:AddLine("|cFFa6a6a6Middle Click:|r Play/Pause Audio")
+            tooltip:AddLine("|cFFa6a6a6Right Click:|r Stop VoiceOver Audio")
+        end,
+    });
+
+    self.LibDataBrokerObj = NewDataObject
+
+    return NewDataObject
+end
+
+function SoundQueueUI:toggleSettingsMenu()
+    PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+    VoiceOverOptions:openConfigWindow() 
+end
+
 function SoundQueueUI:initSettingsButton()
     self.settingsButton = CreateFrame("Button", nil, self.soundQueueFrame)
     self.settingsButton:SetSize(32, 32)
@@ -229,96 +285,9 @@ function SoundQueueUI:initSettingsButton()
     self.settingsButton.menuFrame:SetPoint("BOTTOMLEFT")
     self.settingsButton.menuFrame:Hide()
 
-    local function MakeCheck(text, key, callback, tooltipTitle, tooltipText)
-        return
-        {
-            text = text,
-            isNotRadio = true,
-            keepShownOnClick = true,
-            checked = function() return self.db[key] end,
-            func = function(_, _, _, checked)
-                self.db[key] = checked
-                self.refreshConfig()
-                if callback then
-                    callback(checked)
-                end
-            end,
-            tooltipText = tooltipText,
-            tooltipTitle = tooltipTitle
-        }
-    end
-    local function MakeRadio(text, key, value, callback)
-        return
-        {
-            text = text,
-            keepShownOnClick = true,
-            checked = function() return self.db[key] == value end,
-            func = function()
-                self.db[key] = value
-                self.refreshConfig()
-                UIDropDownMenu_Refresh(self.settingsButton.menuFrame)
-            end,
-        }
-    end
-    local menu =
-    {
-        MakeCheck("Lock Frame", "LockFrame"),
-        MakeCheck("Auto-Hide UI", "HideWhenIdle"),
-        MakeCheck("Mute NPCs While VoiceOver Is Playing", "AutoToggleDialog", function(checked)
-            if not checked then
-                if Addon.db.profile.main.AutoToggleDialog then
-                    SetCVar("Sound_EnableDialog", 1)
-                end
-            end
-        end, "How Auto-Mute NPCs Works", "While VoiceOver is playing, the dialog channel is muted"),
-        {
-            text = "Show Background",
-            notCheckable = true,
-            keepShownOnClick = true,
-            hasArrow = true,
-            menuList =
-            {
-                MakeRadio("Always", "ShowFrameBackground", 3),
-                MakeRadio("When Hovered", "ShowFrameBackground", 2),
-                MakeRadio("Never", "ShowFrameBackground", 1),
-            }
-        },
-        {
-            text = "Gossip Playback Frequency",
-            notCheckable = true,
-            keepShownOnClick = true,
-            hasArrow = true,
-            menuList =
-            {
-                MakeRadio("Always Play", "GossipFrequency", "Always"),
-                MakeRadio("Play Once for Quest NPCs", "GossipFrequency", "OncePerQuestNpc"),
-                MakeRadio("Play Once for All NPCs", "GossipFrequency", "OncePerNpc"),
-                MakeRadio("Never Play", "GossipFrequency", "Never"),
-            }
-        },
-
-        {
-            text = "Sound Playback Channel",
-            notCheckable = true,
-            keepShownOnClick = true,
-            hasArrow = true,
-            menuList =
-            {
-                MakeRadio("Master", "SoundChannel", "Master"),
-                MakeRadio("Sound", "SoundChannel", "Sound"),
-                MakeRadio("Music", "SoundChannel", "Music"),
-                MakeRadio("Ambience", "SoundChannel", "Ambience"),
-                MakeRadio("Dialog", "SoundChannel", "Dialog"),
-            }
-        },
-        MakeCheck("Print Debug Messages", "DebugEnabled"),
-
-    }
-    UIDropDownMenu_Initialize(self.settingsButton.menuFrame, EasyMenu_Initialize, "MENU", nil, menu)
-
     self.settingsButton:HookScript("OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-        ToggleDropDownMenu(1, nil, self.settingsButton.menuFrame, self.settingsButton, 0, 0, menu)
+        VoiceOverOptions:openConfigWindow() 
     end)
 end
 
@@ -414,6 +383,16 @@ end
 
 function SoundQueueUI:updateSoundQueueDisplay()
     self.soundQueueFrame:SetShown(#self.soundQueue.sounds > 0 or not self.db.HideWhenIdle)
+
+    -- Hide the talking NPC heads if the player has opted to not show them
+    if (self.db.HideNpcHead) then
+        self.npcHead:Hide()
+        self.bookTextureFrame:Hide()
+        for i = #self.soundQueue.sounds + 1, #self.soundQueueFrame.buttons do
+            self.soundQueueFrame.buttons[i]:Hide()
+        end
+        return
+    end
 
     local yPos = 0
     for i, soundData in ipairs(self.soundQueue.sounds) do
