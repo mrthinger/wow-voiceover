@@ -16,6 +16,7 @@ local defaults =
             AutoToggleDialog = false,
             DebugEnabled = false,
             HideNpcHead = false,
+            HideMinimapButton = false,
         },
     },
     char = {

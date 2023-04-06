@@ -16,9 +16,23 @@ function VoiceOverOptionsGeneral:new()
 					order = 1,
 					name = function() return "General Options"; end,
 				},
+				hideMinimapButton = {
+					type = "toggle",
+					order = 2,
+					name = function() return "Hide Minimap Button"; end,
+					get = function() return Addon.soundQueue.ui.db["HideMinimapButton"]; end,
+					set = function(info, value)
+						Addon.soundQueue.ui.db["HideMinimapButton"] = value;
+						if (value) then
+							LibStub("LibDBIcon-1.0"):Hide("VoiceOver")
+						else
+							LibStub("LibDBIcon-1.0"):Show("VoiceOver")
+						end
+					end,
+				},
 				frameOptions = {
 					type = "group",
-					order = 2,
+					order = 3,
 					inline = true,
 					name = function() return "Frame"; end,
 					args = {
@@ -76,7 +90,7 @@ function VoiceOverOptionsGeneral:new()
 				},
 				audio = {
 					type = "group",
-					order = 3,
+					order = 4,
 					inline = true,
 					name = function() return "Audio"; end,
 					args = {
@@ -142,7 +156,7 @@ function VoiceOverOptionsGeneral:new()
 				},
 				debug = {
 					type = "group",
-					order = 4,
+					order = 5,
 					inline = true,
 					name = function() return "Debugging Tools"; end,
 					args = {
