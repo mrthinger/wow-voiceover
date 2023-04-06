@@ -106,6 +106,12 @@ function VoiceOverSoundQueue:resumeQueue()
     end
 end
 
+function VoiceOverSoundQueue:removeAllSoundsFromQueue()
+    for index, queuedSound in ipairs(self.sounds) do
+        self:removeSoundFromQueue(queuedSound)
+    end
+end
+
 function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
     local removedIndex = nil
     for index, queuedSound in ipairs(self.sounds) do
