@@ -63,11 +63,11 @@ function SoundQueueUI:initDisplay()
             local isHovered = MouseIsOver(self.soundQueueFrame) or self.soundQueueFrame.isDragging or
                 self.soundQueueFrame.isResizing
             local targetAlpha = 1
-            if self.db.ShowFrameBackground == 1 then
+            if self.db.ShowFrameBackground == "Never" then
                 targetAlpha = 0
-            elseif self.db.ShowFrameBackground == 2 then
+            elseif self.db.ShowFrameBackground == "When Hovered" then
                 targetAlpha = isHovered and 1 or 0
-            elseif self.db.ShowFrameBackground == 3 then
+            elseif self.db.ShowFrameBackground == "Always" then
                 targetAlpha = 1
             end
 
@@ -95,7 +95,7 @@ function SoundQueueUI:initDisplay()
             end
 
             -- Force show settings button on hover, otherwise it would be impossible to change settings
-            if self.db.ShowFrameBackground == 1 then
+            if self.db.ShowFrameBackground == "Always" then
                 self.settingsButton:SetShown(isHovered)
                 self.settingsButton:SetAlpha(isHovered and 1 or 0)
             end

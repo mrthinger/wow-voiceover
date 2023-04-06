@@ -10,11 +10,12 @@ local defaults =
         {
             LockFrame = false,
             HideWhenIdle = false,
-            ShowFrameBackground = 2,
+            ShowFrameBackground = "When Hovered",
             GossipFrequency = "OncePerQuestNpc",
             SoundChannel = "Master",
             AutoToggleDialog = false,
             DebugEnabled = false,
+            HideNpcHead = false,
         },
     },
     char = {
