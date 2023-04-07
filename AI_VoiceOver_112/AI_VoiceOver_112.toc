@@ -1,0 +1,17 @@
+## Interface: 11200
+## Title: VoiceOver
+## Notes: Adds voiceovers to npcs.
+## Version: 0.3
+## SavedVariables: VoiceOverDB
+
+Libs\AceLibrary\AceLibrary.lua
+Libs\AceOO\AceOO-2.0.lua
+Libs\AceEvent\AceEvent-2.0.lua
+Libs\AceDB\AceDB-2.0.lua
+Libs\AceAddon\AceAddon-2.0.lua
+
+generated\quest_id_lookups.lua
+
+FuzzySearch.lua
+Utils.lua
+VoiceOver.lua

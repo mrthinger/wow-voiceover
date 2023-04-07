@@ -8,10 +8,9 @@ import re
 from tts_cli.env_vars import ELEVENLABS_API_KEY
 from tts_cli.consts import RACE_DICT, GENDER_DICT
 from tts_cli.length_table import write_sound_length_table_lua
+from tts_cli.utils import get_first_n_words
 from slpp import slpp as lua
-            
-# eventual subsitution for gendered text (r'\1') is male, 2 is female
-# escapedText = re.sub(r'\$[Gg]\s*([^:;]+?)\s*:\s*([^:;]+?)\s*;', r'\1', escapedText)
+
 
 OUTPUT_FOLDER = 'generated'
 SOUND_OUTPUT_FOLDER = OUTPUT_FOLDER + "/sounds"
@@ -253,6 +252,56 @@ class TTSProcessor:
             f.write(lua.encode(questlog_table))
             f.write("\n")
 
+    def read_quest_id_lookup(self, file_path):
+        quest_id_table = {}
+
+        if not os.path.exists(file_path):
+            return quest_id_table
+
+        with open(file_path, "r") as f:
+            contents = f.read()
+            try:
+                # Remove the assignment part of the Lua table and parse the table
+                contents = contents.replace("QuestIDLookup = ", "")
+                contents = contents.replace("select(2, ...).", "")
+                quest_id_table = lua.decode(contents)
+            except Exception as e:
+                print(f"Error while reading npcname_quest_lookups.lua: {e}")
+                return {}
+
+        return quest_id_table
+
+    def write_quest_id_lookup(self, df):
+        output_file = OUTPUT_FOLDER + "/quest_id_lookups.lua"
+        quest_id_table = self.read_quest_id_lookup(output_file)
+
+        quest_df = df[df['quest'] != '']
+
+        for i, row in tqdm(quest_df.iterrows()):
+            quest_source = row['source']
+            if quest_source == 'progress': # skipping progress text for now
+                continue
+
+            quest_id = row['quest']
+            quest_title = row['quest_title']
+            quest_text = get_first_n_words(row['text'], 15)
+            escaped_quest_text = quest_text.replace('"', '\'').replace('\n','')
+            escaped_quest_title = quest_title.replace('"', '\'').replace('\n','')
+
+            if quest_source not in quest_id_table:
+                quest_id_table[quest_source] = {}
+
+            if escaped_quest_title not in quest_id_table[quest_source]:
+                quest_id_table[quest_source][escaped_quest_title] = {}
+
+            if quest_text not in quest_id_table[quest_source][escaped_quest_title]:
+                quest_id_table[quest_source][escaped_quest_title][escaped_quest_text] = quest_id
+
+        with open(output_file, "w") as f:
+            f.write("select(2, ...).QuestIDLookup = ")
+            f.write(lua.encode(quest_id_table))
+            f.write("\n")
+
 
     def tts_dataframe(self, df, selected_voices):
         self.create_output_dirs()
@@ -264,7 +313,9 @@ class TTSProcessor:
         self.write_gossip_file_lookups_table(df)
         print("Added new entries to gossip_file_lookups.lua")
 
-     
+        self.write_quest_id_lookup(df)
+        print("Added new entries to quest_id_lookups.lua")
+
         self.write_questlog_npc_lookups_table(df)
         print("Added new entries to questlog_npc_lookups.lua")
         write_sound_length_table_lua(SOUND_OUTPUT_FOLDER, OUTPUT_FOLDER)
