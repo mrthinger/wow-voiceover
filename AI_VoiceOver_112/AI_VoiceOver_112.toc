@@ -11,6 +11,7 @@ Libs\AceDB\AceDB-2.0.lua
 Libs\AceAddon\AceAddon-2.0.lua
 
 generated\quest_id_lookups.lua
+generated\npc_name_gossip_file_lookups.lua
 
 FuzzySearch.lua
 Utils.lua

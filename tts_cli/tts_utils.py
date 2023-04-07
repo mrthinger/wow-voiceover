@@ -262,11 +262,10 @@ class TTSProcessor:
             contents = f.read()
             try:
                 # Remove the assignment part of the Lua table and parse the table
-                contents = contents.replace("QuestIDLookup = ", "")
-                contents = contents.replace("select(2, ...).", "")
+                contents = contents.replace("VoiceOver_QuestIDLookup = ", "")
                 quest_id_table = lua.decode(contents)
             except Exception as e:
-                print(f"Error while reading npcname_quest_lookups.lua: {e}")
+                print(f"Error while reading quest_id_lookups.lua: {e}")
                 return {}
 
         return quest_id_table
@@ -298,9 +297,50 @@ class TTSProcessor:
                 quest_id_table[quest_source][escaped_quest_title][escaped_quest_text] = quest_id
 
         with open(output_file, "w") as f:
-            f.write("select(2, ...).QuestIDLookup = ")
+            f.write("VoiceOver_QuestIDLookup = ")
             f.write(lua.encode(quest_id_table))
             f.write("\n")
+
+    def read_npc_name_gossip_file_lookups_table(self, file_path):
+        gossip_table = {}
+        
+        if not os.path.exists(file_path):
+            return gossip_table
+
+        with open(file_path, "r") as f:
+            contents = f.read()
+            try:
+                # Remove the assignment part of the Lua table and parse the table
+                contents = contents.replace("VoiceOver_GossipLookup = ", "")
+                contents = contents.replace("select(2, ...).", "")
+                gossip_table = lua.decode(contents)
+            except Exception as e:
+                print(f"Error while reading npc_name_gossip_file_lookups.lua: {e}")
+                return {}
+        
+        return gossip_table
+
+    def write_npc_name_gossip_file_lookups_table(self, df):
+        output_file = OUTPUT_FOLDER + "/npc_name_gossip_file_lookups.lua"
+        gossip_table = self.read_npc_name_gossip_file_lookups_table(output_file)
+
+        for i, row in tqdm(df.iterrows()):
+            if row['quest']:
+                continue
+            npc_name = row['name']
+
+            if npc_name not in gossip_table:
+                gossip_table[npc_name] = {}
+
+            escapedText = row['text'].replace('"', '\'').replace('\n','')
+            
+            gossip_table[npc_name][escapedText] = row['templateText_race_gender_hash']
+
+        with open(output_file, "w") as f:
+            f.write("VoiceOver_GossipLookup = ")
+            f.write(lua.encode(gossip_table))
+            f.write("\n")
+
 
 
     def tts_dataframe(self, df, selected_voices):
@@ -316,7 +356,11 @@ class TTSProcessor:
         self.write_quest_id_lookup(df)
         print("Added new entries to quest_id_lookups.lua")
 
+        self.write_npc_name_gossip_file_lookups_table(df)
+        print("Added new entries to npc_name_gossip_file_lookups.lua")
+
         self.write_questlog_npc_lookups_table(df)
         print("Added new entries to questlog_npc_lookups.lua")
+        
         write_sound_length_table_lua(SOUND_OUTPUT_FOLDER, OUTPUT_FOLDER)
         print("Updated sound_length_table.lua")

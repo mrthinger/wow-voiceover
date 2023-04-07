@@ -34,3 +34,14 @@ function VoiceOver_GetQuestID(source, title, text)
     VoiceOver_Log(best_result.text .. " -> " .. best_result.value .. " (" .. best_result.similarity .. ")")
     return best_result.value
 end
+
+function VoiceOver_GetNPCGossipTextHash(npcName, text)
+    local text_entries = VoiceOver_GossipLookup[npcName]
+    
+    if not text_entries then
+        return nil
+    end
+
+    local best_result = VoiceOver_FuzzySearchBestKeys(text, text_entries)
+    return best_result and best_result.value
+end
