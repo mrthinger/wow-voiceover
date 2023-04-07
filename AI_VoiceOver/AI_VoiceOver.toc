@@ -11,15 +11,8 @@ VoiceOverData_Vanilla\generated\sound_length_table.lua
 embeds.xml
 
 Environment.lua
-
-# Loader
-Modules\Utils\VoiceOverLoader.lua
-Modules\Utils\VoiceOverDebug.lua
-
-# Options
-Modules\Options\VoiceOverOptions.lua
-Modules\Options\GeneralTab\VoiceOverOptionsGeneral.lua
-
+Debug.lua
+Options.lua
 FuzzySearch.lua
 SoundQueue.lua
 SoundQueueUI.lua

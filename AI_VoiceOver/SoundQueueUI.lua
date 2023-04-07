@@ -2,7 +2,6 @@ setfenv(1, select(2, ...))
 SoundQueueUI = {}
 SoundQueueUI.__index = SoundQueueUI
 
-local VoiceOverOptions = VoiceOverLoader:ImportModule("VoiceOverOptions")
 local _LibDBIcon = LibStub("LibDBIcon-1.0") 
 
 local SPEAKER_ICON_SIZE = 16
@@ -99,7 +98,7 @@ function SoundQueueUI:initDisplay()
             end
 
             -- Force show settings button on hover, otherwise it would be impossible to change settings
-            if self.db.ShowFrameBackground == "Always" then
+            if self.db.ShowFrameBackground == "Never" then
                 self.settingsButton:SetShown(isHovered)
                 self.settingsButton:SetAlpha(isHovered and 1 or 0)
             end
@@ -217,6 +216,28 @@ function SoundQueueUI:initControlButtons()
     end)
 end
 
+function SoundQueueUI:initSettingsButton()
+    self.settingsButton = CreateFrame("Button", nil, self.soundQueueFrame)
+    self.settingsButton:SetSize(32, 32)
+    self.settingsButton:SetPoint("TOPRIGHT", -10, -5)
+
+    self.settingsButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    self.settingsButton:SetNormalTexture("Interface\\AddOns\\AI_VoiceOver\\Textures\\SettingsButton")
+    self.settingsButton:SetPushedTexture("Interface\\AddOns\\AI_VoiceOver\\Textures\\SettingsButton")
+    self.settingsButton:GetPushedTexture():SetPoint("TOPLEFT", 2, -2)
+    self.settingsButton:GetPushedTexture():SetPoint("BOTTOMRIGHT", -2, 2)
+
+    self.settingsButton.menuFrame = CreateFrame("Frame", "VoiceOverSettingsMenu", self.settingsButton,
+        "UIDropDownMenuTemplate")
+    self.settingsButton.menuFrame:SetPoint("BOTTOMLEFT")
+    self.settingsButton.menuFrame:Hide()
+
+    self.settingsButton:HookScript("OnClick", function()
+        PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+        VoiceOverOptions:openConfigWindow() 
+    end)
+end
+
 function SoundQueueUI:initMinimapButton()
     _LibDBIcon:Register("VoiceOver", SoundQueueUI:createDataBrokerObj(), Addon.db.profile.minimap)
     self.minimapConfigIcon = _LibDBIcon
@@ -267,28 +288,6 @@ end
 function SoundQueueUI:toggleSettingsMenu()
     PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
     VoiceOverOptions:openConfigWindow() 
-end
-
-function SoundQueueUI:initSettingsButton()
-    self.settingsButton = CreateFrame("Button", nil, self.soundQueueFrame)
-    self.settingsButton:SetSize(32, 32)
-    self.settingsButton:SetPoint("TOPRIGHT", -10, -5)
-
-    self.settingsButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-    self.settingsButton:SetNormalTexture("Interface\\AddOns\\AI_VoiceOver\\Textures\\SettingsButton")
-    self.settingsButton:SetPushedTexture("Interface\\AddOns\\AI_VoiceOver\\Textures\\SettingsButton")
-    self.settingsButton:GetPushedTexture():SetPoint("TOPLEFT", 2, -2)
-    self.settingsButton:GetPushedTexture():SetPoint("BOTTOMRIGHT", -2, 2)
-
-    self.settingsButton.menuFrame = CreateFrame("Frame", "VoiceOverSettingsMenu", self.settingsButton,
-        "UIDropDownMenuTemplate")
-    self.settingsButton.menuFrame:SetPoint("BOTTOMLEFT")
-    self.settingsButton.menuFrame:Hide()
-
-    self.settingsButton:HookScript("OnClick", function()
-        PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-        VoiceOverOptions:openConfigWindow() 
-    end)
 end
 
 function SoundQueueUI:updateToggleButtonTexture()
@@ -393,7 +392,7 @@ function SoundQueueUI:updateSoundQueueDisplay()
         end
         return
     end
-
+    
     local yPos = 0
     for i, soundData in ipairs(self.soundQueue.sounds) do
         local button = self.soundQueueFrame.buttons[i] or self:createButton(i)
