@@ -32,9 +32,9 @@ local VoiceOverOptionsGeneralTab =
 			type = "toggle",
 			order = 2,
 			name = function() return "Hide Minimap Button"; end,
-			get = function() return Addon.soundQueue.ui.db["HideMinimapButton"]; end,
+			get = function() return Addon.db.profile.main["HideMinimapButton"]; end,
 			set = function(info, value)
-				Addon.soundQueue.ui.db["HideMinimapButton"] = value;
+				Addon.db.profile.main["HideMinimapButton"] = value;
 				if (value) then
 					LibStub("LibDBIcon-1.0"):Hide("VoiceOver")
 				else
@@ -52,9 +52,9 @@ local VoiceOverOptionsGeneralTab =
 					type = "toggle",
 					order = 1,
 					name = function() return "Lock Frame"; end,
-					get = function () return Addon.soundQueue.ui.db["LockFrame"]; end,
+					get = function () return Addon.db.profile.main["LockFrame"]; end,
 					set = function(info, value)
-							Addon.soundQueue.ui.db["LockFrame"] = value
+							Addon.db.profile.main["LockFrame"] = value
 							Addon.soundQueue.ui:refreshConfig()
 						end,
 				},
@@ -63,9 +63,9 @@ local VoiceOverOptionsGeneralTab =
 					order = 2,
 					name = function() return "Auto-Hide UI"; end,
 					desc = function() return "Automatically hides the takling frame when no voice over is playing."; end,
-					get = function () return Addon.soundQueue.ui.db["HideWhenIdle"]; end,
+					get = function () return Addon.db.profile.main["HideWhenIdle"]; end,
 					set = function(info, value)
-						Addon.soundQueue.ui.db["HideWhenIdle"] = value
+						Addon.db.profile.main["HideWhenIdle"] = value
 						Addon.soundQueue.ui:refreshConfig()
 					end,
 				},
@@ -78,9 +78,9 @@ local VoiceOverOptionsGeneralTab =
 						["When Hovered"] = "When Hovered",
 						["Never"] = "Never",
 					},
-					get = function() return Addon.soundQueue.ui.db["ShowFrameBackground"]; end,
+					get = function() return Addon.db.profile.main["ShowFrameBackground"]; end,
 					set = function(info, value)
-						Addon.soundQueue.ui.db["ShowFrameBackground"] = value
+						Addon.db.profile.main["ShowFrameBackground"] = value
 						Addon.soundQueue.ui:refreshConfig()
 					end,
 				},
@@ -91,9 +91,9 @@ local VoiceOverOptionsGeneralTab =
 					desc = function() return "Talking NPC head will not appear when voice over audio is played.\n\n" ..
 						"(This might be useful when using other addons that replace the dialog experience, such as " ..
 						VoiceOverUtils:colorizeText("Immersion", VoiceOverUtils.ColorCodes.DefaultGold); end,
-					get = function () return Addon.soundQueue.ui.db["HideNpcHead"]; end,
+					get = function () return Addon.db.profile.main["HideNpcHead"]; end,
 					set = function(info, value)
-						Addon.soundQueue.ui.db["HideNpcHead"] = value
+						Addon.db.profile.main["HideNpcHead"] = value
 						Addon.soundQueue.ui:refreshConfig()
 						Addon.soundQueue.ui:updateSoundQueueDisplay()
 					end,
@@ -119,9 +119,9 @@ local VoiceOverOptionsGeneralTab =
 						["Music"] = "Music",
 						["Dialog"] = "Dialog",
 					},
-					get = function() return Addon.soundQueue.ui.db["SoundChannel"]; end,
+					get = function() return Addon.db.profile.main["SoundChannel"]; end,
 					set = function(info, value)
-							Addon.soundQueue.ui.db["SoundChannel"] = value
+							Addon.db.profile.main["SoundChannel"] = value
 							Addon.soundQueue.ui:refreshConfig()
 					end,
 				},
@@ -143,9 +143,9 @@ local VoiceOverOptionsGeneralTab =
 						["OncePerNpc"] = "Play Once for All NPCs",
 						["Never"] = "Never",
 					},
-					get = function() return Addon.soundQueue.ui.db["GossipFrequency"]; end,
+					get = function() return Addon.db.profile.main["GossipFrequency"]; end,
 					set = function(info, value)
-							Addon.soundQueue.ui.db["GossipFrequency"] = value
+							Addon.db.profile.main["GossipFrequency"] = value
 							Addon.soundQueue.ui:refreshConfig()
 					end,
 				},
@@ -155,9 +155,9 @@ local VoiceOverOptionsGeneralTab =
 					order = 4,
 					name = function() return "Mute NPCs While VoiceOver is Playing"; end,
 					desc = function() return "While VoiceOver is playing, the Dialog channel will be muted."; end,
-					get = function () return Addon.soundQueue.ui.db["AutoToggleDialog"]; end,
+					get = function () return Addon.db.profile.main["AutoToggleDialog"]; end,
 					set = function(info, value)
-							Addon.soundQueue.ui.db["AutoToggleDialog"] = value
+							Addon.db.profile.main["AutoToggleDialog"] = value
 							Addon.soundQueue.ui:refreshConfig()
 							if Addon.db.profile.main.AutoToggleDialog then
 								SetCVar("Sound_EnableDialog", 1)
@@ -177,9 +177,9 @@ local VoiceOverOptionsGeneralTab =
 					order = 1,
 					name = function() return "Enable Print Strings"; end,
 					desc = function() return "Prints some \"useful\" print strings to the chat window."; end,
-					get = function () return Addon.soundQueue.ui.db["DebugEnabled"]; end,
+					get = function () return Addon.db.profile.main["DebugEnabled"]; end,
 					set = function(info, value)
-						Addon.soundQueue.ui.db["DebugEnabled"] = value
+						Addon.db.profile.main["DebugEnabled"] = value
 					end,
 				},
 			}
