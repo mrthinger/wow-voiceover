@@ -136,3 +136,11 @@ function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
 
     self.ui:updateSoundQueueDisplay()
 end
+
+function VoiceOverSoundQueue:removeAllSoundsFromQueue()
+    for i = #self.sounds, 1, -1 do
+        if (self.sounds[i]) then
+            self:removeSoundFromQueue(self.sounds[i])
+        end
+    end
+end

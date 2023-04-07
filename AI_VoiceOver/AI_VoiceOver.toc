@@ -7,6 +7,8 @@
 embeds.xml
 
 Environment.lua
+Debug.lua
+Options.lua
 FuzzySearch.lua
 SoundQueue.lua
 SoundQueueUI.lua
