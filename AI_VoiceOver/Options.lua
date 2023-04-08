@@ -1,62 +1,74 @@
 setfenv(1, select(2, ...))
-VoiceOverOptions = 
-{
-    _private = 
-    {
-        initalized = false
-    }
-}
-VoiceOverOptions.__index = VoiceOverOptions
+Options = { }
 
----@class AceGUI-3.0
 local AceGUI = LibStub("AceGUI-3.0")
----@class AceConfigDialog
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 
 ------------------------------------------------------------
 -- Construction of the options table for AceConfigDialog --
 
 -- General Tab
-local VoiceOverOptionsGeneralTab = 
+local GeneralTab =
 {
-    name = function() return "General"; end,
+    name = "General",
     type = "group",
     order = 10,
     args = {
-        voiceOverHeader = {
+        Header = {
             type = "header",
             order = 1,
-            name = function() return "General Options"; end,
+            name = "General Options",
         },
-        hideMinimapButton = {
-            type = "toggle",
+        MinimapButton = {
+            type = "group",
             order = 2,
-            name = function() return "Hide Minimap Button"; end,
-            get = function() return Addon.db.profile.main["HideMinimapButton"]; end,
-            set = function(info, value)
-                Addon.db.profile.main["HideMinimapButton"] = value;
-                if (value) then
-                    LibStub("LibDBIcon-1.0"):Hide("VoiceOver")
-                else
-                    LibStub("LibDBIcon-1.0"):Show("VoiceOver")
-                end
-            end,
+            inline = true,
+            name = "Minimap Button",
+            args = {
+                Show = {
+                    type = "toggle",
+                    order = 1,
+                    name = "Show Minimap Button",
+                    get = function(info) return not Addon.db.profile.MinimapButton.hide end,
+                    set = function(info, value)
+                        Addon.db.profile.MinimapButton.hide = not value
+                        if value then
+                            LibStub("LibDBIcon-1.0"):Show("VoiceOver")
+                        else
+                            LibStub("LibDBIcon-1.0"):Hide("VoiceOver")
+                        end
+                    end,
+                },
+                Lock = {
+                    type = "toggle",
+                    order = 2,
+                    name = "Lock Position",
+                    get = function(info) return Addon.db.profile.MinimapButton.lock end,
+                    set = function(info, value)
+                        if value then
+                            LibStub("LibDBIcon-1.0"):Lock("VoiceOver")
+                        else
+                            LibStub("LibDBIcon-1.0"):Unlock("VoiceOver")
+                        end
+                    end,
+                },
+            }
         },
-        frameOptions = {
+        Frame = {
             type = "group",
             order = 3,
             inline = true,
-            name = function() return "Frame"; end,
+            name = "Frame",
             args = {
-                lockFrame = {
+                LockFrame = {
                     type = "toggle",
                     order = 1,
-                    name = function() return "Lock Frame"; end,
-                    get = function () return Addon.db.profile.main["LockFrame"]; end,
+                    name = "Lock Frame",
+                    get = function(info) return Addon.db.profile.main.LockFrame end,
                     set = function(info, value)
-                            Addon.db.profile.main["LockFrame"] = value
-                            Addon.soundQueue.ui:refreshConfig()
-                        end,
+                        Addon.db.profile.main.LockFrame = value
+                        Addon.soundQueue.ui:refreshConfig()
+                    end,
                 },
                 FrameScale = {
                     type = "range",
@@ -67,39 +79,39 @@ local VoiceOverOptionsGeneralTab =
                     softMax = 2,
                     bigStep = 0.05,
                     isPercent = true,
-                    get = function() return Addon.db.profile.main.FrameScale end,
+                    get = function(info) return Addon.db.profile.main.FrameScale end,
                     set = function(info, value)
                         Addon.db.profile.main.FrameScale = value
                         Addon.soundQueue.ui:refreshConfig()
                     end,
                 },
-                hideNpcHead = {
+                HideNpcHead = {
                     type = "toggle",
                     order = 4,
-                    name = function() return "Hide NPC Head"; end,
-                    desc = function() return "Talking NPC head will not appear when voice over audio is played.\n\n" ..
-                        "(This might be useful when using other addons that replace the dialog experience, such as " ..
-                        VoiceOverUtils:colorizeText("Immersion", NORMAL_FONT_COLOR_CODE); end,
-                    get = function () return Addon.db.profile.main["HideNpcHead"]; end,
+                    name = "Hide NPC Portrait",
+                    desc = "Talking NPC portrait will not appear when voice over audio is played.\n\n" ..
+                            "(This might be useful when using other addons that replace the dialog experience, such as " ..
+                            VoiceOverUtils:colorizeText("Immersion", NORMAL_FONT_COLOR_CODE),
+                    get = function(info) return Addon.db.profile.main.HideNpcHead end,
                     set = function(info, value)
-                        Addon.db.profile.main["HideNpcHead"] = value
+                        Addon.db.profile.main.HideNpcHead = value
                         Addon.soundQueue.ui:refreshConfig()
                     end,
                 },
             },
         },
-        audio = {
+        Audio = {
             type = "group",
             order = 4,
             inline = true,
-            name = function() return "Audio"; end,
+            name = "Audio",
             args = {
-                soundChannel = {
+                SoundChannel = {
                     type = "select",
                     width = 0.75,
                     order = 1,
-                    name = function() return "Sound Channel"; end,
-                    desc = function() return "Controls which sound channel VoiceOver will play in."; end,
+                    name = "Sound Channel",
+                    desc = "Controls which sound channel VoiceOver will play in.",
                     values = {
                         ["Master"] = "Master",
                         ["Sound"] = "Sound",
@@ -107,144 +119,106 @@ local VoiceOverOptionsGeneralTab =
                         ["Music"] = "Music",
                         ["Dialog"] = "Dialog",
                     },
-                    get = function() return Addon.db.profile.main["SoundChannel"]; end,
+                    get = function(info) return Addon.db.profile.main.SoundChannel end,
                     set = function(info, value)
-                            Addon.db.profile.main["SoundChannel"] = value
-                            Addon.soundQueue.ui:refreshConfig()
+                        Addon.db.profile.main.SoundChannel = value
+                        Addon.soundQueue.ui:refreshConfig()
                     end,
                 },
-                gm_spacer = {
-                    type = "description",
-                    order = 2,
-                    width = 0.1,
-                    name = function() return " "; end
-                },
-                gossipPlaybackFrequency = {
+                LineBreak = { type = "description", name = "", order = 2 },
+                GossipFrequency = {
                     type = "select",
-                    width = 1.25,
+                    width = 1.1,
                     order = 3,
-                    name = function() return "Gossip Playback Frequency"; end,
-                    desc = function() return "Controls how often VoiceOver will play dialog."; end,
+                    name = "NPC Greeting Playback Frequency",
+                    desc = "Controls how often VoiceOver will play NPC greeting dialog.",
                     values = {
                         ["Always"] = "Always",
                         ["OncePerQuestNpc"] = "Play Once for Quest NPCs",
                         ["OncePerNpc"] = "Play Once for All NPCs",
                         ["Never"] = "Never",
                     },
-                    get = function() return Addon.db.profile.main["GossipFrequency"]; end,
+                    get = function(info) return Addon.db.profile.main.GossipFrequency end,
                     set = function(info, value)
-                            Addon.db.profile.main["GossipFrequency"] = value
-                            Addon.soundQueue.ui:refreshConfig()
+                        Addon.db.profile.main.GossipFrequency = value
+                        Addon.soundQueue.ui:refreshConfig()
                     end,
                 },
-                muteWhileVoiceOverPlaying = {
+                AutoToggleDialog = {
                     type = "toggle",
-                    width = 1.75,
+                    width = 2.25,
                     order = 4,
-                    name = function() return "Mute NPCs While VoiceOver is Playing"; end,
-                    desc = function() return "While VoiceOver is playing, the Dialog channel will be muted."; end,
-                    get = function () return Addon.db.profile.main["AutoToggleDialog"]; end,
+                    name = "Mute Vocal NPCs Greetings While VoiceOver is Playing",
+                    desc = "While VoiceOver is playing, the Dialog channel will be muted.",
+                    get = function(info) return Addon.db.profile.main.AutoToggleDialog end,
                     set = function(info, value)
-                            Addon.db.profile.main["AutoToggleDialog"] = value
-                            Addon.soundQueue.ui:refreshConfig()
-                            if Addon.db.profile.main.AutoToggleDialog then
-                                SetCVar("Sound_EnableDialog", 1)
-                            end
-                        end,
+                        Addon.db.profile.main.AutoToggleDialog = value
+                        Addon.soundQueue.ui:refreshConfig()
+                        if Addon.db.profile.main.AutoToggleDialog then
+                            SetCVar("Sound_EnableDialog", 1)
+                        end
+                    end,
                 },
             }
         },
-        debug = {
+        Debug = {
             type = "group",
             order = 5,
             inline = true,
-            name = function() return "Debugging Tools"; end,
+            name = "Debugging Tools",
             args = {
-                hideNpcHead = {
+                DebugEnabled = {
                     type = "toggle",
                     order = 1,
-                    name = function() return "Enable Print Strings"; end,
-                    desc = function() return "Prints some \"useful\" print strings to the chat window."; end,
-                    get = function () return Addon.db.profile.main["DebugEnabled"]; end,
-                    set = function(info, value)
-                        Addon.db.profile.main["DebugEnabled"] = value
-                    end,
+                    width = 1.25,
+                    name = "Enable Debug Messages",
+                    desc = "Enables printing of some \"useful\" debug messages to the chat window.",
+                    get = function(info) return Addon.db.profile.main.DebugEnabled end,
+                    set = function(info, value) Addon.db.profile.main.DebugEnabled = value end,
                 },
             }
         }
     }
 }
+
+Options.table = {
+    name = "Voice Over",
+    type = "group",
+    childGroups = "tab",
+    args = {
+        General = GeneralTab,
+    }
+}
 ------------------------------------------------------------
 
-VoiceOverOptions.configFrame = nil
-
-VoiceOverOptions.tabs = 
-{
-    general = VoiceOverOptionsGeneralTab
-}
-
 ---Initialization of opens panel
-function  VoiceOverOptions:Initialize()
-    if (VoiceOverOptions._private.initalized) then
-        VoiceOverDebug:print("Already Initialized!", "Options")
-        return
-    end
-
+function Options:Initialize()
     -- Create options table
-    local function CreateOptionsTable()
-        return {
-            name = "Voice Over",
-            handler = Addon,
-            type = "group",
-            childGroups = "tab",
-            args = {
-                generalTab = VoiceOverOptions.tabs.general,
-            }
-        }
-    end
-
-    local optionsTable = CreateOptionsTable()
-    VoiceOverDebug:print("Registering options table...", "Options")
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("VoiceOver", optionsTable)
-    AceConfigDialog:AddToBlizOptions("VoiceOver", "VoiceOver");
-    VoiceOverDebug:print("Done!", "Options")
+    Debug:print("Registering options table...", "Options")
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("VoiceOver", self.table)
+    AceConfigDialog:AddToBlizOptions("VoiceOver", "VoiceOver")
+    Debug:print("Done!", "Options")
 
     -- Create the option frame
-    local configFrame = AceGUI:Create("Frame")
-    configFrame:Hide()
-    AceConfigDialog:SetDefaultSize("VoiceOver", 640, 780)
-    AceConfigDialog:Open("VoiceOver", configFrame)
-    configFrame:SetLayout("Fill")
-    configFrame:Hide()
-    configFrame:SetCallback("OnKeyDown", function(self, event, key)
-        VoiceOverDebug:print("Key Down!", "Options")
-        if (key == "ESCAPE") then
-            self:Hide()
-        end
-    end)
-    _G["VoiceOverOptions"] = configFrame.frame
+    ---@type AceGUIFrame
+    self.frame = AceGUI:Create("Frame")
+    self.frame:Hide()
+    --AceConfigDialog:SetDefaultSize("VoiceOver", 640, 780) -- Let it be auto-sized
+    AceConfigDialog:Open("VoiceOver", self.frame)
+    self.frame:SetLayout("Fill")
+    self.frame:Hide()
+
+    -- Enable the frame to be closed with Escape key
+    _G["VoiceOverOptions"] = self.frame.frame
     tinsert(UISpecialFrames, "VoiceOverOptions")
-    --configFrame:AddChild(container)
-
-    VoiceOverOptions.configFrame = configFrame
-    table.insert(UISpecialFrames, "VoiceOverConfigFrame")
-
-    VoiceOverOptions._private.initalized = true;
 end
 
-function VoiceOverOptions:hideFrame()
-    if (VoiceOverOptions.configFrame and VoiceOverOptions.configFrame:IsShown()) then
-        VoiceOverOptions.configFrame:Hide()
-    end
-end
-
-function VoiceOverOptions:openConfigWindow()
-    self.Initialize()
-
-    if (not VoiceOverOptions.configFrame:IsShown()) then
-        PlaySound(882)
-        VoiceOverOptions.configFrame:Show()
+function Options:openConfigWindow()
+    if self.frame:IsShown() then
+        PlaySound(SOUNDKIT.IG_MAINMENU_CLOSE)
+        self.frame:Hide()
     else
-        VoiceOverOptions.configFrame:Hide()
+        PlaySound(SOUNDKIT.IG_MAINMENU_OPEN)
+        self.frame:Show()
     end
 end

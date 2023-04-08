@@ -17,6 +17,7 @@ local defaults =
             HideMinimapButton = false,
             FrameScale = 1,
         },
+        MinimapButton = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
     },
     char = {
         isPaused = false,
@@ -32,6 +33,7 @@ function Addon:OnInitialize()
     self.questOverlayUI = QuestOverlayUI:new(self.soundQueue)
 
     DataModules:EnumerateAddons()
+    Options:Initialize()
 
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("GOSSIP_SHOW")

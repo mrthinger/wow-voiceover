@@ -7,12 +7,14 @@
 embeds.xml
 
 Environment.lua
+Utils.lua
+Debug.lua
+Options.lua
 FuzzySearch.lua
 SoundQueue.lua
 SoundQueueUI.lua
 QuestOverlayUI.lua
 DataModules.lua
-Utils.lua
 VoiceOver.lua
 
 Compatibility.lua
