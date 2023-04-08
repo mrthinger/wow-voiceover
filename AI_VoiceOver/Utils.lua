@@ -1,5 +1,22 @@
 setfenv(1, select(2, ...))
-VoiceOverUtils = {}
+VoiceOverUtils = 
+{
+    ColorCodes = 
+    {
+        -- Color Constants
+        Red = "|cFFff0000";
+        Grey = "|cFFa6a6a6";
+        Purple = "|cFFB900FF";
+        Blue = "|cB900FFFF";
+        LightBlue = "|cB900FFFF";
+        ReputationBlue = "|cFF8080ff";
+        Yellow = "|cFFffff00";
+        Orange = "|cFFFF6F22";
+        Green = "|cFF00ff00";
+        White = "|cFFffffff";
+        DefaultGold = "|cFFffd100" -- this is the default game font
+    }
+}
 
 function VoiceOverUtils:getIdFromGuid(guid)
     return guid and tonumber((select(6, strsplit("-", guid))))
@@ -29,19 +46,6 @@ function VoiceOverUtils:getQuestLogTitleFrame(index)
     return _G["QuestLogTitle" .. index]
 end
 
-function VoiceOverUtils:getQuestLogTitleNormalText(index)
-    return _G["QuestLogTitle" .. index .. "NormalText"]
-end
-
-function VoiceOverUtils:getQuestLogTitleCheck(index)
-    return _G["QuestLogTitle" .. index .. "Check"]
-end
-
-function VoiceOverUtils:getEmbeddedIcon(type, size)
-    if type == "accept" then
-        type = "Interface\\GossipFrame\\AvailableQuestIcon"
-    elseif type == "complete" then
-        type = "Interface\\GossipFrame\\ActiveQuestIcon"
-    end
-    return format("|T%s:%d|t", type, size or 0)
+function VoiceOverUtils:colorizeText(text, color)
+    return color .. text .. "|r"
 end

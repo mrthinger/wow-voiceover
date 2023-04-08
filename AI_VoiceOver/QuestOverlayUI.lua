@@ -56,8 +56,8 @@ function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame
             questOverlayUI.questPlayButtons[questID].soundData = {
                 event = "accept",
                 questId = questID,
-                title = format("%s %s", VoiceOverUtils:getEmbeddedIcon("accept"), soundTitle),
-                text = GetQuestLogQuestText(),
+                name = "Missing NPC Name",
+                title = soundTitle,
                 unitGuid = npcId and VoiceOverUtils:getGuidFromId(npcId)
             }
         end
@@ -86,13 +86,14 @@ end
 
 function QuestOverlayUI:updateQuestOverlayUI()
     local numEntries, numQuests = GetNumQuestLogEntries()
-    if numEntries == 0 then
-        return
-    end
 
     -- Hide all buttons in displayedButtons
     for _, button in pairs(self.displayedButtons) do
         button:Hide()
+    end
+
+    if numEntries == 0 then
+        return
     end
 
     -- Clear displayedButtons

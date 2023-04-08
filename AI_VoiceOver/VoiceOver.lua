@@ -9,12 +9,13 @@ local defaults =
         main =
         {
             LockFrame = false,
-            HideWhenIdle = false,
-            ShowFrameBackground = 2,
             GossipFrequency = "OncePerQuestNpc",
             SoundChannel = "Master",
             AutoToggleDialog = false,
             DebugEnabled = false,
+            HideNpcHead = false,
+            HideMinimapButton = false,
+            FrameScale = 1,
         },
     },
     char = {
@@ -83,14 +84,14 @@ function Addon:QUEST_DETAIL()
     local questId = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
-    local guid = UnitGUID("npc") or UnitGUID("target")
-    local targetName = UnitName("npc") or UnitName("target")
+    local guid = UnitGUID("npc")
+    local targetName = UnitName("npc")
     -- print("QUEST_DETAIL", questId, questTitle);
     local soundData = {
         event = "accept",
         questId = questId,
-        title = format("%s %s", VoiceOverUtils:getEmbeddedIcon("accept"), questTitle),
-        fullTitle = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("accept"), questTitle),
+        name = targetName,
+        title = questTitle,
         text = questText,
         unitGuid = guid
     }
@@ -101,14 +102,14 @@ function Addon:QUEST_COMPLETE()
     local questId = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetRewardText()
-    local guid = UnitGUID("npc") or UnitGUID("target")
-    local targetName = UnitName("npc") or UnitName("target")
+    local guid = UnitGUID("npc")
+    local targetName = UnitName("npc")
     -- print("QUEST_COMPLETE", questId, questTitle);
     local soundData = {
         event = "complete",
         questId = questId,
-        title = format("%s %s", VoiceOverUtils:getEmbeddedIcon("complete"), questTitle),
-        fullTitle = format("|cFFFFFFFF%s|r|n%s %s", targetName, VoiceOverUtils:getEmbeddedIcon("complete"), questTitle),
+        name = targetName,
+        title = questTitle,
         text = questText,
         unitGuid = guid
     }
@@ -116,8 +117,8 @@ function Addon:QUEST_COMPLETE()
 end
 
 function Addon:GOSSIP_SHOW()
-    local guid = UnitGUID("npc") or UnitGUID("target")
-    local targetName = UnitName("npc") or UnitName("target")
+    local guid = UnitGUID("npc")
+    local targetName = UnitName("npc")
     local npcKey = guid or "unknown"
 
     local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[npcKey]
@@ -140,7 +141,7 @@ function Addon:GOSSIP_SHOW()
     local gossipText = GetGossipText()
     local soundData = {
         event = "gossip",
-        title = targetName,
+        name = targetName,
         text = gossipText,
         unitGuid = guid,
         startCallback = function()
