@@ -26,6 +26,9 @@ local defaults =
     }
 }
 
+local lastGossipOptions
+local selectedGossipOption
+
 function Addon:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("VoiceOverDB", defaults)
     self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
@@ -38,6 +41,7 @@ function Addon:OnInitialize()
 
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("GOSSIP_SHOW")
+    self:RegisterEvent("GOSSIP_CLOSED")
     self:RegisterEvent("QUEST_COMPLETE")
     -- self:RegisterEvent("QUEST_PROGRESS")
 
@@ -77,6 +81,27 @@ function Addon:OnInitialize()
     hooksecurefunc("QuestLog_Update", function()
         self.questOverlayUI:updateQuestOverlayUI()
     end)
+
+    if C_GossipInfo and C_GossipInfo.SelectOption then
+        hooksecurefunc(C_GossipInfo, "SelectOption", function(optionID)
+            if lastGossipOptions then
+                for _, info in ipairs(lastGossipOptions) do
+                    if info.gossipOptionID == optionID then
+                        selectedGossipOption = info.name
+                        break
+                    end
+                end
+                lastGossipOptions = nil
+            end
+        end)
+    elseif SelectGossipOption then
+        hooksecurefunc("SelectGossipOption", function(index)
+            if lastGossipOptions then
+                selectedGossipOption = lastGossipOptions[1 + (index - 1) * 2]
+                lastGossipOptions = nil
+            end
+        end)
+    end
 end
 
 function Addon:RefreshConfig()
@@ -145,6 +170,7 @@ function Addon:GOSSIP_SHOW()
     local soundData = {
         event = "gossip",
         name = targetName,
+        title = selectedGossipOption and format([["%s"]], selectedGossipOption),
         text = gossipText,
         unitGuid = guid,
         startCallback = function()
@@ -152,4 +178,16 @@ function Addon:GOSSIP_SHOW()
         end
     }
     self.soundQueue:addSoundToQueue(soundData)
+
+    selectedGossipOption = nil
+    lastGossipOptions = nil
+    if C_GossipInfo and C_GossipInfo.GetOptions then
+        lastGossipOptions = C_GossipInfo.GetOptions()
+    elseif GetGossipOptions then
+        lastGossipOptions = { GetGossipOptions() }
+    end
+end
+
+function Addon:GOSSIP_CLOSED()
+    selectedGossipOption = nil
 end
