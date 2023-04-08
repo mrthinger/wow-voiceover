@@ -46,15 +46,6 @@ function VoiceOverUtils:getQuestLogTitleFrame(index)
     return _G["QuestLogTitle" .. index]
 end
 
-function VoiceOverUtils:getEmbeddedIcon(type, size)
-    if type == "accept" then
-        type = "Interface\\GossipFrame\\AvailableQuestIcon"
-    elseif type == "complete" then
-        type = "Interface\\GossipFrame\\ActiveQuestIcon"
-    end
-    return format("|T%s:%d|t", type, size or 0)
-end
-
 function VoiceOverUtils:colorizeText(text, color)
     return color .. text .. "|r"
 end

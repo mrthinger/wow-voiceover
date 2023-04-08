@@ -2,6 +2,19 @@ setfenv(1, select(2, ...))
 
 local CLIENT_VERSION = GetBuildInfo()
 
+function CreateFrame(frameType, name, parent, template, ...)
+    local frame = _G.CreateFrame(frameType, name, parent, template, ...)
+    if not frame.SetResizeBounds then
+        function frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
+            frame:SetMinResize(minWidth, minHeight)
+            if maxWidth and maxHeight then
+                frame:SetMaxResize(maxWidth, maxHeight)
+            end
+        end
+    end
+    return frame
+end
+
 if not WOW_PROJECT_ID and CLIENT_VERSION == "1.12.1" then
 
 elseif not WOW_PROJECT_ID and CLIENT_VERSION == "3.3.5" then
