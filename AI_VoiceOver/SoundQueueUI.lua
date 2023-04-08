@@ -466,14 +466,14 @@ function SoundQueueUI:createButton(i)
         else
             if isBeingPlayed then
                 local event = soundData.event
-                if event == "accept" or event == "progress" or event == "reward" then
+                if event == "accept" or event == "progress" or event == "complete" then
                     self.textWidget:SetTextColor(245 / 255, 204 / 255, 24 / 255)
                     if event == "accept" then
                         self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\SoundQueueBulletAccept]])
                     elseif event == "progress" then
                         self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\SoundQueueBulletProgress]])
-                    elseif event == "reward" then
-                        self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\SoundQueueBulletReward]])
+                    elseif event == "complete" then
+                        self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\SoundQueueBulletComplete]])
                     end
                 elseif event == "gossip" then
                     self.textWidget:SetTextColor(1, 1, 1)
