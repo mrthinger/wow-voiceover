@@ -74,13 +74,14 @@ end
 
 function QuestOverlayUI:updateQuestOverlayUI()
     local numEntries, numQuests = GetNumQuestLogEntries()
-    if numEntries == 0 then
-        return
-    end
 
     -- Hide all buttons in displayedButtons
     for _, button in pairs(self.displayedButtons) do
         button:Hide()
+    end
+
+    if numEntries == 0 then
+        return
     end
 
     -- Clear displayedButtons
