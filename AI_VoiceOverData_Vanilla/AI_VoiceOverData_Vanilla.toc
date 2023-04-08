@@ -1,8 +1,8 @@
-## Interface: 11403
+## Interface: 100000
 ## Title: VoiceOver Data - Vanilla
 ## Version: 0.1
 ## LoadOnDemand: 1
-## RequiredDeps: VoiceOver
+## RequiredDeps: AI_VoiceOver
 ## X-Part-Of: VoiceOver
 ## X-Child-Of: VoiceOver
 ## X-VoiceOver-DataModule-Version: 1

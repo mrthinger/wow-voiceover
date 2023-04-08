@@ -58,29 +58,18 @@ local VoiceOverOptionsGeneralTab =
 							Addon.soundQueue.ui:refreshConfig()
 						end,
 				},
-				autoHide = {
-					type = "toggle",
+				FrameScale = {
+					type = "range",
 					order = 2,
-					name = function() return "Auto-Hide UI"; end,
-					desc = function() return "Automatically hides the takling frame when no voice over is playing."; end,
-					get = function () return Addon.db.profile.main["HideWhenIdle"]; end,
+					name = "Frame Scale",
+					desc = "Automatically hides the takling frame when no voice over is playing.",
+					softMin = 0.5,
+					softMax = 2,
+					bigStep = 0.05,
+					isPercent = true,
+					get = function() return Addon.db.profile.main.FrameScale end,
 					set = function(info, value)
-						Addon.db.profile.main["HideWhenIdle"] = value
-						Addon.soundQueue.ui:refreshConfig()
-					end,
-				},
-				showBackground = {
-					type = "select",
-					order = 3,
-					name = function() return "Show Background"; end,
-					values = {
-						["Always"] = "Always",
-						["When Hovered"] = "When Hovered",
-						["Never"] = "Never",
-					},
-					get = function() return Addon.db.profile.main["ShowFrameBackground"]; end,
-					set = function(info, value)
-						Addon.db.profile.main["ShowFrameBackground"] = value
+						Addon.db.profile.main.FrameScale = value
 						Addon.soundQueue.ui:refreshConfig()
 					end,
 				},
@@ -95,7 +84,6 @@ local VoiceOverOptionsGeneralTab =
 					set = function(info, value)
 						Addon.db.profile.main["HideNpcHead"] = value
 						Addon.soundQueue.ui:refreshConfig()
-						Addon.soundQueue.ui:updateSoundQueueDisplay()
 					end,
 				},
 			},
