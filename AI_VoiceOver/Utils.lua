@@ -46,6 +46,14 @@ function VoiceOverUtils:getQuestLogTitleFrame(index)
     return _G["QuestLogTitle" .. index]
 end
 
+function VoiceOverUtils:getQuestLogTitleNormalText(index)
+    return _G["QuestLogTitle" .. index .. "NormalText"]
+end
+
+function VoiceOverUtils:getQuestLogTitleCheck(index)
+    return _G["QuestLogTitle" .. index .. "Check"]
+end
+
 function VoiceOverUtils:colorizeText(text, color)
     return color .. text .. "|r"
 end
