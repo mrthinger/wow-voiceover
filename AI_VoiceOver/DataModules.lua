@@ -1,59 +1,61 @@
 setfenv(1, select(2, ...))
 
 local CURRENT_MODULE_VERSION = 1
+local LOAD_ALL_MODULES = true
 
 DataModules =
 {
+    availableModules = {}, -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
+    availableModulesOrdered = {}, -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
     registeredModules = {}, -- To keep track of which module names were already registered
-    availableModules = {},  -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
-    orderedModules = {},    -- To have a consistent ordering of modules (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
+    registeredModulesOrdered = {}, -- To have a consistent ordering of modules (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
 }
 
+local function SortModules(a, b)
+    a = a.METADATA or a
+    b = b.METADATA or b
+    if a.ModulePriority ~= b.ModulePriority then
+        return a.ModulePriority > b.ModulePriority
+    end
+    return a.AddonName < b.AddonName
+end
+
 function DataModules:Register(name, module)
-    if self.registeredModules[name] then
-        error(format([[Module "%s" already registered]], name))
-        return
-    end
+    assert(not self.registeredModules[name], format([[Module "%s" already registered]], name))
 
-    local moduleVersion = tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Version"))
-    if not moduleVersion then
-        error(format([[Module "%s" is missing data format version]], name))
-        return
-    end
+    local metadata = assert(self.availableModules[name], format([[Module "%s" attempted to register but wasn't detected during addon enumeration]], name))
+    local moduleVersion = assert(tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Version")), format([[Module "%s" is missing data format version]], name))
 
-    if moduleVersion < CURRENT_MODULE_VERSION then
-        -- Ideally if module format would ever change - there should be fallbacks in place to handle outdated formats
-        error(format([[Module "%s" contains outdated data format (version %d, expected %d)]], name, moduleVersion, CURRENT_MODULE_VERSION))
-        return
-    end
+    -- Ideally if module format would ever change - there should be fallbacks in place to handle outdated formats
+    assert(moduleVersion == CURRENT_MODULE_VERSION, format([[Module "%s" contains outdated data format (version %d, expected %d)]], name, moduleVersion, CURRENT_MODULE_VERSION))
 
-    module.MODULE_NAME = name
-    module.MODULE_VERSION = moduleVersion
-    module.MODULE_PRIORITY = tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Priority")) or 0
-    module.MODULE_TITLE = GetAddOnMetadata(name, "Title") or name
-    module.CONTENT_VERSION = GetAddOnMetadata(name, "Version")
+    module.METADATA = metadata
 
     self.registeredModules[name] = module
-    table.insert(self.orderedModules, module)
+    table.insert(self.registeredModulesOrdered, module)
 
     -- Order the modules by priority (higher first) then by name (case-sensitive alphabetical)
     -- Modules with higher priority will be iterated through first, so one can create a module with "overrides" for data in other modules by simply giving it a higher priority
-    table.sort(self.orderedModules, function(a, b)
-        if a.MODULE_PRIORITY ~= b.MODULE_PRIORITY then
-            return a.MODULE_PRIORITY > b.MODULE_PRIORITY
-        end
-        return a.MODULE_NAME < b.MODULE_NAME
-    end)
+    table.sort(self.registeredModulesOrdered, SortModules)
+end
+
+function DataModules:GetModule(name)
+    return self.registeredModules[name]
 end
 
 function DataModules:GetModules()
-    return ipairs(self.orderedModules)
+    return ipairs(self.registeredModulesOrdered)
+end
+
+function DataModules:GetAvailableModules()
+    return ipairs(self.availableModulesOrdered)
 end
 
 function DataModules:EnumerateAddons()
     local playerName = UnitName("player")
     for i = 1, GetNumAddOns() do
-        if GetAddOnMetadata(i, "X-VoiceOver-DataModule-Version") and GetAddOnEnableState(playerName, i) ~= 0 then
+        local moduleVersion = tonumber(GetAddOnMetadata(i, "X-VoiceOver-DataModule-Version"))
+        if moduleVersion and GetAddOnEnableState(playerName, i) ~= 0 then
             local name = GetAddOnInfo(i)
             local mapsString = GetAddOnMetadata(i, "X-VoiceOver-DataModule-Maps")
             local maps = {}
@@ -65,18 +67,29 @@ function DataModules:EnumerateAddons()
                     end
                 end
             end
-            self.availableModules[name] =
+            local module =
             {
-                Name = name,
-                Maps = maps,
+                AddonName = name,
                 LoadOnDemand = IsAddOnLoadOnDemand(name),
+                ModuleVersion = moduleVersion,
+                ModulePriority = tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Priority")) or 0,
+                ContentVersion = GetAddOnMetadata(name, "Version"),
+                Title = GetAddOnMetadata(name, "Title") or name,
+                Maps = maps,
             }
+            self.availableModules[name] = module
+            table.insert(self.availableModulesOrdered, module)
 
             -- Maybe in the future we can load modules based on the map the player is in (select(8, GetInstanceInfo())), but for now - just load everything
-            if IsAddOnLoadOnDemand(name) then
+            if LOAD_ALL_MODULES and IsAddOnLoadOnDemand(name) then
                 LoadAddOn(name)
             end
         end
+    end
+
+    table.sort(self.availableModulesOrdered, SortModules)
+    for order, module in self:GetAvailableModules() do
+        Options:AddDataModule(module, order)
     end
 end
 
@@ -152,7 +165,7 @@ function DataModules:PrepareSound(soundData)
             end
             local length = data[soundData.fileName]
             if length then
-                soundData.filePath = format([[Interface\AddOns\%s\%s]], module.MODULE_NAME,
+                soundData.filePath = format([[Interface\AddOns\%s\%s]], module.METADATA.AddonName,
                     module.GetSoundPath and module:GetSoundPath(soundData.fileName, soundData.event) or
                     soundData.fileName)
                 soundData.length = length

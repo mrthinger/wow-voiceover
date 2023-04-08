@@ -219,15 +219,77 @@ local GeneralTab =
     }
 }
 
+local DataModulesTab =
+{
+    name = "Data Modules",
+    type = "group",
+    childGroups = "tree",
+    order = 20,
+    args = {}
+}
+
 Options.table = {
     name = "Voice Over",
     type = "group",
     childGroups = "tab",
     args = {
         General = GeneralTab,
+        DataModules = DataModulesTab,
     }
 }
 ------------------------------------------------------------
+
+function Options:AddDataModule(module, order)
+    local descriptionOrder = 0
+    local function GetNextOrder()
+        descriptionOrder = descriptionOrder + 1
+        return descriptionOrder
+    end
+    local function MakeDescription(header, text)
+        return { type = "description", order = GetNextOrder(), name = function() return format("%s%s: |r%s", NORMAL_FONT_COLOR_CODE, header, type(text) == "function" and text() or text) end }
+    end
+
+    local name, title, notes, loadable, reason  = GetAddOnInfo(module.AddonName)
+    if reason == "DEMAND_LOADED" then
+        reason = nil
+    end
+    DataModulesTab.args[module.AddonName] = {
+        name = function()
+            local isLoaded = DataModules:GetModule(module.AddonName)
+            return format("%d. %s%s%s|r",
+                order,
+                reason and RED_FONT_COLOR_CODE or isLoaded and HIGHLIGHT_FONT_COLOR_CODE or GRAY_FONT_COLOR_CODE,
+                module.Title:gsub("VoiceOver Data %- ", ""),
+                isLoaded and "" or " (not loaded)")
+        end,
+        type = "group",
+        order = order,
+        args = {
+            AddonName = MakeDescription("Addon Name", module.AddonName),
+            Title = MakeDescription("Title", module.Title),
+            ModuleVersion = MakeDescription("Module Data Format Version", module.ModuleVersion),
+            ModulePriority = MakeDescription("Module Priority", module.ModulePriority),
+            ContentVersion = MakeDescription("Content Version", module.ContentVersion),
+            LoadOnDemand = MakeDescription("Load on Demand", module.LoadOnDemand and "Yes" or "No"),
+            Loaded = MakeDescription("Is Loaded", function() return DataModules:GetModule(module.AddonName) and "Yes" or "No" end),
+            NotLoadableReason = {
+                type = "description",
+                order = GetNextOrder(),
+                name = format("%sReason: |r%s%s|r", NORMAL_FONT_COLOR_CODE, RED_FONT_COLOR_CODE, reason and _G["ADDON_"..reason] or ""),
+                hidden = not reason,
+            },
+            Load = {
+                type = "execute",
+                order = GetNextOrder(),
+                name = "Load",
+                hidden = function() return reason or not module.LoadOnDemand or DataModules:GetModule(module.AddonName) end,
+                func = function()
+                    LoadAddOn(module.AddonName)
+                end,
+            },
+        }
+    }
+end
 
 ---Initialization of opens panel
 function Options:Initialize()
