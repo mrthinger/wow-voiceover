@@ -16,7 +16,7 @@ local defaults =
             HideNpcHead = false,
             HideMinimapButton = false,
             FrameStrata = "HIGH",
-            FrameScale = 1,
+            FrameScale = 0.7,
         },
         MinimapButton = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
     },
