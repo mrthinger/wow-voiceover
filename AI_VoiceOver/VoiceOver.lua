@@ -15,6 +15,7 @@ local defaults =
             DebugEnabled = false,
             HideNpcHead = false,
             HideMinimapButton = false,
+            FrameStrata = "HIGH",
             FrameScale = 1,
         },
         MinimapButton = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)

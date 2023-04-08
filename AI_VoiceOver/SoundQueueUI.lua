@@ -104,7 +104,7 @@ function SoundQueueUI:initDisplay()
     self.frame:SetResizable(true)       -- Allow the frame to be resized
     self.frame:SetClampedToScreen(true) -- Prevent from being dragged off-screen
     self.frame:SetUserPlaced(true)
-    self.frame:SetFrameStrata("HIGH")
+    self.frame:SetFrameStrata(Addon.db.profile.main.FrameStrata)
 
     -- Create a background gradient behind the queue container
     self.frame.background = self.frame:CreateTexture(nil, "BACKGROUND")

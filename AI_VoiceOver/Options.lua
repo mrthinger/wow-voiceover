@@ -7,6 +7,16 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 ------------------------------------------------------------
 -- Construction of the options table for AceConfigDialog --
 
+-- Needed to preserve order (modern AceGUI has support for custom sorting of dropdown items, but old versions don't)
+local FRAME_STRATAS =
+{
+    "BACKGROUND",
+    "LOW",
+    "MEDIUM",
+    "HIGH",
+    "DIALOG",
+}
+
 -- General Tab
 local GeneralTab =
 {
@@ -79,9 +89,27 @@ local GeneralTab =
                         Addon.soundQueue.ui.frame:Reset()
                     end,
                 },
+                LineBreak1 = { type = "description", name = "", order = 3 },
+                FrameStrata = {
+                    type = "select",
+                    order = 4,
+                    name = "Frame Strata",
+                    values = FRAME_STRATAS,
+                    get = function(info)
+                        for k, v in ipairs(FRAME_STRATAS) do
+                            if v == Addon.db.profile.main.FrameStrata then
+                                return k;
+                            end
+                        end
+                    end,
+                    set = function(info, value)
+                        Addon.db.profile.main.FrameStrata = FRAME_STRATAS[value]
+                        Addon.soundQueue.ui.frame:SetFrameStrata(Addon.db.profile.main.FrameStrata)
+                    end,
+                },
                 FrameScale = {
                     type = "range",
-                    order = 3,
+                    order = 5,
                     name = "Frame Scale",
                     desc = "Automatically hides the takling frame when no voice over is playing.",
                     softMin = 0.5,
@@ -94,9 +122,10 @@ local GeneralTab =
                         Addon.soundQueue.ui:refreshConfig()
                     end,
                 },
+                LineBreak2 = { type = "description", name = "", order = 6 },
                 HideNpcHead = {
                     type = "toggle",
-                    order = 4,
+                    order = 7,
                     name = "Hide NPC Portrait",
                     desc = "Talking NPC portrait will not appear when voice over audio is played.\n\n" ..
                             "(This might be useful when using other addons that replace the dialog experience, such as " ..
