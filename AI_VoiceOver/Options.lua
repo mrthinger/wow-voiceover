@@ -70,9 +70,18 @@ local GeneralTab =
                         Addon.soundQueue.ui:refreshConfig()
                     end,
                 },
+                ResetFrame = {
+                    type = "execute",
+                    order = 2,
+                    name = "Reset Frame",
+                    desc = "Resets frame position and size back to default.",
+                    func = function(info)
+                        Addon.soundQueue.ui.frame:Reset()
+                    end,
+                },
                 FrameScale = {
                     type = "range",
-                    order = 2,
+                    order = 3,
                     name = "Frame Scale",
                     desc = "Automatically hides the takling frame when no voice over is playing.",
                     softMin = 0.5,

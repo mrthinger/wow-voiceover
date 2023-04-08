@@ -93,9 +93,13 @@ function SoundQueueUI:initDisplay()
     local soundQueueUI = self
 
     self.frame = CreateFrame("Frame", "VoiceOverFrame", UIParent, "BackdropTemplate")
-    self.frame:SetWidth(PORTRAIT_SIZE + FRAME_WIDTH_WITHOUT_PORTRAIT)
-    self.frame:SetHeight(PORTRAIT_SIZE)
-    self.frame:SetPoint("BOTTOM", 0, 200)
+    function self.frame:Reset()
+        self:SetWidth(PORTRAIT_SIZE + FRAME_WIDTH_WITHOUT_PORTRAIT)
+        self:SetHeight(PORTRAIT_SIZE)
+        self:ClearAllPoints()
+        self:SetPoint("BOTTOM", 0, 200)
+    end
+    self.frame:Reset()
     self.frame:SetMovable(true)         -- Allow the frame to be moved
     self.frame:SetResizable(true)       -- Allow the frame to be resized
     self.frame:SetClampedToScreen(true) -- Prevent from being dragged off-screen
