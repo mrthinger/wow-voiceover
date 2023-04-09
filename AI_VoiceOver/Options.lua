@@ -187,6 +187,18 @@ local GeneralTab =
                         Addon.soundQueue.ui:refreshConfig()
                     end,
                 },
+                HideFrame = {
+                    type = "toggle",
+                    order = 8,
+                    name = "Hide Entirely",
+                    desc = "Play voiceovers without ever displaying the frame.",
+                    disabled = false,
+                    get = function(info) return Addon.db.profile.main.HideFrame end,
+                    set = function(info, value)
+                        Addon.db.profile.main.HideFrame = value
+                        Addon.soundQueue.ui:refreshConfig()
+                    end,
+                },
             },
         },
         Audio = {

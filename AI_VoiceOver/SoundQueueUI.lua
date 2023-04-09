@@ -495,7 +495,7 @@ function SoundQueueUI:createButton(i)
 end
 
 function SoundQueueUI:updateSoundQueueDisplay()
-    self.frame:SetShown(#self.soundQueue.sounds > 0)
+    self.frame:SetShown(not Addon.db.profile.main.HideFrame and #self.soundQueue.sounds > 0)
 
     self:updatePauseDisplay()
 

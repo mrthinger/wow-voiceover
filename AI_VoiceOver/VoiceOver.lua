@@ -8,6 +8,7 @@ local defaults =
     {
         main =
         {
+            HideFrame = false,
             LockFrame = false,
             GossipFrequency = "OncePerQuestNpc",
             SoundChannel = "Master",
