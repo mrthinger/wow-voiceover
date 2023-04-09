@@ -123,6 +123,17 @@ function Addon:QUEST_DETAIL()
     local questText = GetQuestText()
     local guid = UnitGUID("npc")
     local targetName = UnitName("npc")
+
+    if UnitIsPlayer("npc") then
+        local npcId = DataModules:GetQuestLogNPCID(questId)
+        if npcId then
+            guid = VoiceOverUtils:getGuidFromId(npcId)
+            targetName = "Missing NPC Name" -- TODO: Get name from npc name database
+        else
+            return
+        end
+    end
+
     -- print("QUEST_DETAIL", questId, questTitle);
     local soundData = {
         event = "accept",
