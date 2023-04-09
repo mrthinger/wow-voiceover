@@ -35,6 +35,13 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
         return _G["QuestLogListScrollFrameButton" .. index]
     end
 
+    function QuestOverlayUI:updateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
+        playButton:SetPoint("LEFT", questLogTitleFrame.normalText, "LEFT", 0, 0)
+        questLogTitleFrame.normalText:SetText("|TInterface\\Common\\spacer:1:20|t" ..
+            (questLogTitleFrame.normalText:GetText() or ""):trim())
+        QuestLogTitleButton_Resize(questLogTitleFrame)
+    end
+
     hooksecurefunc(Addon, "OnInitialize", function()
         QuestLogListScrollFrame.update = QuestLog_Update
     end)
