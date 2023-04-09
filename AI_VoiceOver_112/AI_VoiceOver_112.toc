@@ -10,10 +10,13 @@ Libs\AceOO\AceOO-2.0.lua
 Libs\AceEvent\AceEvent-2.0.lua
 Libs\AceDB\AceDB-2.0.lua
 Libs\AceAddon\AceAddon-2.0.lua
+Libs\AceConsole\AceConsole-2.0.lua
 
 generated\quest_id_lookups.lua
 generated\npc_name_gossip_file_lookups.lua
+generated\sound_length_table.lua
 
 FuzzySearch.lua
 Utils.lua
+SoundQueue.lua
 VoiceOver.lua
