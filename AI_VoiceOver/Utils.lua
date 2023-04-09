@@ -1,22 +1,5 @@
 setfenv(1, select(2, ...))
-VoiceOverUtils = 
-{
-    ColorCodes = 
-    {
-        -- Color Constants
-        Red = "|cFFff0000";
-        Grey = "|cFFa6a6a6";
-        Purple = "|cFFB900FF";
-        Blue = "|cB900FFFF";
-        LightBlue = "|cB900FFFF";
-        ReputationBlue = "|cFF8080ff";
-        Yellow = "|cFFffff00";
-        Orange = "|cFFFF6F22";
-        Green = "|cFF00ff00";
-        White = "|cFFffffff";
-        DefaultGold = "|cFFffd100" -- this is the default game font
-    }
-}
+VoiceOverUtils = {}
 
 function VoiceOverUtils:getIdFromGuid(guid)
     return guid and tonumber((select(6, strsplit("-", guid))))
@@ -48,4 +31,26 @@ end
 
 function VoiceOverUtils:colorizeText(text, color)
     return color .. text .. "|r"
+end
+
+function VoiceOverUtils:Ordered(tbl, sorter)
+    local orderedIndex = {}
+    for key in pairs(tbl) do
+        table.insert(orderedIndex, key)
+    end
+    if sorter then
+        table.sort(orderedIndex, function(a, b)
+            return sorter(tbl[a], tbl[b], a, b)
+        end)
+    else
+        table.sort(orderedIndex)
+    end
+
+    local i = 0
+    local function orderedNext(t)
+        i = i + 1
+        return orderedIndex[i], t[orderedIndex[i]]
+    end
+
+    return orderedNext, tbl, nil
 end

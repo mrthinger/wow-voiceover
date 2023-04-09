@@ -8,6 +8,7 @@ local defaults =
     {
         main =
         {
+            HideFrame = false,
             LockFrame = false,
             GossipFrequency = "OncePerQuestNpc",
             SoundChannel = "Master",
@@ -15,7 +16,17 @@ local defaults =
             DebugEnabled = false,
             HideNpcHead = false,
             HideMinimapButton = false,
-            FrameScale = 1,
+            FrameStrata = "HIGH",
+            FrameScale = 0.7,
+        },
+        MinimapButton = {
+            LibDBIcon = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
+            Commands = {
+                -- References keys from Options.table.args.SlashCommands.args table
+                LeftButton = "Options",
+                MiddleButton = "PlayPause",
+                RightButton = "Clear",
+            }
         },
     },
     char = {
@@ -23,6 +34,9 @@ local defaults =
         hasSeenGossipForNPC = {},
     }
 }
+
+local lastGossipOptions
+local selectedGossipOption
 
 function Addon:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("VoiceOverDB", defaults)
@@ -32,9 +46,11 @@ function Addon:OnInitialize()
     self.questOverlayUI = QuestOverlayUI:new(self.soundQueue)
 
     DataModules:EnumerateAddons()
+    Options:Initialize()
 
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("GOSSIP_SHOW")
+    self:RegisterEvent("GOSSIP_CLOSED")
     self:RegisterEvent("QUEST_COMPLETE")
     -- self:RegisterEvent("QUEST_PROGRESS")
 
@@ -74,6 +90,27 @@ function Addon:OnInitialize()
     hooksecurefunc("QuestLog_Update", function()
         self.questOverlayUI:updateQuestOverlayUI()
     end)
+
+    if C_GossipInfo and C_GossipInfo.SelectOption then
+        hooksecurefunc(C_GossipInfo, "SelectOption", function(optionID)
+            if lastGossipOptions then
+                for _, info in ipairs(lastGossipOptions) do
+                    if info.gossipOptionID == optionID then
+                        selectedGossipOption = info.name
+                        break
+                    end
+                end
+                lastGossipOptions = nil
+            end
+        end)
+    elseif SelectGossipOption then
+        hooksecurefunc("SelectGossipOption", function(index)
+            if lastGossipOptions then
+                selectedGossipOption = lastGossipOptions[1 + (index - 1) * 2]
+                lastGossipOptions = nil
+            end
+        end)
+    end
 end
 
 function Addon:RefreshConfig()
@@ -86,6 +123,17 @@ function Addon:QUEST_DETAIL()
     local questText = GetQuestText()
     local guid = UnitGUID("npc")
     local targetName = UnitName("npc")
+
+    if UnitIsPlayer("npc") then
+        local npcId = DataModules:GetQuestLogNPCID(questId)
+        if npcId then
+            guid = VoiceOverUtils:getGuidFromId(npcId)
+            targetName = "Missing NPC Name" -- TODO: Get name from npc name database
+        else
+            return
+        end
+    end
+
     -- print("QUEST_DETAIL", questId, questTitle);
     local soundData = {
         event = "accept",
@@ -142,6 +190,7 @@ function Addon:GOSSIP_SHOW()
     local soundData = {
         event = "gossip",
         name = targetName,
+        title = selectedGossipOption and format([["%s"]], selectedGossipOption),
         text = gossipText,
         unitGuid = guid,
         startCallback = function()
@@ -149,4 +198,16 @@ function Addon:GOSSIP_SHOW()
         end
     }
     self.soundQueue:addSoundToQueue(soundData)
+
+    selectedGossipOption = nil
+    lastGossipOptions = nil
+    if C_GossipInfo and C_GossipInfo.GetOptions then
+        lastGossipOptions = C_GossipInfo.GetOptions()
+    elseif GetGossipOptions then
+        lastGossipOptions = { GetGossipOptions() }
+    end
+end
+
+function Addon:GOSSIP_CLOSED()
+    selectedGossipOption = nil
 end

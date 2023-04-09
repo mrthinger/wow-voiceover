@@ -44,7 +44,7 @@ function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame
             questOverlayUI.questPlayButtons[questID].soundData = {
                 event = "accept",
                 questId = questID,
-                name = "Missing NPC Name",
+                name = "Missing NPC Name", -- TODO: Get name from npc name database
                 title = soundTitle,
                 unitGuid = npcId and VoiceOverUtils:getGuidFromId(npcId)
             }

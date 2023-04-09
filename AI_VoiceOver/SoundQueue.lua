@@ -20,7 +20,7 @@ function VoiceOverSoundQueue:addSoundToQueue(soundData)
     if soundData.fileName == nil or not VoiceOverUtils:willSoundPlay(soundData) then
 
         if Addon.db.profile.main.DebugEnabled then
-            print("Sound does not exist for: ", soundData.title)
+            print("Sound does not exist for: ", soundData.title or soundData.name)
         end
         
         if soundData.stopCallback then
@@ -92,6 +92,8 @@ function VoiceOverSoundQueue:pauseQueue()
         StopSound(currentSound.handle)
         currentSound.nextSoundTimer:Cancel()
     end
+
+    self.ui:updatePauseDisplay()
 end
 
 function VoiceOverSoundQueue:resumeQueue()
@@ -103,6 +105,16 @@ function VoiceOverSoundQueue:resumeQueue()
     if #self.sounds > 0 then
         local currentSound = self.sounds[1]
         self:playSound(currentSound)
+    end
+
+    self.ui:updatePauseDisplay()
+end
+
+function VoiceOverSoundQueue:TogglePauseQueue()
+    if Addon.db.char.isPaused then
+        self:resumeQueue()
+    else
+        self:pauseQueue()
     end
 end
 
