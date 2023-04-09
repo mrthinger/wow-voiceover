@@ -186,7 +186,7 @@ local GeneralTab =
                     name = "Hide NPC Portrait",
                     desc = "Talking NPC portrait will not appear when voice over audio is played.\n\n" ..
                             VoiceOverUtils:colorizeText("This might be useful when using other addons that replace the dialog experience, such as " ..
-                                VoiceOverUtils:colorizeText("Immersion", NORMAL_FONT_COLOR_CODE) .. ".",
+                                VoiceOverUtils:colorizeText("Immersion", NORMAL_FONT_COLOR_CODE) .. ").",
                                 GRAY_FONT_COLOR_CODE),
                     get = function(info) return Addon.db.profile.main.HideNpcHead end,
                     set = function(info, value)
