@@ -82,7 +82,7 @@ function SoundQueueUI:new(soundQueue)
         self.frame:SetScale(Addon.db.profile.main.FrameScale)
 
         self:updateSoundQueueDisplay()
-        LibDBIcon:Refresh("VoiceOver", Addon.db.profile.MinimapButton)
+        LibDBIcon:Refresh("VoiceOver", Addon.db.profile.MinimapButton.LibDBIcon)
     end
 
     self.refreshConfig()
@@ -298,11 +298,7 @@ function SoundQueueUI:initPortrait()
     end)
     self.frame.portrait.pause:HookScript("OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-        if Addon.db.char.isPaused then
-            self.soundQueue:resumeQueue()
-        else
-            self.soundQueue:pauseQueue()
-        end
+        self.soundQueue:TogglePauseQueue()
     end)
 
     -- Create an overlay frame above the 3D model to contain the border and any other button that might be placed on the border (like the mover)
@@ -360,42 +356,44 @@ end
 
 function SoundQueueUI:initMinimapButton()
     local soundQueueUI = self
+    local buttons =
+    {
+        { "LeftButton", "Left Click" },
+        { "MiddleButton", "Middle Click" },
+        { "RightButton", "Right Click" },
+    }
     local object = LibDataBroker:NewDataObject("VoiceOver", {
         type = "launcher",
         text = "VoiceOver",
         icon = [[Interface\AddOns\AI_VoiceOver\Textures\MinimapButton]],
 
         OnClick = function(self, button)
-            -- Left click opens settings menu
-            if button == "LeftButton" then
-                PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-                Options:openConfigWindow()
-
-            -- Right click stops any playing audio
-            elseif button == "RightButton" then
-                PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-                soundQueueUI.soundQueue:removeAllSoundsFromQueue()
-
-            -- Middle click pause/plays audio
-            elseif button == "MiddleButton" then
-                PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-                if Addon.db.char.isPaused then
-                    soundQueueUI.soundQueue:resumeQueue()
-                else
-                    soundQueueUI.soundQueue:pauseQueue()
+            local command = Addon.db.profile.MinimapButton.Commands[button]
+            if command and command ~= "" then
+                local handler = Options.table.args.SlashCommands.args[command]
+                if handler and handler.func then
+                    PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+                    handler.func()
                 end
             end
         end,
 
         OnTooltipShow = function(tooltip)
             tooltip:SetText("VoiceOver")
-            tooltip:AddLine(GRAY_FONT_COLOR_CODE .. "Left Click:|r Toggle Settings")
-            tooltip:AddLine(GRAY_FONT_COLOR_CODE .. "Middle Click:|r Play/Pause Audio")
-            tooltip:AddLine(GRAY_FONT_COLOR_CODE .. "Right Click:|r Stop VoiceOver Audio")
+            for _, info in ipairs(buttons) do
+                local button, text = unpack(info)
+                local command = Addon.db.profile.MinimapButton.Commands[button]
+                if command and command ~= "" then
+                    local handler = Options.table.args.SlashCommands.args[command]
+                    if handler and handler.name then
+                        tooltip:AddLine(format("%s%s:|r %s", GRAY_FONT_COLOR_CODE, text, handler.name))
+                    end
+                end
+            end
             tooltip:Show()
         end,
     })
-    LibDBIcon:Register("VoiceOver", object, Addon.db.profile.MinimapButton)
+    LibDBIcon:Register("VoiceOver", object, Addon.db.profile.MinimapButton.LibDBIcon)
 end
 
 function SoundQueueUI:createButton(i)

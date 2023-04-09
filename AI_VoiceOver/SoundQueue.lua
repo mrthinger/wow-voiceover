@@ -110,6 +110,14 @@ function VoiceOverSoundQueue:resumeQueue()
     self.ui:updatePauseDisplay()
 end
 
+function VoiceOverSoundQueue:TogglePauseQueue()
+    if Addon.db.char.isPaused then
+        self:resumeQueue()
+    else
+        self:pauseQueue()
+    end
+end
+
 function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
     local removedIndex = nil
     for index, queuedSound in ipairs(self.sounds) do

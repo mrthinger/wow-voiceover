@@ -32,3 +32,25 @@ end
 function VoiceOverUtils:colorizeText(text, color)
     return color .. text .. "|r"
 end
+
+function VoiceOverUtils:Ordered(tbl, sorter)
+    local orderedIndex = {}
+    for key in pairs(tbl) do
+        table.insert(orderedIndex, key)
+    end
+    if sorter then
+        table.sort(orderedIndex, function(a, b)
+            return sorter(tbl[a], tbl[b], a, b)
+        end)
+    else
+        table.sort(orderedIndex)
+    end
+
+    local i = 0
+    local function orderedNext(t)
+        i = i + 1
+        return orderedIndex[i], t[orderedIndex[i]]
+    end
+
+    return orderedNext, tbl, nil
+end

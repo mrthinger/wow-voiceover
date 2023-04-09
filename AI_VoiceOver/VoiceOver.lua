@@ -18,7 +18,15 @@ local defaults =
             FrameStrata = "HIGH",
             FrameScale = 0.7,
         },
-        MinimapButton = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
+        MinimapButton = {
+            LibDBIcon = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
+            Commands = {
+                -- References keys from Options.table.args.SlashCommands.args table
+                LeftButton = "Options",
+                MiddleButton = "PlayPause",
+                RightButton = "Clear",
+            }
+        },
     },
     char = {
         isPaused = false,

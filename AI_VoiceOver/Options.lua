@@ -18,6 +18,31 @@ local FRAME_STRATAS =
     "DIALOG",
 }
 
+local slashCommandsHandler = {}
+function slashCommandsHandler:values(info)
+    if not self.indexToName then
+        self.indexToName = { "Nothing" }
+        self.indexToCommand = { "" }
+        self.commandToIndex = { [""] = 1 }
+        for command, handler in VoiceOverUtils:Ordered(Options.table.args.SlashCommands.args, function(a, b) return (a.order or 100) < (b.order or 100) end) do
+            if not handler.dropdownHidden then
+                table.insert(self.indexToName, handler.name)
+                table.insert(self.indexToCommand, command)
+                self.commandToIndex[command] = #self.indexToCommand
+            end
+        end
+    end
+    return self.indexToName
+end
+function slashCommandsHandler:get(info)
+    local config, key = info.arg()
+    return self.commandToIndex[config[key]]
+end
+function slashCommandsHandler:set(info, value)
+    local config, key = info.arg()
+    config[key] = self.indexToCommand[value]
+end
+
 -- General Tab
 local GeneralTab =
 {
@@ -25,11 +50,6 @@ local GeneralTab =
     type = "group",
     order = 10,
     args = {
-        Header = {
-            type = "header",
-            order = 1,
-            name = "General Options",
-        },
         MinimapButton = {
             type = "group",
             order = 2,
@@ -40,9 +60,9 @@ local GeneralTab =
                     type = "toggle",
                     order = 1,
                     name = "Show Minimap Button",
-                    get = function(info) return not Addon.db.profile.MinimapButton.hide end,
+                    get = function(info) return not Addon.db.profile.MinimapButton.LibDBIcon.hide end,
                     set = function(info, value)
-                        Addon.db.profile.MinimapButton.hide = not value
+                        Addon.db.profile.MinimapButton.LibDBIcon.hide = not value
                         if value then
                             LibStub("LibDBIcon-1.0"):Show("VoiceOver")
                         else
@@ -54,7 +74,7 @@ local GeneralTab =
                     type = "toggle",
                     order = 2,
                     name = "Lock Position",
-                    get = function(info) return Addon.db.profile.MinimapButton.lock end,
+                    get = function(info) return Addon.db.profile.MinimapButton.LibDBIcon.lock end,
                     set = function(info, value)
                         if value then
                             LibStub("LibDBIcon-1.0"):Lock("VoiceOver")
@@ -63,6 +83,36 @@ local GeneralTab =
                         end
                     end,
                 },
+                LineBreak1 = { type = "description", name = "", order = 3 },
+                MinimapButtons = {
+                    type = "group",
+                    inline = true,
+                    name = "",
+                    handler = slashCommandsHandler,
+                    args = {
+                        MinimapButtonLeftClick = {
+                            type = "select",
+                            order = 4,
+                            name = "Left Click",
+                            values = "values", get = "get", set = "set",
+                            arg = function(value) return Addon.db.profile.MinimapButton.Commands, "LeftButton" end,
+                        },
+                        MinimapButtonMiddleClick = {
+                            type = "select",
+                            order = 4,
+                            name = "Middle Click",
+                            values = "values", get = "get", set = "set",
+                            arg = function(value) return Addon.db.profile.MinimapButton.Commands, "MiddleButton" end,
+                        },
+                        MinimapButtonRightClick = {
+                            type = "select",
+                            order = 4,
+                            name = "Right Click",
+                            values = "values", get = "get", set = "set",
+                            arg = function(value) return Addon.db.profile.MinimapButton.Commands, "RightButton" end,
+                        }
+                    }
+                }
             }
         },
         Frame = {
@@ -236,26 +286,39 @@ local SlashCommands = {
     inline = true,
     dialogHidden = true,
     args = {
-        Play = {
+        PlayPause = {
             type = "execute",
             order = 1,
-            name = "Resume the playback of voiceovers",
+            name = "Play/Pause Audio",
+            desc = "Play/Pause voiceovers",
+            hidden = true,
+            func = function(info)
+                Addon.soundQueue:TogglePauseQueue()
+            end
+        },
+        Play = {
+            type = "execute",
+            order = 2,
+            name = "Play Audio",
+            desc = "Resume the playback of voiceovers",
             func = function(info)
                 Addon.soundQueue:resumeQueue()
             end
         },
         Pause = {
             type = "execute",
-            order = 2,
-            name = "Pause the playback of voiceovers",
+            order = 3,
+            name = "Pause Audio",
+            desc = "Pause the playback of voiceovers",
             func = function(info)
                 Addon.soundQueue:pauseQueue()
             end
         },
         Skip = {
             type = "execute",
-            order = 3,
-            name = "Skip the currently played voiceover",
+            order = 4,
+            name = "Skip Line",
+            desc = "Skip the currently played voiceover",
             func = function(info)
                 local soundData = Addon.soundQueue.sounds[1]
                 if soundData then
@@ -265,10 +328,20 @@ local SlashCommands = {
         },
         Clear = {
             type = "execute",
-            order = 4,
-            name = "Stops the playback and clears the voiceovers queue",
+            order = 5,
+            name = "Clear Queue",
+            desc = "Stop the playback and clears the voiceovers queue",
             func = function(info)
                 Addon.soundQueue:removeAllSoundsFromQueue()
+            end
+        },
+        Options = {
+            type = "execute",
+            order = 100,
+            name = "Open Options",
+            desc = "Open the options panel",
+            func = function(info)
+                Options:openConfigWindow()
             end
         },
     }
@@ -353,9 +426,7 @@ function Options:Initialize()
     -- Create the option frame
     ---@type AceGUIFrame
     self.frame = AceGUI:Create("Frame")
-    self.frame:Hide()
     --AceConfigDialog:SetDefaultSize("VoiceOver", 640, 780) -- Let it be auto-sized
-    AceConfigDialog:Open("VoiceOver", self.frame)
     self.frame:SetLayout("Fill")
     self.frame:Hide()
 
@@ -370,6 +441,6 @@ function Options:openConfigWindow()
         self.frame:Hide()
     else
         PlaySound(SOUNDKIT.IG_MAINMENU_OPEN)
-        self.frame:Show()
+        AceConfigDialog:Open("VoiceOver", self.frame)
     end
 end
