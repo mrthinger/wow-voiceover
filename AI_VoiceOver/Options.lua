@@ -94,6 +94,7 @@ local GeneralTab =
                             type = "select",
                             order = 4,
                             name = "Left Click",
+                            desc = "Action performed by left-clicking the minimap button.",
                             values = "values", get = "get", set = "set",
                             arg = function(value) return Addon.db.profile.MinimapButton.Commands, "LeftButton" end,
                         },
@@ -101,6 +102,7 @@ local GeneralTab =
                             type = "select",
                             order = 4,
                             name = "Middle Click",
+                            desc = "Action performed by middle-clicking the minimap button.",
                             values = "values", get = "get", set = "set",
                             arg = function(value) return Addon.db.profile.MinimapButton.Commands, "MiddleButton" end,
                         },
@@ -108,6 +110,7 @@ local GeneralTab =
                             type = "select",
                             order = 4,
                             name = "Right Click",
+                            desc = "Action performed by right-clicking the minimap button.",
                             values = "values", get = "get", set = "set",
                             arg = function(value) return Addon.db.profile.MinimapButton.Commands, "RightButton" end,
                         }
@@ -120,11 +123,13 @@ local GeneralTab =
             order = 3,
             inline = true,
             name = "Frame",
+            disabled = function(info) return Addon.db.profile.main.HideFrame end,
             args = {
                 LockFrame = {
                     type = "toggle",
                     order = 1,
                     name = "Lock Frame",
+                    desc = "Prevent the frame from being moved or resized.",
                     get = function(info) return Addon.db.profile.main.LockFrame end,
                     set = function(info, value)
                         Addon.db.profile.main.LockFrame = value
@@ -143,8 +148,9 @@ local GeneralTab =
                 LineBreak1 = { type = "description", name = "", order = 3 },
                 FrameStrata = {
                     type = "select",
-                    order = 4,
+                    order = 5,
                     name = "Frame Strata",
+                    desc = "Changes the \"depth\" of the frame, determining which other frames will it overlap or fall behind.",
                     values = FRAME_STRATAS,
                     get = function(info)
                         for k, v in ipairs(FRAME_STRATAS) do
@@ -160,7 +166,7 @@ local GeneralTab =
                 },
                 FrameScale = {
                     type = "range",
-                    order = 5,
+                    order = 4,
                     name = "Frame Scale",
                     desc = "Automatically hides the takling frame when no voice over is playing.",
                     softMin = 0.5,
@@ -180,7 +186,8 @@ local GeneralTab =
                     name = "Hide NPC Portrait",
                     desc = "Talking NPC portrait will not appear when voice over audio is played.\n\n" ..
                             VoiceOverUtils:colorizeText("This might be useful when using other addons that replace the dialog experience, such as " ..
-                                VoiceOverUtils:colorizeText("Immersion", NORMAL_FONT_COLOR_CODE), GRAY_FONT_COLOR_CODE),
+                                VoiceOverUtils:colorizeText("Immersion", NORMAL_FONT_COLOR_CODE) .. ".",
+                                GRAY_FONT_COLOR_CODE),
                     get = function(info) return Addon.db.profile.main.HideNpcHead end,
                     set = function(info, value)
                         Addon.db.profile.main.HideNpcHead = value
@@ -439,6 +446,7 @@ function Options:Initialize()
     ---@type AceGUIFrame
     self.frame = AceGUI:Create("Frame")
     --AceConfigDialog:SetDefaultSize("VoiceOver", 640, 780) -- Let it be auto-sized
+    AceConfigDialog:Open("VoiceOver", self.frame)
     self.frame:SetLayout("Fill")
     self.frame:Hide()
 
@@ -453,6 +461,7 @@ function Options:openConfigWindow()
         self.frame:Hide()
     else
         PlaySound(SOUNDKIT.IG_MAINMENU_OPEN)
+        self.frame:Show()
         AceConfigDialog:Open("VoiceOver", self.frame)
     end
 end
