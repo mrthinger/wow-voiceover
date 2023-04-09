@@ -40,6 +40,7 @@ function SoundQueueUI:new(soundQueue)
     self.animtimer = time()
 
     self:initDisplay()
+    self:initPortraitLine()
     self:initPortrait()
     self:initMover()
     self:initMinimapButton()
@@ -53,8 +54,9 @@ function SoundQueueUI:new(soundQueue)
 
             self.frame.portraitLine:Show()
             self.frame.portrait:Hide()
+            self.frame.miniPause:Show()
 
-            self.frame.container:SetPoint("LEFT", 15, 0)
+            self.frame.container:SetPoint("LEFT", 20, 0)
             self.frame.background:SetPoint("TOPLEFT")
             self.frame.background:SetPoint("BOTTOMLEFT")
 
@@ -68,6 +70,7 @@ function SoundQueueUI:new(soundQueue)
 
             self.frame.portraitLine:Hide()
             self.frame.portrait:Show()
+            self.frame.miniPause:Hide()
 
             self.frame.container:SetPoint("LEFT", self.frame.portrait, "RIGHT", 15, 0)
             self.frame.background:SetPoint("TOPLEFT", self.frame.portrait, "TOPRIGHT")
@@ -193,15 +196,57 @@ function SoundQueueUI:initDisplay()
     end)
 end
 
-function SoundQueueUI:initPortrait()
-    local soundQueueUI = self
-
+function SoundQueueUI:initPortraitLine()
     -- Create a vertical line that will be visible instead of the portrait if the player turned the portrait off
     self.frame.portraitLine = self.frame:CreateTexture(nil, "BORDER")
     self.frame.portraitLine:SetPoint("TOPLEFT", -PORTRAIT_LINE_WIDTH / 2 + 2, PORTRAIT_BORDER_OUTSET)
     self.frame.portraitLine:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMLEFT", PORTRAIT_LINE_WIDTH / 2 + 2, -PORTRAIT_BORDER_OUTSET)
     self.frame.portraitLine:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\PortraitFrameAtlas]])
     self.frame.portraitLine:SetTexCoord(456 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE, 0, PORTRAIT_ATLAS_BORDER_SIZE / PORTRAIT_ATLAS_SIZE)
+
+    -- Create a play/pause button on the vertical line that will be visible if the player turned the portrait off
+    self.frame.miniPause = CreateFrame("Button", nil, self.frame)
+    self.frame.miniPause:SetSize(26, 26)
+    --self.frame.miniPause:SetPoint("CENTER", self.frame.container.name, "LEFT", -20 + 2, 0) -- Use this to make the button be placed next to NPC name instead of always centered
+    self.frame.miniPause:SetPoint("CENTER", self.frame.container, "LEFT", -20 + 2, 0)
+    self.frame.miniPause:SetNormalTexture([[Interface\AddOns\AI_VoiceOver\Textures\PortraitFrameAtlas]])
+    self.frame.miniPause:GetNormalTexture():ClearAllPoints()
+    self.frame.miniPause:GetNormalTexture():SetPoint("CENTER")
+    self.frame.miniPause:GetNormalTexture():SetSize(14, 14)
+    self.frame.miniPause:SetPushedTexture([[Interface\AddOns\AI_VoiceOver\Textures\PortraitFrameAtlas]])
+    self.frame.miniPause:GetPushedTexture():ClearAllPoints()
+    self.frame.miniPause:GetPushedTexture():SetPoint("CENTER")
+    self.frame.miniPause:GetPushedTexture():SetSize(12, 12)
+    self.frame.miniPause.background = self.frame.miniPause:CreateTexture(nil, "BACKGROUND")
+    self.frame.miniPause.background:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\SettingsButton]])
+    self.frame.miniPause.background:SetPoint("CENTER")
+    self.frame.miniPause.background:SetSize(32, 32)
+    function self.frame.miniPause:Update()
+        if Addon.db.char.isPaused then
+            self:GetNormalTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetPushedTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0.75)
+        else
+            self:GetNormalTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetPushedTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0.75)
+        end
+    end
+    self.frame.miniPause:Update()
+    self.frame.miniPause:HookScript("OnEnter", function(self)
+        self:GetNormalTexture():SetAlpha(1)
+    end)
+    self.frame.miniPause:HookScript("OnLeave", function(self)
+        self:GetNormalTexture():SetAlpha(0.75)
+    end)
+    self.frame.miniPause:HookScript("OnClick", function()
+        PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+        self.soundQueue:TogglePauseQueue()
+    end)
+end
+
+function SoundQueueUI:initPortrait()
+    local soundQueueUI = self
 
     -- Create a container frame for the portrait
     self.frame.portrait = CreateFrame("Frame", nil, self.frame)
@@ -546,5 +591,6 @@ function SoundQueueUI:updateSoundQueueDisplay()
 end
 
 function SoundQueueUI:updatePauseDisplay()
+    self.frame.miniPause:Update()
     self.frame.portrait.pause:Update()
 end
