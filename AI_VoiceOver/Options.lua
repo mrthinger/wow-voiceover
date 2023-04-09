@@ -3,6 +3,7 @@ Options = { }
 
 local AceGUI = LibStub("AceGUI-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+local AceDBOptions = LibStub("AceDBOptions-3.0")
 
 ------------------------------------------------------------
 -- Construction of the options table for AceConfigDialog --
@@ -280,6 +281,7 @@ Options.table = {
     args = {
         General = GeneralTab,
         DataModules = DataModulesTab,
+        Profiles = nil, -- Filled in Options:OnInitialize, order is implicity 100
 
         SlashCommands = SlashCommands,
     }
@@ -340,6 +342,8 @@ end
 
 ---Initialization of opens panel
 function Options:Initialize()
+    self.table.args.Profiles = AceDBOptions:GetOptionsTable(Addon.db)
+
     -- Create options table
     Debug:print("Registering options table...", "Options")
     LibStub("AceConfig-3.0"):RegisterOptionsTable("VoiceOver", self.table, "vo")

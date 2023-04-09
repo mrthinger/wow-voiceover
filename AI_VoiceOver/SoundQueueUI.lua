@@ -82,6 +82,7 @@ function SoundQueueUI:new(soundQueue)
         self.frame:SetScale(Addon.db.profile.main.FrameScale)
 
         self:updateSoundQueueDisplay()
+        LibDBIcon:Refresh("VoiceOver", Addon.db.profile.MinimapButton)
     end
 
     self.refreshConfig()
