@@ -21,23 +21,51 @@ local function getFirstNWords(text, n)
     return table.concat(firstNWords, " ")
 end
 
-function VoiceOver_GetQuestID(source, title, text)
-    local cleanedTitle = replaceDoubleQuotes(title)
-    local cleanedText = replaceDoubleQuotes(getFirstNWords(text, 15))
-    local possibleTitles = VoiceOver_QuestIDLookup[source][cleanedTitle]
+local function getLastNWords(text, n)
+    local lastNWords = {}
+    local count = 0
 
-    if possibleTitles == nil then
-        return -1
+    for word in string.gfind(text, "%S+") do
+        table.insert(lastNWords, word)
+        count = count + 1
     end
 
-    local best_result = VoiceOver_FuzzySearchBestKeys(cleanedText, possibleTitles)
+    local startIndex = math.max(1, count - n + 1)
+    local endIndex = count
+
+    return table.concat(lastNWords, " ", startIndex, endIndex)
+end
+
+
+function VoiceOver_GetQuestID(source, title, npcName, text)
+    local cleanedTitle = replaceDoubleQuotes(title)
+    local cleanedNPCName =  replaceDoubleQuotes(npcName)
+    local cleanedText = replaceDoubleQuotes(getFirstNWords(text, 15)) .. " " .. replaceDoubleQuotes(getLastNWords(text, 15))
+    local titleLookup = VoiceOver_QuestIDLookup[source][cleanedTitle]
+
+    if titleLookup == nil then
+        return -1
+    elseif type(titleLookup) == "number" then
+        return titleLookup
+    end
+
+    -- else titleLookup is a table and we need to search it further
+    local npcLookup = titleLookup[cleanedNPCName]
+    if npcLookup == nil then
+        return -1
+    elseif type(npcLookup) == "number" then
+        return npcLookup
+    end
+
+    -- else npcLookup is a table and we need to search it further
+    local best_result = VoiceOver_FuzzySearchBestKeys(cleanedText, npcLookup)
     VoiceOver_Log(best_result.text .. " -> " .. best_result.value .. " (" .. best_result.similarity .. ")")
     return best_result.value
 end
 
 function VoiceOver_GetNPCGossipTextHash(npcName, text)
     local text_entries = VoiceOver_GossipLookup[npcName]
-    
+
     if not text_entries then
         return nil
     end

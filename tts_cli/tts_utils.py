@@ -8,7 +8,7 @@ import re
 from tts_cli.env_vars import ELEVENLABS_API_KEY
 from tts_cli.consts import RACE_DICT, GENDER_DICT
 from tts_cli.length_table import write_sound_length_table_lua
-from tts_cli.utils import get_first_n_words
+from tts_cli.utils import get_first_n_words, get_last_n_words, replace_dollar_bs_with_space
 from slpp import slpp as lua
 
 
@@ -26,6 +26,38 @@ def create_output_subdirs(subdir: str):
     output_subdir = os.path.join(SOUND_OUTPUT_FOLDER, subdir)
     if not os.path.exists(output_subdir):
         os.makedirs(output_subdir)
+
+def prune_quest_id_table(quest_id_table):
+    def is_single_quest_id(nested_dict):
+        if isinstance(nested_dict, dict):
+            if len(nested_dict) == 1:
+                return is_single_quest_id(next(iter(nested_dict.values())))
+            else:
+                return False
+        else:
+            return True
+
+    def single_quest_id(nested_dict):
+        if isinstance(nested_dict, dict):
+            return single_quest_id(next(iter(nested_dict.values())))
+        else:
+            return nested_dict
+
+    pruned_table = {}
+    for source_key, source_value in quest_id_table.items():
+        pruned_table[source_key] = {}
+        for title_key, title_value in source_value.items():
+            if is_single_quest_id(title_value):
+                pruned_table[source_key][title_key] = single_quest_id(title_value)
+            else:
+                pruned_table[source_key][title_key] = {}
+                for npc_key, npc_value in title_value.items():
+                    if is_single_quest_id(npc_value):
+                        pruned_table[source_key][title_key][npc_key] = single_quest_id(npc_value)
+                    else:
+                        pruned_table[source_key][title_key][npc_key] = npc_value
+
+    return pruned_table
 
 class TTSProcessor:
     def __init__(self):
@@ -281,24 +313,32 @@ class TTSProcessor:
             if quest_source == 'progress': # skipping progress text for now
                 continue
 
-            quest_id = row['quest']
+            quest_id = int(row['quest'])
             quest_title = row['quest_title']
-            quest_text = get_first_n_words(row['text'], 15)
-            escaped_quest_text = quest_text.replace('"', '\'').replace('\n','')
+            quest_text = get_first_n_words(row['text'], 15) + ' ' +  get_last_n_words(row['text'], 15)
+            escaped_quest_text = replace_dollar_bs_with_space(quest_text.replace('"', '\'').replace('\n',''))
             escaped_quest_title = quest_title.replace('"', '\'').replace('\n','')
+            npc_name = row['name']
+            escaped_npc_name = npc_name.replace('"', '\'').replace('\n','')
 
+            # table[source][title][npcName][text]
             if quest_source not in quest_id_table:
                 quest_id_table[quest_source] = {}
 
             if escaped_quest_title not in quest_id_table[quest_source]:
                 quest_id_table[quest_source][escaped_quest_title] = {}
 
-            if quest_text not in quest_id_table[quest_source][escaped_quest_title]:
-                quest_id_table[quest_source][escaped_quest_title][escaped_quest_text] = quest_id
+            if escaped_npc_name not in quest_id_table[quest_source][escaped_quest_title]:
+                quest_id_table[quest_source][escaped_quest_title][escaped_npc_name] = {}
+
+            if quest_text not in quest_id_table[quest_source][escaped_quest_title][escaped_npc_name]:
+                quest_id_table[quest_source][escaped_quest_title][escaped_npc_name][escaped_quest_text] = quest_id
+
+        pruned_quest_id_table = prune_quest_id_table(quest_id_table)
 
         with open(output_file, "w") as f:
             f.write("VoiceOver_QuestIDLookup = ")
-            f.write(lua.encode(quest_id_table))
+            f.write(lua.encode(pruned_quest_id_table))
             f.write("\n")
 
     def read_npc_name_gossip_file_lookups_table(self, file_path):

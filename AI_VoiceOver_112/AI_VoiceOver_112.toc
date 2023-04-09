@@ -3,6 +3,7 @@
 ## Notes: Adds voiceovers to npcs.
 ## Version: 0.3
 ## SavedVariables: VoiceOverDB
+## SavedVariablesPerCharacter: VoiceOverDBPerChar
 
 Libs\AceLibrary\AceLibrary.lua
 Libs\AceOO\AceOO-2.0.lua
