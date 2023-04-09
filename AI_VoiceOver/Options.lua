@@ -35,7 +35,7 @@ local GeneralTab =
             inline = true,
             name = "Minimap Button",
             args = {
-                Show = {
+                MinimapButtonShow = {
                     type = "toggle",
                     order = 1,
                     name = "Show Minimap Button",
@@ -49,7 +49,7 @@ local GeneralTab =
                         end
                     end,
                 },
-                Lock = {
+                MinimapButtonLock = {
                     type = "toggle",
                     order = 2,
                     name = "Lock Position",
@@ -128,8 +128,8 @@ local GeneralTab =
                     order = 7,
                     name = "Hide NPC Portrait",
                     desc = "Talking NPC portrait will not appear when voice over audio is played.\n\n" ..
-                            "(This might be useful when using other addons that replace the dialog experience, such as " ..
-                            VoiceOverUtils:colorizeText("Immersion", NORMAL_FONT_COLOR_CODE),
+                            VoiceOverUtils:colorizeText("This might be useful when using other addons that replace the dialog experience, such as " ..
+                                VoiceOverUtils:colorizeText("Immersion", NORMAL_FONT_COLOR_CODE), GRAY_FONT_COLOR_CODE),
                     get = function(info) return Addon.db.profile.main.HideNpcHead end,
                     set = function(info, value)
                         Addon.db.profile.main.HideNpcHead = value
@@ -228,6 +228,51 @@ local DataModulesTab =
     args = {}
 }
 
+local SlashCommands = {
+    type = "group",
+    name = "Commands",
+    order = 110,
+    inline = true,
+    dialogHidden = true,
+    args = {
+        Play = {
+            type = "execute",
+            order = 1,
+            name = "Resume the playback of voiceovers",
+            func = function(info)
+                Addon.soundQueue:resumeQueue()
+            end
+        },
+        Pause = {
+            type = "execute",
+            order = 2,
+            name = "Pause the playback of voiceovers",
+            func = function(info)
+                Addon.soundQueue:pauseQueue()
+            end
+        },
+        Skip = {
+            type = "execute",
+            order = 3,
+            name = "Skip the currently played voiceover",
+            func = function(info)
+                local soundData = Addon.soundQueue.sounds[1]
+                if soundData then
+                    Addon.soundQueue:removeSoundFromQueue(soundData)
+                end
+            end
+        },
+        Clear = {
+            type = "execute",
+            order = 4,
+            name = "Stops the playback and clears the voiceovers queue",
+            func = function(info)
+                Addon.soundQueue:removeAllSoundsFromQueue()
+            end
+        },
+    }
+}
+
 Options.table = {
     name = "Voice Over",
     type = "group",
@@ -235,6 +280,8 @@ Options.table = {
     args = {
         General = GeneralTab,
         DataModules = DataModulesTab,
+
+        SlashCommands = SlashCommands,
     }
 }
 ------------------------------------------------------------
@@ -295,7 +342,7 @@ end
 function Options:Initialize()
     -- Create options table
     Debug:print("Registering options table...", "Options")
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("VoiceOver", self.table)
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("VoiceOver", self.table, "vo")
     AceConfigDialog:AddToBlizOptions("VoiceOver", "VoiceOver")
     Debug:print("Done!", "Options")
 

@@ -302,7 +302,6 @@ function SoundQueueUI:initPortrait()
         else
             self.soundQueue:pauseQueue()
         end
-        self.frame.portrait.pause:Update()
     end)
 
     -- Create an overlay frame above the 3D model to contain the border and any other button that might be placed on the border (like the mover)
@@ -384,7 +383,6 @@ function SoundQueueUI:initMinimapButton()
                 else
                     soundQueueUI.soundQueue:pauseQueue()
                 end
-                soundQueueUI.frame.portrait.pause:Update()
             end
         end,
 
@@ -500,7 +498,8 @@ end
 function SoundQueueUI:updateSoundQueueDisplay()
     self.frame:SetShown(#self.soundQueue.sounds > 0)
 
-    self.frame.portrait.pause:Update()
+    self:updatePauseDisplay()
+
     self.frame.portrait:Configure(self.soundQueue.sounds[1])
 
     self.frame.container:Show()
@@ -545,4 +544,8 @@ function SoundQueueUI:updateSoundQueueDisplay()
     end
     -- Refresh again after updating layout (same frame in modern WoW, next frame in old WoW) to update hover state depending on the new button positions after realignment
     C_Timer.After(0, function() self.frame.container.buttons:Update() end)
+end
+
+function SoundQueueUI:updatePauseDisplay()
+    self.frame.portrait.pause:Update()
 end

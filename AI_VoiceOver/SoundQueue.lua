@@ -92,6 +92,8 @@ function VoiceOverSoundQueue:pauseQueue()
         StopSound(currentSound.handle)
         currentSound.nextSoundTimer:Cancel()
     end
+
+    self.ui:updatePauseDisplay()
 end
 
 function VoiceOverSoundQueue:resumeQueue()
@@ -104,6 +106,8 @@ function VoiceOverSoundQueue:resumeQueue()
         local currentSound = self.sounds[1]
         self:playSound(currentSound)
     end
+
+    self.ui:updatePauseDisplay()
 end
 
 function VoiceOverSoundQueue:removeSoundFromQueue(soundData)
