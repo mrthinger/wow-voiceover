@@ -281,7 +281,7 @@ function SoundQueueUI:initPortrait()
     end
 
     -- Create a background behind the model
-    self.frame.portrait.background = self.frame.portrait:CreateTexture(nil, "OVERLAY")
+    self.frame.portrait.background = self.frame.portrait:CreateTexture(nil, "BACKGROUND")
     self.frame.portrait.background:SetAllPoints()
     self.frame.portrait.background:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\PortraitFrameBackground]])
 
