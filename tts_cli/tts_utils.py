@@ -15,8 +15,8 @@ from slpp import slpp as lua
 MODULE_NAME = 'AI_VoiceOverData_Vanilla'
 OUTPUT_FOLDER = MODULE_NAME + '/generated'
 SOUND_OUTPUT_FOLDER =  OUTPUT_FOLDER + '/sounds'
-
-replace_dict = {'$b': '\n', '$B': '\n', '$n': 'adventurer', '$N': 'Adventurer',
+DATAMODULE_TABLE_GUARD_CLAUSE = 'if not VoiceOver or not VoiceOver.DataModules then return end'
+REPLACE_DICT = {'$b': '\n', '$B': '\n', '$n': 'adventurer', '$N': 'Adventurer',
                 '$C': 'Adventurer', '$c': 'adventurer', '$R': 'Traveler', '$r': 'traveler'}
 
 def get_hash(text):
@@ -143,7 +143,7 @@ class TTSProcessor:
 
         df['cleanedText'] = df['text'].copy()
 
-        for k, v in replace_dict.items():
+        for k, v in REPLACE_DICT.items():
             df['cleanedText'] = df['cleanedText'].str.replace(k, v, regex=False)
 
         df['cleanedText'] = df['cleanedText'].str.replace(r'<.*?>\s', '', regex=True)
@@ -229,6 +229,7 @@ class TTSProcessor:
             gossip_table[row['id']][escapedText] = row['templateText_race_gender_hash']
 
         with open(output_file, "w") as f:
+            f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.NPCToTextToTemplateHash = ")
             f.write(lua.encode(gossip_table))
             f.write("\n")
@@ -244,6 +245,7 @@ class TTSProcessor:
             questlog_table[int(row['quest'])] = row['id']
 
         with open(output_file, "w") as f:
+            f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.QuestlogNpcGuidTable = ")
             f.write(lua.encode(questlog_table))
             f.write("\n")
@@ -257,6 +259,7 @@ class TTSProcessor:
             npc_name_table[row['id']] =  row['name']
 
         with open(output_file, "w") as f:
+            f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.NPCNameLookup = ")
             f.write(lua.encode(npc_name_table))
             f.write("\n")
@@ -296,6 +299,7 @@ class TTSProcessor:
         pruned_quest_id_table = prune_quest_id_table(quest_id_table)
 
         with open(output_file, "w") as f:
+            f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.QuestIDLookup = ")
             f.write(lua.encode(pruned_quest_id_table))
             f.write("\n")
@@ -318,6 +322,7 @@ class TTSProcessor:
             gossip_table[npc_name][escapedText] = row['templateText_race_gender_hash']
 
         with open(output_file, "w") as f:
+            f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.GossipLookup = ")
             f.write(lua.encode(gossip_table))
             f.write("\n")
