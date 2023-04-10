@@ -27,15 +27,15 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
     GetNumGossipActiveQuests = C_GossipInfo.GetNumActiveQuests
     GetNumGossipAvailableQuests = C_GossipInfo.GetNumAvailableQuests
 
-    function VoiceOverUtils:getQuestLogScrollOffset()
+    function Utils:GetQuestLogScrollOffset()
         return HybridScrollFrame_GetOffset(QuestLogListScrollFrame)
     end
 
-    function VoiceOverUtils:getQuestLogTitleFrame(index)
+    function Utils:GetQuestLogTitleFrame(index)
         return _G["QuestLogListScrollFrameButton" .. index]
     end
 
-    function QuestOverlayUI:updateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
+    function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
         playButton:SetPoint("LEFT", questLogTitleFrame.normalText, "LEFT", 4, 0)
         questLogTitleFrame.normalText:SetText([[|TInterface\AddOns\AI_VoiceOver\Textures\spacer:1:24|t]] ..
             (questLogTitleFrame.normalText:GetText() or ""):trim())

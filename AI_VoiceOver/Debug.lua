@@ -1,14 +1,14 @@
 setfenv(1, VoiceOver)
 Debug = {}
 
-function Debug:print(msg, header)
+function Debug:Print(msg, header)
     if Addon.db.profile.main.DebugEnabled then
         if header then
-            print(VoiceOverUtils:colorizeText("VoiceOver", NORMAL_FONT_COLOR_CODE) ..
-                VoiceOverUtils:colorizeText(" (" .. header .. ")", GRAY_FONT_COLOR_CODE) ..
+            print(Utils:ColorizeText("VoiceOver", NORMAL_FONT_COLOR_CODE) ..
+                Utils:ColorizeText(" (" .. header .. ")", GRAY_FONT_COLOR_CODE) ..
                 " - " .. msg)
         else
-            print(VoiceOverUtils:colorizeText("VoiceOver", NORMAL_FONT_COLOR_CODE) ..
+            print(Utils:ColorizeText("VoiceOver", NORMAL_FONT_COLOR_CODE) ..
                 " - " .. msg)
         end
     end

@@ -13,7 +13,7 @@ function QuestOverlayUI:new(soundQueue)
     return questOverlayUI
 end
 
-function QuestOverlayUI:createPlayButton(questID)
+function QuestOverlayUI:CreatePlayButton(questID)
     local playButton = CreateFrame("Button", nil, QuestLogFrame)
     playButton:SetWidth(20)
     playButton:SetHeight(20)
@@ -26,7 +26,7 @@ function QuestOverlayUI:createPlayButton(questID)
     self.questPlayButtons[questID] = playButton
 end
 
-function QuestOverlayUI:updateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
+function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
     playButton:SetPoint("LEFT", normalText, "LEFT", 4, 0)
 
     local formatedText = [[|TInterface\AddOns\AI_VoiceOver\Textures\spacer:1:24|t]] .. (normalText:GetText() or ""):trim()
@@ -37,7 +37,7 @@ function QuestOverlayUI:updateQuestTitle(questLogTitleFrame, playButton, normalT
     questCheck:SetPoint("LEFT", normalText, "LEFT", normalText:GetStringWidth(), 0)
 end
 
-function QuestOverlayUI:updatePlayButtonTexture(questID, isPlaying)
+function QuestOverlayUI:UpdatePlayButtonTexture(questID, isPlaying)
     local texturePath = isPlaying and "Interface\\TIMEMANAGER\\ResetButton" or
     "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up"
 
@@ -46,11 +46,11 @@ function QuestOverlayUI:updatePlayButtonTexture(questID, isPlaying)
     end
 end
 
-function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame, normalText, questCheck)
+function QuestOverlayUI:UpdatePlayButton(soundTitle, questID, questLogTitleFrame, normalText, questCheck)
     self.questPlayButtons[questID]:SetParent(questLogTitleFrame:GetParent())
     self.questPlayButtons[questID]:SetFrameLevel(questLogTitleFrame:GetFrameLevel() + 2)
 
-    QuestOverlayUI:updateQuestTitle(questLogTitleFrame, self.questPlayButtons[questID], normalText, questCheck)
+    QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, self.questPlayButtons[questID], normalText, questCheck)
 
     local questOverlayUI = self
     self.questPlayButtons[questID]:SetScript("OnClick", function(self)
@@ -58,36 +58,36 @@ function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame
             local npcID = DataModules:GetQuestLogNPCID(questID)
             questOverlayUI.questPlayButtons[questID].soundData = {
                 event = "accept",
-                questId = questID,
+                questID = questID,
                 name = npcID and DataModules:GetNPCName(npcID) or "Unknown Name",
                 title = soundTitle,
-                unitGuid = npcID and VoiceOverUtils:getGuidFromId(npcID)
+                unitGUID = npcID and Utils:GetGUIDFromID(npcID)
             }
         end
 
         local button = self
         local soundData = button.soundData
-        local questID = soundData.questId
+        local questID = soundData.questID
         local isPlaying = questOverlayUI.playingStates[questID] or false
 
         if not isPlaying then
-            questOverlayUI.soundQueue:addSoundToQueue(soundData)
+            questOverlayUI.soundQueue:AddSoundToQueue(soundData)
             questOverlayUI.playingStates[questID] = true
-            questOverlayUI:updatePlayButtonTexture(questID, true)
+            questOverlayUI:UpdatePlayButtonTexture(questID, true)
 
             soundData.stopCallback = function()
                 questOverlayUI.playingStates[questID] = false
-                questOverlayUI:updatePlayButtonTexture(questID, false)
+                questOverlayUI:UpdatePlayButtonTexture(questID, false)
                 button.soundData = nil
             end
         else
-            questOverlayUI.soundQueue:removeSoundFromQueue(soundData)
+            questOverlayUI.soundQueue:RemoveSoundFromQueue(soundData)
         end
     end)
 end
 
 
-function QuestOverlayUI:updateQuestOverlayUI()
+function QuestOverlayUI:UpdateQuestOverlayUI()
     local numEntries, numQuests = GetNumQuestLogEntries()
 
     -- Hide all buttons in displayedButtons
@@ -104,34 +104,34 @@ function QuestOverlayUI:updateQuestOverlayUI()
 
     -- Traverse through the quests displayed in the UI
     for i = 1, QUESTS_DISPLAYED do
-        local questIndex = i + VoiceOverUtils:getQuestLogScrollOffset();
+        local questIndex = i + Utils:GetQuestLogScrollOffset();
         if questIndex > numEntries then
             break
         end
 
         -- Get quest title
-        local questLogTitleFrame = VoiceOverUtils:getQuestLogTitleFrame(i)
-        local normalText = VoiceOverUtils:getQuestLogTitleNormalText(i)
-        local questCheck = VoiceOverUtils:getQuestLogTitleCheck(i)
+        local questLogTitleFrame = Utils:GetQuestLogTitleFrame(i)
+        local normalText = Utils:GetQuestLogTitleNormalText(i)
+        local questCheck = Utils:GetQuestLogTitleCheck(i)
         local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID = GetQuestLogTitle(
             questIndex)
 
         if not self.questPlayButtons[questID] then
-            self:createPlayButton(questID)
+            self:CreatePlayButton(questID)
         end
 
         if not isHeader then
-            if DataModules:PrepareSound({ event = "accept", questId = questID }) then
-                self:updatePlayButton(title, questID, questLogTitleFrame, normalText, questCheck)
+            if DataModules:PrepareSound({ event = "accept", questID = questID }) then
+                self:UpdatePlayButton(title, questID, questLogTitleFrame, normalText, questCheck)
                 self.questPlayButtons[questID]:Enable()
             else
-                self:updateQuestTitle(questLogTitleFrame, self.questPlayButtons[questID], normalText, questCheck)
+                self:UpdateQuestTitle(questLogTitleFrame, self.questPlayButtons[questID], normalText, questCheck)
                 self.questPlayButtons[questID]:Disable()
             end
 
             self.questPlayButtons[questID]:Show()
             local isPlaying = self.playingStates[questID] or false
-            self:updatePlayButtonTexture(questID, isPlaying)
+            self:UpdatePlayButtonTexture(questID, isPlaying)
 
             -- Add the button to displayedButtons
             table.insert(self.displayedButtons, self.questPlayButtons[questID])

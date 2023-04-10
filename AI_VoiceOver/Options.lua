@@ -24,7 +24,7 @@ function slashCommandsHandler:values(info)
         self.indexToName = { "Nothing" }
         self.indexToCommand = { "" }
         self.commandToIndex = { [""] = 1 }
-        for command, handler in VoiceOverUtils:Ordered(Options.table.args.SlashCommands.args, function(a, b) return (a.order or 100) < (b.order or 100) end) do
+        for command, handler in Utils:Ordered(Options.table.args.SlashCommands.args, function(a, b) return (a.order or 100) < (b.order or 100) end) do
             if not handler.dropdownHidden then
                 table.insert(self.indexToName, handler.name)
                 table.insert(self.indexToCommand, command)
@@ -133,7 +133,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.main.LockFrame end,
                     set = function(info, value)
                         Addon.db.profile.main.LockFrame = value
-                        Addon.soundQueue.ui:refreshConfig()
+                        Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
                 ResetFrame = {
@@ -176,7 +176,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.main.FrameScale end,
                     set = function(info, value)
                         Addon.db.profile.main.FrameScale = value
-                        Addon.soundQueue.ui:refreshConfig()
+                        Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
                 LineBreak2 = { type = "description", name = "", order = 6 },
@@ -185,13 +185,13 @@ local GeneralTab =
                     order = 7,
                     name = "Hide NPC Portrait",
                     desc = "Talking NPC portrait will not appear when voice over audio is played.\n\n" ..
-                            VoiceOverUtils:colorizeText("This might be useful when using other addons that replace the dialog experience, such as " ..
-                                VoiceOverUtils:colorizeText("Immersion", NORMAL_FONT_COLOR_CODE) .. ".",
+                            Utils:ColorizeText("This might be useful when using other addons that replace the dialog experience, such as " ..
+                                Utils:ColorizeText("Immersion", NORMAL_FONT_COLOR_CODE) .. ".",
                                 GRAY_FONT_COLOR_CODE),
                     get = function(info) return Addon.db.profile.main.HideNpcHead end,
                     set = function(info, value)
                         Addon.db.profile.main.HideNpcHead = value
-                        Addon.soundQueue.ui:refreshConfig()
+                        Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
                 HideFrame = {
@@ -203,7 +203,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.main.HideFrame end,
                     set = function(info, value)
                         Addon.db.profile.main.HideFrame = value
-                        Addon.soundQueue.ui:refreshConfig()
+                        Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
             },
@@ -230,7 +230,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.main.SoundChannel end,
                     set = function(info, value)
                         Addon.db.profile.main.SoundChannel = value
-                        Addon.soundQueue.ui:refreshConfig()
+                        Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
                 LineBreak = { type = "description", name = "", order = 2 },
@@ -242,14 +242,14 @@ local GeneralTab =
                     desc = "Controls how often VoiceOver will play NPC greeting dialog.",
                     values = {
                         ["Always"] = "Always",
-                        ["OncePerQuestNpc"] = "Play Once for Quest NPCs",
-                        ["OncePerNpc"] = "Play Once for All NPCs",
+                        ["OncePerQuestNPC"] = "Play Once for Quest NPCs",
+                        ["OncePerNPC"] = "Play Once for All NPCs",
                         ["Never"] = "Never",
                     },
                     get = function(info) return Addon.db.profile.main.GossipFrequency end,
                     set = function(info, value)
                         Addon.db.profile.main.GossipFrequency = value
-                        Addon.soundQueue.ui:refreshConfig()
+                        Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
                 AutoToggleDialog = {
@@ -261,7 +261,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.main.AutoToggleDialog end,
                     set = function(info, value)
                         Addon.db.profile.main.AutoToggleDialog = value
-                        Addon.soundQueue.ui:refreshConfig()
+                        Addon.soundQueue.ui:RefreshConfig()
                         if Addon.db.profile.main.AutoToggleDialog then
                             SetCVar("Sound_EnableDialog", 1)
                         end
@@ -321,7 +321,7 @@ local SlashCommands = {
             name = "Play Audio",
             desc = "Resume the playback of voiceovers",
             func = function(info)
-                Addon.soundQueue:resumeQueue()
+                Addon.soundQueue:ResumeQueue()
             end
         },
         Pause = {
@@ -330,7 +330,7 @@ local SlashCommands = {
             name = "Pause Audio",
             desc = "Pause the playback of voiceovers",
             func = function(info)
-                Addon.soundQueue:pauseQueue()
+                Addon.soundQueue:PauseQueue()
             end
         },
         Skip = {
@@ -341,7 +341,7 @@ local SlashCommands = {
             func = function(info)
                 local soundData = Addon.soundQueue.sounds[1]
                 if soundData then
-                    Addon.soundQueue:removeSoundFromQueue(soundData)
+                    Addon.soundQueue:RemoveSoundFromQueue(soundData)
                 end
             end
         },
@@ -351,7 +351,7 @@ local SlashCommands = {
             name = "Clear Queue",
             desc = "Stop the playback and clears the voiceovers queue",
             func = function(info)
-                Addon.soundQueue:removeAllSoundsFromQueue()
+                Addon.soundQueue:RemoveAllSoundsFromQueue()
             end
         },
         Options = {
@@ -360,7 +360,7 @@ local SlashCommands = {
             name = "Open Options",
             desc = "Open the options panel",
             func = function(info)
-                Options:openConfigWindow()
+                Options:OpenConfigWindow()
             end
         },
     }
@@ -437,10 +437,10 @@ function Options:Initialize()
     self.table.args.Profiles = AceDBOptions:GetOptionsTable(Addon.db)
 
     -- Create options table
-    Debug:print("Registering options table...", "Options")
+    Debug:Print("Registering options table...", "Options")
     LibStub("AceConfig-3.0"):RegisterOptionsTable("VoiceOver", self.table, "vo")
     AceConfigDialog:AddToBlizOptions("VoiceOver", "VoiceOver")
-    Debug:print("Done!", "Options")
+    Debug:Print("Done!", "Options")
 
     -- Create the option frame
     ---@type AceGUIFrame
@@ -455,7 +455,7 @@ function Options:Initialize()
     tinsert(UISpecialFrames, "VoiceOverOptions")
 end
 
-function Options:openConfigWindow()
+function Options:OpenConfigWindow()
     if self.frame:IsShown() then
         PlaySound(SOUNDKIT.IG_MAINMENU_CLOSE)
         self.frame:Hide()
