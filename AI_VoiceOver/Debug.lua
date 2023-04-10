@@ -1,4 +1,4 @@
-setfenv(1, select(2, ...))
+setfenv(1, VoiceOver)
 Debug = {}
 
 function Debug:print(msg, header)

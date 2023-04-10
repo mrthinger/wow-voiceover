@@ -1,4 +1,4 @@
-setfenv(1, select(2, ...))
+setfenv(1, VoiceOver)
 
 local CURRENT_MODULE_VERSION = 1
 local LOAD_ALL_MODULES = true

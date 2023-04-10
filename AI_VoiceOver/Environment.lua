@@ -11,8 +11,8 @@ This accomplishes several goals:
    the real global namespace, making these overrides visible only to this addon.
    This will be useful mainly for adding backwards-compatibility with older WoW clients.
 
-setfenv(1, select(2, ...)) must be added to every .lua file to allow it to work within this environment,
+setfenv(1, VoiceOver) must be added to every .lua file to allow it to work within this environment,
 and this Environment file must be loaded before all others
 ]]
 
-VoiceOver = setmetatable(select(2, ...), { __index = _G })
+VoiceOver = setmetatable({}, { __index = _G })

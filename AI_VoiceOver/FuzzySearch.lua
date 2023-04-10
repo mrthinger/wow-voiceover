@@ -1,4 +1,4 @@
-setfenv(1, select(2, ...))
+setfenv(1, VoiceOver)
 
 -- -- Calculate the Levenshtein distance between two strings
 -- local function levenshtein_distance(a, b)

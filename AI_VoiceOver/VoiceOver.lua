@@ -1,4 +1,4 @@
-setfenv(1, select(2, ...))
+setfenv(1, VoiceOver)
 
 Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0")
 
