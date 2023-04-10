@@ -1,3 +1,5 @@
+setfenv(1, VoiceOver)
+
 local function jaccardSimilarity(a, b)
     local tokens_a, tokens_b = {}, {}
     for token in string.gfind(a, "%S+") do tokens_a[token] = true end
@@ -19,7 +21,7 @@ local function jaccardSimilarity(a, b)
     return intersection / union
 end
 
-function VoiceOver_FuzzySearchBestKeys(query, tableVar)
+function FuzzySearchBestKeys(query, tableVar)
     local best_result = nil
     local max_similarity = -1
 

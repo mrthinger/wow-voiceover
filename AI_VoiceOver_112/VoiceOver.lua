@@ -1,11 +1,13 @@
-VoiceOver = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0", "AceDB-2.0", "AceConsole-2.0")
+setfenv(1, VoiceOver)
+
+Addon = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0", "AceDB-2.0", "AceConsole-2.0")
 
 
-VoiceOver:RegisterDB("VoiceOverDB", "VoiceOverDBPerChar")
+Addon:RegisterDB("VoiceOverDB", "VoiceOverDBPerChar")
 -- Register your default values for the character and profile databases
-VoiceOver:RegisterDefaults('char', {})
+Addon:RegisterDefaults('char', {})
 
-VoiceOver:RegisterDefaults('profile', {})
+Addon:RegisterDefaults('profile', {})
 
 local chatCommands = {
     type = 'group',
@@ -15,7 +17,7 @@ local chatCommands = {
             name = "Pause",
             desc = "Pauses sound playback after the current sound finishes",
             func = function()
-                VoiceOver.soundQueue:pauseQueue()
+                Addon.soundQueue:pauseQueue()
             end
         },
         resume = {
@@ -23,36 +25,36 @@ local chatCommands = {
             name = "Resume",
             desc = "Resumes sound playback",
             func = function()
-                VoiceOver.soundQueue:resumeQueue()
+                Addon.soundQueue:resumeQueue()
             end
         },
     },
 }
 
-VoiceOver:RegisterChatCommand({ "/voiceover", "/vo" }, chatCommands)
+Addon:RegisterChatCommand({ "/voiceover", "/vo" }, chatCommands)
 
-function VoiceOver:OnInitialize()
+function Addon:OnInitialize()
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("GOSSIP_SHOW")
     self:RegisterEvent("QUEST_COMPLETE")
     self:RegisterEvent("VOICEOVER_NEXT_SOUND_TIMER")
 
-    self.soundQueue = VoiceOver_SoundQueue.new()
+    self.soundQueue = SoundQueue.new()
 end
 
-function VoiceOver:VOICEOVER_NEXT_SOUND_TIMER(soundData)
-    VoiceOver_Log("delayfun")
+function Addon:VOICEOVER_NEXT_SOUND_TIMER(soundData)
+    Utils:Log("delayfun")
     self.soundQueue:removeSoundFromQueue(soundData)
     self.soundQueue.isSoundPlaying = false
 end
 
-function VoiceOver:QUEST_DETAIL()
+function Addon:QUEST_DETAIL()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
     local targetName = UnitName("npc")
 
-    local questID = VoiceOver_GetQuestID("accept", questTitle, targetName, questText)
-    VoiceOver_Log("QUEST_DETAIL" .. " " .. questTitle .. " " .. targetName .. " " .. questID);
+    local questID = Utils:GetQuestID("accept", questTitle, targetName, questText)
+    Utils:Log("QUEST_DETAIL" .. " " .. questTitle .. " " .. targetName .. " " .. questID);
     local fileName = tostring(questID) .. "-accept"
 
 
@@ -67,13 +69,13 @@ function VoiceOver:QUEST_DETAIL()
     self.soundQueue:addSoundToQueue(soundData)
 end
 
-function VoiceOver:QUEST_COMPLETE()
+function Addon:QUEST_COMPLETE()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
     local targetName = UnitName("npc")
 
-    local questID = VoiceOver_GetQuestID("complete", questTitle, targetName, questText)
-    VoiceOver_Log("QUEST_COMPLETE" .. " " .. questTitle .. " " .. targetName .. " " .. questID);
+    local questID = Utils:GetQuestID("complete", questTitle, targetName, questText)
+    Utils:Log("QUEST_COMPLETE" .. " " .. questTitle .. " " .. targetName .. " " .. questID);
     local fileName = tostring(questID) .. "-complete"
     local soundData = {
         event = "complete",
@@ -86,10 +88,10 @@ function VoiceOver:QUEST_COMPLETE()
     self.soundQueue:addSoundToQueue(soundData)
 end
 
-function VoiceOver:GOSSIP_SHOW()
+function Addon:GOSSIP_SHOW()
     local gossipText = GetGossipText()
     local targetName = UnitName("npc")
-    local fileName = VoiceOver_GetNPCGossipTextHash(targetName, gossipText)
+    local fileName = Utils:GetNPCGossipTextHash(targetName, gossipText)
 
     local soundData = {
         event = "gossip",

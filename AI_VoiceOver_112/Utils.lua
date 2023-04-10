@@ -1,4 +1,8 @@
-function VoiceOver_Log(text)
+setfenv(1, VoiceOver)
+
+Utils = {}
+
+function Utils:Log(text)
     DEFAULT_CHAT_FRAME:AddMessage(text)
 end
 
@@ -37,12 +41,12 @@ local function getLastNWords(text, n)
 end
 
 
-function VoiceOver_GetQuestID(source, title, npcName, text)
+function Utils:GetQuestID(source, title, npcName, text)
     local cleanedTitle = replaceDoubleQuotes(title)
     local cleanedNPCName = replaceDoubleQuotes(npcName)
     local cleanedText = replaceDoubleQuotes(getFirstNWords(text, 15)) ..
     " " .. replaceDoubleQuotes(getLastNWords(text, 15))
-    local titleLookup = VoiceOver_QuestIDLookup[source][cleanedTitle]
+    local titleLookup = QuestIDLookup[source][cleanedTitle]
 
     if titleLookup == nil then
         return -1
@@ -59,19 +63,19 @@ function VoiceOver_GetQuestID(source, title, npcName, text)
     end
 
     -- else npcLookup is a table and we need to search it further
-    local best_result = VoiceOver_FuzzySearchBestKeys(cleanedText, npcLookup)
-    VoiceOver_Log(best_result.text .. " -> " .. best_result.value .. " (" .. best_result.similarity .. ")")
+    local best_result = FuzzySearchBestKeys(cleanedText, npcLookup)
+    Utils:Log(best_result.text .. " -> " .. best_result.value .. " (" .. best_result.similarity .. ")")
     return best_result.value
 end
 
-function VoiceOver_GetNPCGossipTextHash(npcName, text)
-    local text_entries = VoiceOver_GossipLookup[npcName]
+function Utils:GetNPCGossipTextHash(npcName, text)
+    local text_entries = GossipLookup[npcName]
 
     if not text_entries then
         return nil
     end
 
-    local best_result = VoiceOver_FuzzySearchBestKeys(text, text_entries)
+    local best_result = FuzzySearchBestKeys(text, text_entries)
     return best_result and best_result.value
 end
 
@@ -87,9 +91,9 @@ local function addPlayerGenderToFilename(fileName)
     end
 end
 
-VoiceOver_SoundPath = "Interface\\AddOns\\AI_VoiceOver_112\\generated\\sounds\\"
-VoiceOver_MP3_EXT = ".mp3"
-function VoiceOver_PrepareSoundDataInPlace(soundData)
+SoundPath = "Interface\\AddOns\\AI_VoiceOver_112\\generated\\sounds\\"
+MP3_EXT = ".mp3"
+function Utils:PrepareSoundDataInPlace(soundData)
     local subfolder
     if soundData.event == "gossip" then
         subfolder = "gossip\\"
@@ -99,10 +103,10 @@ function VoiceOver_PrepareSoundDataInPlace(soundData)
 
 
     local genderedFileName = addPlayerGenderToFilename(soundData.fileName)
-    local filePath =  VoiceOver_SoundPath .. subfolder .. soundData.fileName .. VoiceOver_MP3_EXT
-    local genderedFilePath = VoiceOver_SoundPath .. subfolder .. genderedFileName .. VoiceOver_MP3_EXT
+    local filePath =  SoundPath .. subfolder .. soundData.fileName .. MP3_EXT
+    local genderedFilePath = SoundPath .. subfolder .. genderedFileName .. MP3_EXT
     soundData.filePath = filePath
     soundData.genderedFilePath = genderedFilePath
 
-    soundData.length = VoiceOver_SoundLengthTable[soundData.fileName]
+    soundData.length = SoundLengthTable[soundData.fileName]
 end

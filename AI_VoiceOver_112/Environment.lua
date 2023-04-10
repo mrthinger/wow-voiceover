@@ -1,0 +1,1 @@
+VoiceOver = setmetatable({}, { __index = function(self, key) return getglobal(key) end })
