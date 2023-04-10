@@ -126,10 +126,9 @@ function Addon:QUEST_DETAIL()
 
     if UnitIsPlayer("npc") then
         local npcID = DataModules:GetQuestLogNPCID(questId)
-        local npcName = DataModules:GetNPCName(npcID)
         if npcID then
             guid = VoiceOverUtils:getGuidFromId(npcID)
-            targetName = npcName
+            targetName = DataModules:GetNPCName(npcID) or "Unknown Name"
         else
             return
         end
