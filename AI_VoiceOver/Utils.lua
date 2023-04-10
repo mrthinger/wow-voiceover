@@ -1,4 +1,4 @@
-setfenv(1, select(2, ...))
+setfenv(1, VoiceOver)
 VoiceOverUtils = {}
 
 function VoiceOverUtils:getIdFromGuid(guid)
