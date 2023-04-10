@@ -8,14 +8,13 @@ function SoundQueue.new()
 
     self.soundIdCounter = 0
     self.sounds = {}
-    self.isPaused = false
     self.soundsLength = 0
     self.isSoundPlaying = false
 
     return self
 end
 
-function SoundQueue:addSoundToQueue(soundData)
+function SoundQueue:AddSoundToQueue(soundData)
 
     if soundData.fileName == nil then
 
@@ -57,14 +56,14 @@ function SoundQueue:addSoundToQueue(soundData)
     self.soundsLength = self.soundsLength + 1
 
     -- If the sound queue only contains one sound, play it immediately
-    if self.soundsLength == 1 and not Addon.db.char.isPaused then
-        self:playSound(soundData)
+    if self.soundsLength == 1 and not Addon.db.char.IsPaused then
+        self:PlaySound(soundData)
     end
 end
 
 
 
-function SoundQueue:playSound(soundData)
+function SoundQueue:PlaySound(soundData)
     -- local channel = Addon.db.profile.SoundChannel
     local channel = "Master"
     local isPlaying = PlaySoundFile(soundData.genderedFilePath, channel)
@@ -72,7 +71,7 @@ function SoundQueue:playSound(soundData)
         isPlaying = PlaySoundFile(soundData.filePath, channel)
         if not isPlaying then
             Utils:Log("Sound does not exist for: " .. soundData.title)
-            self:removeSoundFromQueue(soundData)
+            self:RemoveSoundFromQueue(soundData)
             return
         end
 
@@ -93,12 +92,12 @@ function SoundQueue:playSound(soundData)
 
 end
 
-function SoundQueue:pauseQueue()
-    if Addon.db.char.isPaused then
+function SoundQueue:PauseQueue()
+    if Addon.db.char.IsPaused then
         return
     end
 
-    Addon.db.char.isPaused = true
+    Addon.db.char.IsPaused = true
 
     -- if self.soundsLength > 0 then
     --     local currentSound = self.sounds[1]
@@ -107,19 +106,19 @@ function SoundQueue:pauseQueue()
     -- end
 end
 
-function SoundQueue:resumeQueue()
-    if not Addon.db.char.isPaused then
+function SoundQueue:ResumeQueue()
+    if not Addon.db.char.IsPaused then
         return
     end
 
-    Addon.db.char.isPaused = false
+    Addon.db.char.IsPaused = false
     if self.soundsLength > 0 and not self.isSoundPlaying then
         local currentSound = self.sounds[1]
-        self:playSound(currentSound)
+        self:PlaySound(currentSound)
     end
 end
 
-function SoundQueue:removeSoundFromQueue(soundData)
+function SoundQueue:RemoveSoundFromQueue(soundData)
     local removedIndex = nil
     for index, queuedSound in ipairs(self.sounds) do
         if queuedSound.id == soundData.id then
@@ -134,10 +133,10 @@ function SoundQueue:removeSoundFromQueue(soundData)
         soundData.stopCallback()
     end
 
-    if removedIndex == 1 and not Addon.db.char.isPaused then
+    if removedIndex == 1 and not Addon.db.char.IsPaused then
         if self.soundsLength > 0 then
             local nextSoundData = self.sounds[1]
-            self:playSound(nextSoundData)
+            self:PlaySound(nextSoundData)
         end
     end
 
@@ -147,10 +146,10 @@ function SoundQueue:removeSoundFromQueue(soundData)
 
 end
 
-function SoundQueue:removeAllSoundsFromQueue()
+function SoundQueue:RemoveAllSoundsFromQueue()
     for i = self.soundsLength, 1, -1 do
         if (self.sounds[i]) then
-            self:removeSoundFromQueue(self.sounds[i])
+            self:RemoveSoundFromQueue(self.sounds[i])
         end
     end
 end

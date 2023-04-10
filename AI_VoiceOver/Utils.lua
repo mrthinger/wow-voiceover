@@ -1,15 +1,15 @@
 setfenv(1, VoiceOver)
-VoiceOverUtils = {}
+Utils = {}
 
-function VoiceOverUtils:getIdFromGuid(guid)
+function Utils:GetIDFromGUID(guid)
     return guid and tonumber((select(6, strsplit("-", guid))))
 end
 
-function VoiceOverUtils:getGuidFromId(id)
+function Utils:GetGUIDFromID(id)
     return format("Creature-%d-%d-%d-%d-%d-%d", 0, 0, 0, 0, id, 0)
 end
 
-function VoiceOverUtils:willSoundPlay(soundData)
+function Utils:WillSoundPlay(soundData)
     if not soundData.filePath then
         return false
     end
@@ -21,27 +21,27 @@ function VoiceOverUtils:willSoundPlay(soundData)
     return willPlay
 end
 
-function VoiceOverUtils:getQuestLogScrollOffset()
+function Utils:GetQuestLogScrollOffset()
     return FauxScrollFrame_GetOffset(QuestLogListScrollFrame)
 end
 
-function VoiceOverUtils:getQuestLogTitleFrame(index)
+function Utils:GetQuestLogTitleFrame(index)
     return _G["QuestLogTitle" .. index]
 end
 
-function VoiceOverUtils:getQuestLogTitleNormalText(index)
+function Utils:GetQuestLogTitleNormalText(index)
     return _G["QuestLogTitle" .. index .. "NormalText"]
 end
 
-function VoiceOverUtils:getQuestLogTitleCheck(index)
+function Utils:GetQuestLogTitleCheck(index)
     return _G["QuestLogTitle" .. index .. "Check"]
 end
 
-function VoiceOverUtils:colorizeText(text, color)
+function Utils:ColorizeText(text, color)
     return color .. text .. "|r"
 end
 
-function VoiceOverUtils:Ordered(tbl, sorter)
+function Utils:Ordered(tbl, sorter)
     local orderedIndex = {}
     for key in pairs(tbl) do
         table.insert(orderedIndex, key)

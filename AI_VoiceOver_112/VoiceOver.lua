@@ -17,7 +17,7 @@ local chatCommands = {
             name = "Pause",
             desc = "Pauses sound playback after the current sound finishes",
             func = function()
-                Addon.soundQueue:pauseQueue()
+                Addon.soundQueue:PauseQueue()
             end
         },
         resume = {
@@ -25,7 +25,7 @@ local chatCommands = {
             name = "Resume",
             desc = "Resumes sound playback",
             func = function()
-                Addon.soundQueue:resumeQueue()
+                Addon.soundQueue:ResumeQueue()
             end
         },
     },
@@ -44,7 +44,7 @@ end
 
 function Addon:VOICEOVER_NEXT_SOUND_TIMER(soundData)
     Utils:Log("delayfun")
-    self.soundQueue:removeSoundFromQueue(soundData)
+    self.soundQueue:RemoveSoundFromQueue(soundData)
     self.soundQueue.isSoundPlaying = false
 end
 
@@ -66,7 +66,7 @@ function Addon:QUEST_DETAIL()
         text = questText,
         fileName = fileName,
     }
-    self.soundQueue:addSoundToQueue(soundData)
+    self.soundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:QUEST_COMPLETE()
@@ -85,7 +85,7 @@ function Addon:QUEST_COMPLETE()
         text = questText,
         fileName = fileName,
     }
-    self.soundQueue:addSoundToQueue(soundData)
+    self.soundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:GOSSIP_SHOW()
@@ -99,5 +99,5 @@ function Addon:GOSSIP_SHOW()
         title = targetName,
         fileName = fileName,
     }
-    self.soundQueue:addSoundToQueue(soundData)
+    self.soundQueue:AddSoundToQueue(soundData)
 end

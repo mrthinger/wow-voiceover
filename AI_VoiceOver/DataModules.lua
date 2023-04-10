@@ -94,7 +94,7 @@ function DataModules:EnumerateAddons()
 end
 
 function DataModules:GetNPCGossipTextHash(soundData)
-    local npcId = VoiceOverUtils:getIdFromGuid(soundData.unitGuid)
+    local npcID = Utils:GetIDFromGUID(soundData.unitGUID)
     local text = soundData.text
 
     local text_entries = {}
@@ -102,7 +102,7 @@ function DataModules:GetNPCGossipTextHash(soundData)
     for _, module in self:GetModules() do
         local data = module.NPCToTextToTemplateHash
         if data then
-            local npc_gossip_table = data[npcId]
+            local npc_gossip_table = data[npcID]
             if npc_gossip_table then
                 for text, hash in pairs(npc_gossip_table) do
                     text_entries[text] = text_entries[text] or
@@ -116,13 +116,13 @@ function DataModules:GetNPCGossipTextHash(soundData)
     return best_result and best_result.value
 end
 
-function DataModules:GetQuestLogNPCID(questId)
+function DataModules:GetQuestLogNPCID(questID)
     for _, module in self:GetModules() do
         local data = module.QuestlogNpcGuidTable
         if data then
-            local npcId = data[questId]
-            if npcId then
-                return npcId
+            local npcID = data[questID]
+            if npcID then
+                return npcID
             end
         end
     end
@@ -140,14 +140,14 @@ function DataModules:GetNPCName(npcID)
     end
 end
 
-function DataModules:GetQuestIDByQuestTextHash(hash, npcId)
-    local hashWithNpc = format("%s:%d", hash, npcId)
+function DataModules:GetQuestIDByQuestTextHash(text, npcID)
+    local hashWithNPC = format("%s:%d", hash, npcID)
     for _, module in self:GetModules() do
         local data = module.QuestTextHashToQuestID
         if data then
-            local questId = data[hashWithNpc] or data[hash]
-            if questId then
-                return questId
+            local questID = data[hashWithNPC] or data[hash]
+            if questID then
+                return questID
             end
         end
     end
@@ -155,9 +155,9 @@ end
 
 local getFileNameForEvent = setmetatable(
     {
-        accept = function(soundData) return format("%d-%s", soundData.questId, "accept") end,
-        progress = function(soundData) return format("%d-%s", soundData.questId, "progress") end,
-        complete = function(soundData) return format("%d-%s", soundData.questId, "complete") end,
+        accept = function(soundData) return format("%d-%s", soundData.questID, "accept") end,
+        progress = function(soundData) return format("%d-%s", soundData.questID, "progress") end,
+        complete = function(soundData) return format("%d-%s", soundData.questID, "complete") end,
         gossip = function(soundData) return DataModules:GetNPCGossipTextHash(soundData) end,
     }, { __index = function(self, event) error(format([[Unhandled VoiceOver sound event "%s"]], event)) end })
 
@@ -171,7 +171,7 @@ function DataModules:PrepareSound(soundData)
     for _, module in self:GetModules() do
         local data = module.SoundLengthTable
         if data then
-            local playerGenderedFileName = DataModules:addPlayerGenderToFilename(soundData.fileName)
+            local playerGenderedFileName = DataModules:AddPlayerGenderToFilename(soundData.fileName)
             if data[playerGenderedFileName] then
                 soundData.fileName = playerGenderedFileName
             end
@@ -186,11 +186,11 @@ function DataModules:PrepareSound(soundData)
             end
         end
     end
-    
+
     return false
 end
 
-function DataModules:addPlayerGenderToFilename(fileName)
+function DataModules:AddPlayerGenderToFilename(fileName)
     local playerGender = UnitSex("player")
 
     if playerGender == 2 then     -- male

@@ -39,61 +39,18 @@ function SoundQueueUI:new(soundQueue)
 
     self.animtimer = time()
 
-    self:initDisplay()
-    self:initPortraitLine()
-    self:initPortrait()
-    self:initMover()
-    self:initMinimapButton()
+    self:InitDisplay()
+    self:InitPortraitLine()
+    self:InitPortrait()
+    self:InitMover()
+    self:InitMinimapButton()
 
-    function self.refreshConfig()
-        if Addon.db.profile.main.HideNpcHead then
-            if self.frame.portrait:IsShown() then
-                self.frame:SetWidth(self.frame:GetWidth() - PORTRAIT_SIZE)
-            end
-            self.frame:SetResizeBounds(100, PORTRAIT_SIZE, 10000, PORTRAIT_SIZE)
-
-            self.frame.portraitLine:Show()
-            self.frame.portrait:Hide()
-            self.frame.miniPause:Show()
-
-            self.frame.container:SetPoint("LEFT", 20, 0)
-            self.frame.background:SetPoint("TOPLEFT")
-            self.frame.background:SetPoint("BOTTOMLEFT")
-
-            self.frame.mover:SetParent(self.frame)
-            self.frame.mover:SetPoint("CENTER", self.frame, "BOTTOMLEFT", 2, 6)
-        else
-            if not self.frame.portrait:IsShown() then
-                self.frame:SetWidth(self.frame:GetWidth() + PORTRAIT_SIZE)
-            end
-            self.frame:SetResizeBounds(PORTRAIT_SIZE + 100, PORTRAIT_SIZE, 10000, PORTRAIT_SIZE)
-
-            self.frame.portraitLine:Hide()
-            self.frame.portrait:Show()
-            self.frame.miniPause:Hide()
-
-            self.frame.container:SetPoint("LEFT", self.frame.portrait, "RIGHT", 15, 0)
-            self.frame.background:SetPoint("TOPLEFT", self.frame.portrait, "TOPRIGHT")
-            self.frame.background:SetPoint("BOTTOMLEFT", self.frame.portrait, "BOTTOMRIGHT")
-
-            self.frame.mover:SetParent(self.frame.portrait.border)
-            self.frame.mover:SetPoint("CENTER", self.frame.portrait.border, "BOTTOMLEFT", 5, 6)
-        end
-
-        self.frame.mover:SetShown(not Addon.db.profile.main.LockFrame)
-        self.frame.resizer:SetShown(not Addon.db.profile.main.LockFrame)
-        self.frame:SetScale(Addon.db.profile.main.FrameScale)
-
-        self:updateSoundQueueDisplay()
-        LibDBIcon:Refresh("VoiceOver", Addon.db.profile.MinimapButton.LibDBIcon)
-    end
-
-    self.refreshConfig()
+    self:RefreshConfig()
 
     return self
 end
 
-function SoundQueueUI:initDisplay()
+function SoundQueueUI:InitDisplay()
     local soundQueueUI = self
 
     self.frame = CreateFrame("Frame", "VoiceOverFrame", UIParent, "BackdropTemplate")
@@ -108,7 +65,7 @@ function SoundQueueUI:initDisplay()
     self.frame:SetResizable(true)       -- Allow the frame to be resized
     self.frame:SetClampedToScreen(true) -- Prevent from being dragged off-screen
     self.frame:SetUserPlaced(true)
-    self.frame:SetFrameStrata(Addon.db.profile.main.FrameStrata)
+    self.frame:SetFrameStrata(Addon.db.profile.SoundQueueUI.FrameStrata)
 
     -- Create a background gradient behind the queue container
     self.frame.background = self.frame:CreateTexture(nil, "BACKGROUND")
@@ -186,7 +143,7 @@ function SoundQueueUI:initDisplay()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
         local soundData = self.soundQueue.sounds[1]
         if soundData and soundData.event == "gossip" then
-            self.soundQueue:removeSoundFromQueue(soundData)
+            self.soundQueue:RemoveSoundFromQueue(soundData)
         end
     end)
 
@@ -196,7 +153,7 @@ function SoundQueueUI:initDisplay()
     end)
 end
 
-function SoundQueueUI:initPortraitLine()
+function SoundQueueUI:InitPortraitLine()
     -- Create a vertical line that will be visible instead of the portrait if the player turned the portrait off
     self.frame.portraitLine = self.frame:CreateTexture(nil, "BORDER")
     self.frame.portraitLine:SetPoint("TOPLEFT", -PORTRAIT_LINE_WIDTH / 2 + 2, PORTRAIT_BORDER_OUTSET)
@@ -222,7 +179,7 @@ function SoundQueueUI:initPortraitLine()
     self.frame.miniPause.background:SetPoint("CENTER")
     self.frame.miniPause.background:SetSize(32, 32)
     function self.frame.miniPause:Update()
-        if Addon.db.char.isPaused then
+        if Addon.db.char.IsPaused then
             self:GetNormalTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetPushedTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0.75)
@@ -245,7 +202,7 @@ function SoundQueueUI:initPortraitLine()
     end)
 end
 
-function SoundQueueUI:initPortrait()
+function SoundQueueUI:InitPortrait()
     local soundQueueUI = self
 
     -- Create a container frame for the portrait
@@ -256,24 +213,24 @@ function SoundQueueUI:initPortrait()
         if not soundData then
             self.model:Hide()
             self.book:Hide()
-        elseif not soundData.unitGuid then
+        elseif not soundData.unitGUID then
             self.model:Hide()
             self.book:Show()
         else
             self.model:Show()
             self.book:Hide()
 
-            local creatureID = VoiceOverUtils:getIdFromGuid(soundData.unitGuid)
+            local creatureID = Utils:GetIDFromGUID(soundData.unitGUID)
 
-            if creatureID ~= self.oldCreatureId then
+            if creatureID ~= self.oldCreatureID then
                 self.model:SetCreature(creatureID)
                 self.model:SetCustomCamera(0)
 
-                if not Addon.db.char.isPaused then
+                if not Addon.db.char.IsPaused then
                     self.model:SetAnimation(60)
                 end
 
-                self.oldCreatureId = creatureID
+                self.oldCreatureID = creatureID
             else
                 self.model:SetCustomCamera(0)
             end
@@ -293,7 +250,7 @@ function SoundQueueUI:initPortrait()
     end)
     self.frame.portrait.model:HookScript("OnUpdate", function(self)
         self:SetCustomCamera(0)
-        if self:IsShown() and time() - soundQueueUI.animtimer >= 2 and not Addon.db.char.isPaused then
+        if self:IsShown() and time() - soundQueueUI.animtimer >= 2 and not Addon.db.char.IsPaused then
             self:SetAnimation(60)
             soundQueueUI.animtimer = time()
         end
@@ -322,7 +279,7 @@ function SoundQueueUI:initPortrait()
     self.frame.portrait.pause:GetPushedTexture():SetPoint("CENTER")
     self.frame.portrait.pause:GetPushedTexture():SetSize(28, 28)
     function self.frame.portrait.pause:Update()
-        if Addon.db.char.isPaused then
+        if Addon.db.char.IsPaused then
             self.background:Show()
             self:GetNormalTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetPushedTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
@@ -339,7 +296,7 @@ function SoundQueueUI:initPortrait()
         self:GetNormalTexture():SetAlpha(1)
     end)
     self.frame.portrait.pause:HookScript("OnLeave", function(self)
-        self:GetNormalTexture():SetAlpha(Addon.db.char.isPaused and 0.75 or 0)
+        self:GetNormalTexture():SetAlpha(Addon.db.char.IsPaused and 0.75 or 0)
     end)
     self.frame.portrait.pause:HookScript("OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
@@ -358,7 +315,7 @@ function SoundQueueUI:initPortrait()
     self.frame.portrait.border.texture:SetTexCoord(0, PORTRAIT_ATLAS_BORDER_SIZE / PORTRAIT_ATLAS_SIZE, 0, PORTRAIT_ATLAS_BORDER_SIZE / PORTRAIT_ATLAS_SIZE)
 end
 
-function SoundQueueUI:initMover()
+function SoundQueueUI:InitMover()
     -- Create a button that lets the player drag the frame around
     self.frame.mover = CreateFrame("Button", nil, self.frame.portrait.border)
     self.frame.mover:SetSize(26, 26)
@@ -378,7 +335,7 @@ function SoundQueueUI:initMover()
     self.frame.mover.background:SetPoint("CENTER")
     self.frame.mover.background:SetSize(32, 32)
     self.frame.mover:HookScript("OnEnter", function(self)
-        if Addon.db.profile.main.LockFrame then return end
+        if Addon.db.profile.SoundQueueUI.LockFrame then return end
         SetCursor([[Interface\Cursor\UI-Cursor-Move]])
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText("Move the Frame", HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b)
@@ -390,16 +347,16 @@ function SoundQueueUI:initMover()
         GameTooltip_Hide(self)
     end)
     self.frame.mover:HookScript("OnMouseDown", function()
-        if Addon.db.profile.main.LockFrame then return end
+        if Addon.db.profile.SoundQueueUI.LockFrame then return end
         self.frame:StartMoving()
     end)
     self.frame.mover:HookScript("OnMouseUp", function()
-        if Addon.db.profile.main.LockFrame then return end
+        if Addon.db.profile.SoundQueueUI.LockFrame then return end
         self.frame:StopMovingOrSizing()
     end)
 end
 
-function SoundQueueUI:initMinimapButton()
+function SoundQueueUI:InitMinimapButton()
     local soundQueueUI = self
     local buttons =
     {
@@ -441,7 +398,50 @@ function SoundQueueUI:initMinimapButton()
     LibDBIcon:Register("VoiceOver", object, Addon.db.profile.MinimapButton.LibDBIcon)
 end
 
-function SoundQueueUI:createButton(i)
+function SoundQueueUI:RefreshConfig()
+    if Addon.db.profile.SoundQueueUI.HidePortrait then
+        if self.frame.portrait:IsShown() then
+            self.frame:SetWidth(self.frame:GetWidth() - PORTRAIT_SIZE)
+        end
+        self.frame:SetResizeBounds(100, PORTRAIT_SIZE, 10000, PORTRAIT_SIZE)
+
+        self.frame.portraitLine:Show()
+        self.frame.portrait:Hide()
+        self.frame.miniPause:Show()
+
+        self.frame.container:SetPoint("LEFT", 20, 0)
+        self.frame.background:SetPoint("TOPLEFT")
+        self.frame.background:SetPoint("BOTTOMLEFT")
+
+        self.frame.mover:SetParent(self.frame)
+        self.frame.mover:SetPoint("CENTER", self.frame, "BOTTOMLEFT", 2, 6)
+    else
+        if not self.frame.portrait:IsShown() then
+            self.frame:SetWidth(self.frame:GetWidth() + PORTRAIT_SIZE)
+        end
+        self.frame:SetResizeBounds(PORTRAIT_SIZE + 100, PORTRAIT_SIZE, 10000, PORTRAIT_SIZE)
+
+        self.frame.portraitLine:Hide()
+        self.frame.portrait:Show()
+        self.frame.miniPause:Hide()
+
+        self.frame.container:SetPoint("LEFT", self.frame.portrait, "RIGHT", 15, 0)
+        self.frame.background:SetPoint("TOPLEFT", self.frame.portrait, "TOPRIGHT")
+        self.frame.background:SetPoint("BOTTOMLEFT", self.frame.portrait, "BOTTOMRIGHT")
+
+        self.frame.mover:SetParent(self.frame.portrait.border)
+        self.frame.mover:SetPoint("CENTER", self.frame.portrait.border, "BOTTOMLEFT", 5, 6)
+    end
+
+    self.frame.mover:SetShown(not Addon.db.profile.SoundQueueUI.LockFrame)
+    self.frame.resizer:SetShown(not Addon.db.profile.SoundQueueUI.LockFrame)
+    self.frame:SetScale(Addon.db.profile.SoundQueueUI.FrameScale)
+
+    self:UpdateSoundQueueDisplay()
+    LibDBIcon:Refresh("VoiceOver", Addon.db.profile.MinimapButton.LibDBIcon)
+end
+
+function SoundQueueUI:CreateButton(i)
     local soundQueueUI = self
 
     local button = CreateFrame("Button", nil, self.frame.container)
@@ -529,7 +529,7 @@ function SoundQueueUI:createButton(i)
         end
     end
 
-    button:HookScript("OnClick", function(self) soundQueueUI.soundQueue:removeSoundFromQueue(self.soundData) end)
+    button:HookScript("OnClick", function(self) soundQueueUI.soundQueue:RemoveSoundFromQueue(self.soundData) end)
     button:HookScript("OnMouseDown", function(self) self:Update(true) end)
     button:HookScript("OnMouseUp", function(self) self:Update(false) end)
     button:HookScript("OnEnter", function(self) self:Update(nil, true) end)
@@ -539,10 +539,10 @@ function SoundQueueUI:createButton(i)
     return button
 end
 
-function SoundQueueUI:updateSoundQueueDisplay()
-    self.frame:SetShown(not Addon.db.profile.main.HideFrame and #self.soundQueue.sounds > 0)
+function SoundQueueUI:UpdateSoundQueueDisplay()
+    self.frame:SetShown(not Addon.db.profile.SoundQueueUI.HideFrame and #self.soundQueue.sounds > 0)
 
-    self:updatePauseDisplay()
+    self:UpdatePauseDisplay()
 
     self.frame.portrait:Configure(self.soundQueue.sounds[1])
 
@@ -563,7 +563,7 @@ function SoundQueueUI:updateSoundQueueDisplay()
                 gossipCount = i - 1
             end
             lastButtonIndex = lastButtonIndex + 1
-            local button = self.frame.container.buttons[lastButtonIndex] or self:createButton(lastButtonIndex)
+            local button = self.frame.container.buttons[lastButtonIndex] or self:CreateButton(lastButtonIndex)
             button:Configure(soundData)
             lastContent = button
         end
@@ -590,7 +590,7 @@ function SoundQueueUI:updateSoundQueueDisplay()
     C_Timer.After(0, function() self.frame.container.buttons:Update() end)
 end
 
-function SoundQueueUI:updatePauseDisplay()
+function SoundQueueUI:UpdatePauseDisplay()
     self.frame.miniPause:Update()
     self.frame.portrait.pause:Update()
 end

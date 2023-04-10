@@ -2,22 +2,19 @@ setfenv(1, VoiceOver)
 
 Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0")
 
-local defaults =
-{
-    profile =
-    {
-        main =
-        {
-            HideFrame = false,
+local defaults = {
+    profile = {
+        SoundQueueUI = {
             LockFrame = false,
-            GossipFrequency = "OncePerQuestNpc",
+            FrameScale = 0.7,
+            FrameStrata = "HIGH",
+            HidePortrait = false,
+            HideFrame = false,
+        },
+        Audio = {
+            GossipFrequency = "OncePerQuestNPC",
             SoundChannel = "Master",
             AutoToggleDialog = false,
-            DebugEnabled = false,
-            HideNpcHead = false,
-            HideMinimapButton = false,
-            FrameStrata = "HIGH",
-            FrameScale = 0.7,
         },
         MinimapButton = {
             LibDBIcon = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
@@ -28,9 +25,10 @@ local defaults =
                 RightButton = "Clear",
             }
         },
+        DebugEnabled = false,
     },
     char = {
-        isPaused = false,
+        IsPaused = false,
         hasSeenGossipForNPC = {},
     }
 }
@@ -42,7 +40,7 @@ function Addon:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("VoiceOverDB", defaults)
     self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
 
-    self.soundQueue = VoiceOverSoundQueue:new()
+    self.soundQueue = SoundQueue:new()
     self.questOverlayUI = QuestOverlayUI:new(self.soundQueue)
 
     DataModules:EnumerateAddons()
@@ -83,12 +81,12 @@ function Addon:OnInitialize()
         end
 
         for _, soundData in pairs(soundsToRemove) do
-            self.soundQueue:removeSoundFromQueue(soundData)
+            self.soundQueue:RemoveSoundFromQueue(soundData)
         end
     end)
 
     hooksecurefunc("QuestLog_Update", function()
-        self.questOverlayUI:updateQuestOverlayUI()
+        self.questOverlayUI:UpdateQuestOverlayUI()
     end)
 
     if C_GossipInfo and C_GossipInfo.SelectOption then
@@ -114,54 +112,54 @@ function Addon:OnInitialize()
 end
 
 function Addon:RefreshConfig()
-    self.soundQueue.ui.refreshConfig()
+    self.soundQueue.ui:RefreshConfig()
 end
 
 function Addon:QUEST_DETAIL()
-    local questId = GetQuestID()
+    local questID = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
     local guid = UnitGUID("npc")
     local targetName = UnitName("npc")
 
     if UnitIsPlayer("npc") then
-        local npcID = DataModules:GetQuestLogNPCID(questId)
+        local npcID = DataModules:GetQuestLogNPCID(questID)
         if npcID then
-            guid = VoiceOverUtils:getGuidFromId(npcID)
+            guid = Utils:GetGUIDFromID(npcID)
             targetName = DataModules:GetNPCName(npcID) or "Unknown Name"
         else
             return
         end
     end
 
-    -- print("QUEST_DETAIL", questId, questTitle);
+    -- print("QUEST_DETAIL", questID, questTitle);
     local soundData = {
         event = "accept",
-        questId = questId,
+        questID = questID,
         name = targetName,
         title = questTitle,
         text = questText,
-        unitGuid = guid
+        unitGUID = guid
     }
-    self.soundQueue:addSoundToQueue(soundData)
+    self.soundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:QUEST_COMPLETE()
-    local questId = GetQuestID()
+    local questID = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetRewardText()
     local guid = UnitGUID("npc")
     local targetName = UnitName("npc")
-    -- print("QUEST_COMPLETE", questId, questTitle);
+    -- print("QUEST_COMPLETE", questID, questTitle);
     local soundData = {
         event = "complete",
-        questId = questId,
+        questID = questID,
         name = targetName,
         title = questTitle,
         text = questText,
-        unitGuid = guid
+        unitGUID = guid
     }
-    self.soundQueue:addSoundToQueue(soundData)
+    self.soundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:GOSSIP_SHOW()
@@ -171,18 +169,18 @@ function Addon:GOSSIP_SHOW()
 
     local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[npcKey]
 
-    if self.db.profile.main.GossipFrequency == "OncePerQuestNpc" then
+    if self.db.profile.Audio.GossipFrequency == "OncePerQuestNPC" then
         local numActiveQuests = GetNumGossipActiveQuests()
         local numAvailableQuests = GetNumGossipAvailableQuests()
         local npcHasQuests = (numActiveQuests > 0 or numAvailableQuests > 0)
         if npcHasQuests and gossipSeenForNPC then
             return
         end
-    elseif self.db.profile.main.GossipFrequency == "OncePerNpc" then
+    elseif self.db.profile.Audio.GossipFrequency == "OncePerNPC" then
         if gossipSeenForNPC then
             return
         end
-    elseif self.db.profile.main.GossipFrequency == "Never" then
+    elseif self.db.profile.Audio.GossipFrequency == "Never" then
         return
     end
 
@@ -193,12 +191,12 @@ function Addon:GOSSIP_SHOW()
         name = targetName,
         title = selectedGossipOption and format([["%s"]], selectedGossipOption),
         text = gossipText,
-        unitGuid = guid,
+        unitGUID = guid,
         startCallback = function()
             self.db.char.hasSeenGossipForNPC[npcKey] = true
         end
     }
-    self.soundQueue:addSoundToQueue(soundData)
+    self.soundQueue:AddSoundToQueue(soundData)
 
     selectedGossipOption = nil
     lastGossipOptions = nil
