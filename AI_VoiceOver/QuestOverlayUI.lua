@@ -19,14 +19,17 @@ function QuestOverlayUI:createPlayButton(questID)
     playButton:SetHeight(20)
     playButton:SetHitRectInsets(2, 2, 2, 2)
     playButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    playButton:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    playButton:GetDisabledTexture():SetDesaturated(true)
+    playButton:GetDisabledTexture():SetAlpha(0.33)
     playButton:SetHighlightTexture("Interface\\BUTTONS\\UI-Panel-MinimizeButton-Highlight")
     self.questPlayButtons[questID] = playButton
 end
 
 function QuestOverlayUI:updateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
-    playButton:SetPoint("LEFT", normalText, "LEFT", 0, 0)
+    playButton:SetPoint("LEFT", normalText, "LEFT", 4, 0)
 
-    local formatedText = "|TInterface\\Common\\spacer:1:20|t" .. (normalText:GetText() or ""):trim()
+    local formatedText = [[|TInterface\AddOns\AI_VoiceOver\Textures\spacer:1:24|t]] .. (normalText:GetText() or ""):trim()
 
     normalText:SetText(formatedText)
     QuestLogDummyText:SetText(formatedText)
@@ -108,18 +111,24 @@ function QuestOverlayUI:updateQuestOverlayUI()
 
         -- Get quest title
         local questLogTitleFrame = VoiceOverUtils:getQuestLogTitleFrame(i)
+        local normalText = VoiceOverUtils:getQuestLogTitleNormalText(i)
+        local questCheck = VoiceOverUtils:getQuestLogTitleCheck(i)
         local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID = GetQuestLogTitle(
             questIndex)
 
-        if not isHeader and DataModules:PrepareSound({ event = "accept", questId = questID }) then
-            if not self.questPlayButtons[questID] then
-                self:createPlayButton(questID)
+        if not self.questPlayButtons[questID] then
+            self:createPlayButton(questID)
+        end
+
+        if not isHeader then
+            if DataModules:PrepareSound({ event = "accept", questId = questID }) then
+                self:updatePlayButton(title, questID, questLogTitleFrame, normalText, questCheck)
+                self.questPlayButtons[questID]:Enable()
+            else
+                self:updateQuestTitle(questLogTitleFrame, self.questPlayButtons[questID], normalText, questCheck)
+                self.questPlayButtons[questID]:Disable()
             end
 
-            local normalText = VoiceOverUtils:getQuestLogTitleNormalText(i);
-            local questCheck = VoiceOverUtils:getQuestLogTitleCheck(i);
-
-            self:updatePlayButton(title, questID, questLogTitleFrame, normalText, questCheck)
             self.questPlayButtons[questID]:Show()
             local isPlaying = self.playingStates[questID] or false
             self:updatePlayButtonTexture(questID, isPlaying)

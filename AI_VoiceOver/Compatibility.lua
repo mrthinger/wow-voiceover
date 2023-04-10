@@ -36,8 +36,8 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
     end
 
     function QuestOverlayUI:updateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
-        playButton:SetPoint("LEFT", questLogTitleFrame.normalText, "LEFT", 0, 0)
-        questLogTitleFrame.normalText:SetText("|TInterface\\Common\\spacer:1:20|t" ..
+        playButton:SetPoint("LEFT", questLogTitleFrame.normalText, "LEFT", 4, 0)
+        questLogTitleFrame.normalText:SetText([[|TInterface\AddOns\AI_VoiceOver\Textures\spacer:1:24|t]] ..
             (questLogTitleFrame.normalText:GetText() or ""):trim())
         QuestLogTitleButton_Resize(questLogTitleFrame)
     end
