@@ -39,7 +39,7 @@ function SoundQueue:addSoundToQueue(soundData)
     -- Don't play gossip if there are quest sounds in the queue
     local questSoundExists = false
     for _, queuedSound in ipairs(self.sounds) do
-        if queuedSound.questId ~= nil then
+        if queuedSound.questID then
             questSoundExists = true
             break
         end
