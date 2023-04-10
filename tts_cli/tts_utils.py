@@ -11,9 +11,10 @@ from tts_cli.length_table import write_sound_length_table_lua
 from tts_cli.utils import get_first_n_words, get_last_n_words, replace_dollar_bs_with_space
 from slpp import slpp as lua
 
-
-OUTPUT_FOLDER = 'generated'
-SOUND_OUTPUT_FOLDER = OUTPUT_FOLDER + "/sounds"
+# TODO: make module name a cli arg when we do other expansions
+MODULE_NAME = 'AI_VoiceOverData_Vanilla'
+OUTPUT_FOLDER = MODULE_NAME + '/generated'
+SOUND_OUTPUT_FOLDER =  OUTPUT_FOLDER + '/sounds'
 
 replace_dict = {'$b': '\n', '$B': '\n', '$n': 'adventurer', '$N': 'Adventurer',
                 '$C': 'Adventurer', '$c': 'adventurer', '$R': 'Traveler', '$r': 'traveler'}
@@ -212,27 +213,9 @@ class TTSProcessor:
                     pbar.update(1)
 
 
-    def read_gossip_file_lookups_table(self, file_path):
-        gossip_table = {}
-        
-        if not os.path.exists(file_path):
-            return gossip_table
-
-        with open(file_path, "r") as f:
-            contents = f.read()
-            try:
-                # Remove the assignment part of the Lua table and parse the table
-                contents = contents.replace("NPCToTextToTemplateHash = ", "")
-                contents = contents.replace("select(2, ...).", "")
-                gossip_table = lua.decode(contents)
-            except Exception as e:
-                print(f"Error while reading gossip_file_lookups.lua: {e}")
-                return {}
-        
-        return gossip_table
-    def write_gossip_file_lookups_table(self, df):
+    def write_gossip_file_lookups_table(self, df, module_name):
         output_file = OUTPUT_FOLDER + "/gossip_file_lookups.lua"
-        gossip_table = self.read_gossip_file_lookups_table(output_file)
+        gossip_table = {}
 
         for i, row in tqdm(df.iterrows()):
             if row['quest']:
@@ -246,33 +229,14 @@ class TTSProcessor:
             gossip_table[row['id']][escapedText] = row['templateText_race_gender_hash']
 
         with open(output_file, "w") as f:
-            f.write("select(2, ...).NPCToTextToTemplateHash = ")
+            f.write(f"{module_name}.NPCToTextToTemplateHash = ")
             f.write(lua.encode(gossip_table))
             f.write("\n")
 
 
-    def read_questlog_npc_lookups_table(self, file_path):
-        questlog_table = {}
-
-        if not os.path.exists(file_path):
-            return questlog_table
-
-        with open(file_path, "r") as f:
-            contents = f.read()
-            try:
-                # Remove the assignment part of the Lua table and parse the table
-                contents = contents.replace("QuestlogNpcGuidTable = ", "")
-                contents = contents.replace("select(2, ...).", "")
-                questlog_table = lua.decode(contents)
-            except Exception as e:
-                print(f"Error while reading questlog_npc_lookups.lua: {e}")
-                return {}
-
-        return questlog_table
-
-    def write_questlog_npc_lookups_table(self, df):
+    def write_questlog_npc_lookups_table(self, df, module_name):
         output_file = OUTPUT_FOLDER + "/questlog_npc_lookups.lua"
-        questlog_table = self.read_questlog_npc_lookups_table(output_file)
+        questlog_table = {}
 
         accept_df = df[df['source'] == 'accept']
 
@@ -280,31 +244,26 @@ class TTSProcessor:
             questlog_table[int(row['quest'])] = row['id']
 
         with open(output_file, "w") as f:
-            f.write("select(2, ...).QuestlogNpcGuidTable = ")
+            f.write(f"{module_name}.QuestlogNpcGuidTable = ")
             f.write(lua.encode(questlog_table))
             f.write("\n")
+    
+    def write_npc_name_lookup_table(self, df, module_name):
+        output_file = OUTPUT_FOLDER + "/npc_name_lookups.lua"
+        npc_name_table = {}
 
-    def read_quest_id_lookup(self, file_path):
-        quest_id_table = {}
 
-        if not os.path.exists(file_path):
-            return quest_id_table
+        for i, row in tqdm(df.iterrows()):
+            npc_name_table[row['id']] =  row['name']
 
-        with open(file_path, "r") as f:
-            contents = f.read()
-            try:
-                # Remove the assignment part of the Lua table and parse the table
-                contents = contents.replace("VoiceOver_QuestIDLookup = ", "")
-                quest_id_table = lua.decode(contents)
-            except Exception as e:
-                print(f"Error while reading quest_id_lookups.lua: {e}")
-                return {}
+        with open(output_file, "w") as f:
+            f.write(f"{module_name}.NPCNameLookup = ")
+            f.write(lua.encode(npc_name_table))
+            f.write("\n")
 
-        return quest_id_table
-
-    def write_quest_id_lookup(self, df):
+    def write_quest_id_lookup(self, df, module_name):
         output_file = OUTPUT_FOLDER + "/quest_id_lookups.lua"
-        quest_id_table = self.read_quest_id_lookup(output_file)
+        quest_id_table = {}
 
         quest_df = df[df['quest'] != '']
 
@@ -337,32 +296,14 @@ class TTSProcessor:
         pruned_quest_id_table = prune_quest_id_table(quest_id_table)
 
         with open(output_file, "w") as f:
-            f.write("VoiceOver_QuestIDLookup = ")
+            f.write(f"{module_name}.QuestIDLookup = ")
             f.write(lua.encode(pruned_quest_id_table))
             f.write("\n")
 
-    def read_npc_name_gossip_file_lookups_table(self, file_path):
-        gossip_table = {}
-        
-        if not os.path.exists(file_path):
-            return gossip_table
 
-        with open(file_path, "r") as f:
-            contents = f.read()
-            try:
-                # Remove the assignment part of the Lua table and parse the table
-                contents = contents.replace("VoiceOver_GossipLookup = ", "")
-                contents = contents.replace("select(2, ...).", "")
-                gossip_table = lua.decode(contents)
-            except Exception as e:
-                print(f"Error while reading npc_name_gossip_file_lookups.lua: {e}")
-                return {}
-        
-        return gossip_table
-
-    def write_npc_name_gossip_file_lookups_table(self, df):
+    def write_npc_name_gossip_file_lookups_table(self, df, module_name):
         output_file = OUTPUT_FOLDER + "/npc_name_gossip_file_lookups.lua"
-        gossip_table = self.read_npc_name_gossip_file_lookups_table(output_file)
+        gossip_table = {}
 
         for i, row in tqdm(df.iterrows()):
             if row['quest']:
@@ -377,7 +318,7 @@ class TTSProcessor:
             gossip_table[npc_name][escapedText] = row['templateText_race_gender_hash']
 
         with open(output_file, "w") as f:
-            f.write("VoiceOver_GossipLookup = ")
+            f.write(f"{module_name}.GossipLookup = ")
             f.write(lua.encode(gossip_table))
             f.write("\n")
 
@@ -387,20 +328,23 @@ class TTSProcessor:
         self.create_output_dirs()
         self.process_rows_in_parallel(df, self.process_row, selected_voices, max_workers=5)
         print("Audio finished generating.")
-        self.generate_lookup_tables(df)
 
     def generate_lookup_tables(self, df):
-        self.write_gossip_file_lookups_table(df)
-        print("Added new entries to gossip_file_lookups.lua")
+        self.create_output_dirs()
+        self.write_gossip_file_lookups_table(df, MODULE_NAME)
+        print("Finished writing gossip_file_lookups.lua")
 
-        self.write_quest_id_lookup(df)
-        print("Added new entries to quest_id_lookups.lua")
+        self.write_quest_id_lookup(df, MODULE_NAME)
+        print("Finished writing quest_id_lookups.lua")
 
-        self.write_npc_name_gossip_file_lookups_table(df)
-        print("Added new entries to npc_name_gossip_file_lookups.lua")
+        self.write_npc_name_gossip_file_lookups_table(df, MODULE_NAME)
+        print("Finished writing npc_name_gossip_file_lookups.lua")
 
-        self.write_questlog_npc_lookups_table(df)
-        print("Added new entries to questlog_npc_lookups.lua")
+        self.write_questlog_npc_lookups_table(df, MODULE_NAME)
+        print("Finished writing questlog_npc_lookups.lua")
+
+        self.write_npc_name_lookup_table(df, MODULE_NAME)
+        print("Finished writing npc_name_lookups.lua")
         
-        write_sound_length_table_lua(SOUND_OUTPUT_FOLDER, OUTPUT_FOLDER)
+        write_sound_length_table_lua(MODULE_NAME, SOUND_OUTPUT_FOLDER, OUTPUT_FOLDER)
         print("Updated sound_length_table.lua")

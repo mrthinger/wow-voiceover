@@ -1,8 +1,8 @@
 if not VoiceOver or not VoiceOver.DataModules then return end
 
-local name, module = ...
+AI_VoiceOverData_Vanilla = {}
 
-function module:GetSoundPath(fileName, event)
+function AI_VoiceOverData_Vanilla:GetSoundPath(fileName, event)
     if event == "accept" or event == "complete" or event == "progress" then
         return format([[generated\sounds\quests\%s.mp3]], fileName)
     elseif event == "gossip" then
@@ -10,4 +10,4 @@ function module:GetSoundPath(fileName, event)
     end
 end
 
-VoiceOver.DataModules:Register(name, module)
+VoiceOver.DataModules:Register("AI_VoiceOverData_Vanilla", AI_VoiceOverData_Vanilla)
