@@ -95,7 +95,7 @@ SoundPath = "Interface\\AddOns\\AI_VoiceOver_112\\generated\\sounds\\"
 MP3_EXT = ".mp3"
 function Utils:PrepareSoundDataInPlace(soundData)
     local subfolder
-    if soundData.event == "gossip" then
+    if Enums.SoundEvent:IsGossipEvent(soundData.event) then
         subfolder = "gossip\\"
     else
         subfolder = "quests\\"

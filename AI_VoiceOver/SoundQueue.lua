@@ -61,7 +61,7 @@ function SoundQueue:AddSoundToQueue(soundData)
 end
 
 function SoundQueue:PlaySound(soundData)
-    local channel = Addon.db.profile.Audio.SoundChannel
+    local channel = Enums.SoundChannel:GetName(Addon.db.profile.Audio.SoundChannel)
     local willPlay, handle = PlaySoundFile(soundData.filePath, channel)
 
     if Addon.db.profile.Audio.AutoToggleDialog then

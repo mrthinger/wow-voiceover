@@ -12,8 +12,8 @@ local defaults = {
             HideFrame = false,
         },
         Audio = {
-            GossipFrequency = "OncePerQuestNPC",
-            SoundChannel = "Master",
+            GossipFrequency = Enums.GossipFrequency.OncePerQuestNPC,
+            SoundChannel = Enums.SoundChannel.Master,
             AutoToggleDialog = false,
         },
         MinimapButton = {
@@ -134,7 +134,7 @@ function Addon:QUEST_DETAIL()
 
     -- print("QUEST_DETAIL", questID, questTitle);
     local soundData = {
-        event = "accept",
+        event = Enums.SoundEvent.QuestAccept,
         questID = questID,
         name = targetName,
         title = questTitle,
@@ -152,7 +152,7 @@ function Addon:QUEST_COMPLETE()
     local targetName = UnitName("npc")
     -- print("QUEST_COMPLETE", questID, questTitle);
     local soundData = {
-        event = "complete",
+        event = Enums.SoundEvent.QuestComplete,
         questID = questID,
         name = targetName,
         title = questTitle,
@@ -169,25 +169,25 @@ function Addon:GOSSIP_SHOW()
 
     local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[npcKey]
 
-    if self.db.profile.Audio.GossipFrequency == "OncePerQuestNPC" then
+    if self.db.profile.Audio.GossipFrequency == Enums.GossipFrequency.OncePerQuestNPC then
         local numActiveQuests = GetNumGossipActiveQuests()
         local numAvailableQuests = GetNumGossipAvailableQuests()
         local npcHasQuests = (numActiveQuests > 0 or numAvailableQuests > 0)
         if npcHasQuests and gossipSeenForNPC then
             return
         end
-    elseif self.db.profile.Audio.GossipFrequency == "OncePerNPC" then
+    elseif self.db.profile.Audio.GossipFrequency == Enums.GossipFrequency.OncePerNPC then
         if gossipSeenForNPC then
             return
         end
-    elseif self.db.profile.Audio.GossipFrequency == "Never" then
+    elseif self.db.profile.Audio.GossipFrequency == Enums.GossipFrequency.Never then
         return
     end
 
     -- Play the gossip sound
     local gossipText = GetGossipText()
     local soundData = {
-        event = "gossip",
+        event = Enums.SoundEvent.Gossip,
         name = targetName,
         title = selectedGossipOption and format([["%s"]], selectedGossipOption),
         text = gossipText,

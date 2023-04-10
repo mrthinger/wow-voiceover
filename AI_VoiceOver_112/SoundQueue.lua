@@ -64,7 +64,7 @@ end
 
 
 function SoundQueue:PlaySound(soundData)
-    -- local channel = Addon.db.profile.SoundChannel
+    -- local channel = Enums.SoundChannel:GetName(Addon.db.profile.SoundChannel)
     local channel = "Master"
     local isPlaying = PlaySoundFile(soundData.genderedFilePath, channel)
     if not isPlaying then

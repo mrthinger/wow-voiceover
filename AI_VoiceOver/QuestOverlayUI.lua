@@ -57,7 +57,7 @@ function QuestOverlayUI:UpdatePlayButton(soundTitle, questID, questLogTitleFrame
         if questOverlayUI.questPlayButtons[questID].soundData == nil then
             local npcID = DataModules:GetQuestLogNPCID(questID)
             questOverlayUI.questPlayButtons[questID].soundData = {
-                event = "accept",
+                event = Enums.SoundEvent.QuestAccept,
                 questID = questID,
                 name = npcID and DataModules:GetNPCName(npcID) or "Unknown Name",
                 title = soundTitle,
@@ -121,7 +121,7 @@ function QuestOverlayUI:UpdateQuestOverlayUI()
         end
 
         if not isHeader then
-            if DataModules:PrepareSound({ event = "accept", questID = questID }) then
+            if DataModules:PrepareSound({ event = Enums.SoundEvent.QuestAccept, questID = questID }) then
                 self:UpdatePlayButton(title, questID, questLogTitleFrame, normalText, questCheck)
                 self.questPlayButtons[questID]:Enable()
             else

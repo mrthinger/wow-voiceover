@@ -3,9 +3,10 @@ if not VoiceOver or not VoiceOver.DataModules then return end
 AI_VoiceOverData_Vanilla = {}
 
 function AI_VoiceOverData_Vanilla:GetSoundPath(fileName, event)
-    if event == "accept" or event == "complete" or event == "progress" then
+    setfenv(1, VoiceOver)
+    if Enums.SoundEvent:IsQuestEvent(event) then
         return format([[generated\sounds\quests\%s.mp3]], fileName)
-    elseif event == "gossip" then
+    elseif Enums.SoundEvent:IsGossipEvent(event) then
         return format([[generated\sounds\gossip\%s.mp3]], fileName)
     end
 end
