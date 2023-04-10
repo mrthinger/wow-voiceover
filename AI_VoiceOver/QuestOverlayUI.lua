@@ -55,13 +55,13 @@ function QuestOverlayUI:updatePlayButton(soundTitle, questID, questLogTitleFrame
     local questOverlayUI = self
     self.questPlayButtons[questID]:SetScript("OnClick", function(self)
         if questOverlayUI.questPlayButtons[questID].soundData == nil then
-            local npcId = DataModules:GetQuestLogNPCID(questID)
+            local npcID = DataModules:GetQuestLogNPCID(questID)
             questOverlayUI.questPlayButtons[questID].soundData = {
                 event = "accept",
                 questId = questID,
-                name = "Missing NPC Name", -- TODO: Get name from npc name database
+                name = npcID and DataModules:GetNPCName(npcID) or "Unknown Name",
                 title = soundTitle,
-                unitGuid = npcId and VoiceOverUtils:getGuidFromId(npcId)
+                unitGuid = npcID and VoiceOverUtils:getGuidFromId(npcID)
             }
         end
 

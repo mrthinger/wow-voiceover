@@ -128,6 +128,18 @@ function DataModules:GetQuestLogNPCID(questId)
     end
 end
 
+function DataModules:GetNPCName(npcID)
+    for _, module in self:GetModules() do
+        local data = module.NPCNameLookup
+        if data then
+            local npcName = data[npcID]
+            if npcName then
+                return npcName
+            end
+        end
+    end
+end
+
 function DataModules:GetQuestIDByQuestTextHash(hash, npcId)
     local hashWithNpc = format("%s:%d", hash, npcId)
     for _, module in self:GetModules() do

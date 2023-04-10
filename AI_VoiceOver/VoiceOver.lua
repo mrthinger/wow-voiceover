@@ -125,10 +125,10 @@ function Addon:QUEST_DETAIL()
     local targetName = UnitName("npc")
 
     if UnitIsPlayer("npc") then
-        local npcId = DataModules:GetQuestLogNPCID(questId)
-        if npcId then
-            guid = VoiceOverUtils:getGuidFromId(npcId)
-            targetName = "Missing NPC Name" -- TODO: Get name from npc name database
+        local npcID = DataModules:GetQuestLogNPCID(questId)
+        if npcID then
+            guid = VoiceOverUtils:getGuidFromId(npcID)
+            targetName = DataModules:GetNPCName(npcID) or "Unknown Name"
         else
             return
         end
@@ -174,7 +174,8 @@ function Addon:GOSSIP_SHOW()
     if self.db.profile.main.GossipFrequency == "OncePerQuestNpc" then
         local numActiveQuests = GetNumGossipActiveQuests()
         local numAvailableQuests = GetNumGossipAvailableQuests()
-        if (numActiveQuests > 0 or numAvailableQuests > 0) and gossipSeenForNPC then
+        local npcHasQuests = (numActiveQuests > 0 or numAvailableQuests > 0)
+        if npcHasQuests and gossipSeenForNPC then
             return
         end
     elseif self.db.profile.main.GossipFrequency == "OncePerNpc" then
