@@ -164,6 +164,7 @@ SELECT
     distinct
     qr.source,
     qr.quest,
+    qt.Title as quest_title,
     CASE
         WHEN qr.source = 'accept' THEN qt.Details
         WHEN qr.source = 'progress' THEN qt.RequestItemsText
@@ -192,6 +193,7 @@ SELECT
     distinct
     'gossip' as source,
     '' as quest,
+    '' as quest_title,
     IF(creature_data.DisplaySexID = 0, bt.male_text, bt.female_text) AS text,
     creature_data.DisplayRaceID,
     creature_data.DisplaySexID,
@@ -239,21 +241,21 @@ def query_dataframe_for_all_quests_and_gossip():
     db = make_connection()
     sql_query = '''
 WITH quest_relations AS (
-    SELECT 'accept' as source, qr.quest, c.id as creature_id, c.position_x, c.position_y, c.map
-    FROM creature c
-    JOIN creature_questrelation qr ON qr.id = c.id
+    SELECT 'accept' as source, qr.quest, ct.entry as creature_id
+    FROM creature_template ct
+    JOIN creature_questrelation qr ON qr.id = ct.entry
         UNION ALL
-    SELECT 'complete' as source, qr.quest, c.id as creature_id, c.position_x, c.position_y, c.map
-    FROM creature c
-    JOIN creature_involvedrelation qr ON qr.id = c.id
+    SELECT 'complete' as source, qr.quest, ct.entry as creature_id
+    FROM creature_template ct
+    JOIN creature_involvedrelation qr ON qr.id = ct.entry
         UNION ALL
-    SELECT 'progress' as source, qr.quest, c.id as creature_id, c.position_x, c.position_y, c.map
-    FROM creature c
-    JOIN creature_involvedrelation qr ON qr.id = c.id
+    SELECT 'progress' as source, qr.quest, ct.entry as creature_id
+    FROM creature_template ct
+    JOIN creature_involvedrelation qr ON qr.id = ct.entry
 ),
 creature_data AS (
     SELECT
-        creature.id,
+        ct.entry as id,
         ct.name,
         gm.entry AS gm_entry,
         gm.text_id AS gm_text_id,
@@ -263,8 +265,7 @@ creature_data AS (
         gm3.text_id AS gm3_text_id,
         cdie.DisplaySexID,
         cdie.DisplayRaceID
-    FROM creature
-        JOIN creature_template ct ON creature.id = ct.entry
+    FROM creature_template ct
         JOIN db_CreatureDisplayInfo cdi ON ct.display_id1 = cdi.ID
         JOIN db_CreatureDisplayInfoExtra cdie ON cdi.ExtendedDisplayInfoID = cdie.ID
         left JOIN gossip_menu gm ON ct.gossip_menu_id = gm.entry
@@ -292,6 +293,7 @@ SELECT
     distinct
     qr.source,
     qr.quest,
+    qt.Title as quest_title,
     CASE
         WHEN qr.source = 'accept' THEN qt.Details
         WHEN qr.source = 'progress' THEN qt.RequestItemsText
@@ -318,6 +320,7 @@ SELECT
     distinct
     'gossip' as source,
     '' as quest,
+    '' as quest_title,
     IF(creature_data.DisplaySexID = 0, bt.male_text, bt.female_text) AS text,
     creature_data.DisplayRaceID,
     creature_data.DisplaySexID,
