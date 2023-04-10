@@ -123,16 +123,16 @@ local GeneralTab =
             order = 3,
             inline = true,
             name = "Frame",
-            disabled = function(info) return Addon.db.profile.main.HideFrame end,
+            disabled = function(info) return Addon.db.profile.SoundQueueUI.HideFrame end,
             args = {
                 LockFrame = {
                     type = "toggle",
                     order = 1,
                     name = "Lock Frame",
                     desc = "Prevent the frame from being moved or resized.",
-                    get = function(info) return Addon.db.profile.main.LockFrame end,
+                    get = function(info) return Addon.db.profile.SoundQueueUI.LockFrame end,
                     set = function(info, value)
-                        Addon.db.profile.main.LockFrame = value
+                        Addon.db.profile.SoundQueueUI.LockFrame = value
                         Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
@@ -154,14 +154,14 @@ local GeneralTab =
                     values = FRAME_STRATAS,
                     get = function(info)
                         for k, v in ipairs(FRAME_STRATAS) do
-                            if v == Addon.db.profile.main.FrameStrata then
+                            if v == Addon.db.profile.SoundQueueUI.FrameStrata then
                                 return k;
                             end
                         end
                     end,
                     set = function(info, value)
-                        Addon.db.profile.main.FrameStrata = FRAME_STRATAS[value]
-                        Addon.soundQueue.ui.frame:SetFrameStrata(Addon.db.profile.main.FrameStrata)
+                        Addon.db.profile.SoundQueueUI.FrameStrata = FRAME_STRATAS[value]
+                        Addon.soundQueue.ui.frame:SetFrameStrata(Addon.db.profile.SoundQueueUI.FrameStrata)
                     end,
                 },
                 FrameScale = {
@@ -173,14 +173,14 @@ local GeneralTab =
                     softMax = 2,
                     bigStep = 0.05,
                     isPercent = true,
-                    get = function(info) return Addon.db.profile.main.FrameScale end,
+                    get = function(info) return Addon.db.profile.SoundQueueUI.FrameScale end,
                     set = function(info, value)
-                        Addon.db.profile.main.FrameScale = value
+                        Addon.db.profile.SoundQueueUI.FrameScale = value
                         Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
                 LineBreak2 = { type = "description", name = "", order = 6 },
-                HideNpcHead = {
+                HidePortrait = {
                     type = "toggle",
                     order = 7,
                     name = "Hide NPC Portrait",
@@ -188,9 +188,9 @@ local GeneralTab =
                             Utils:ColorizeText("This might be useful when using other addons that replace the dialog experience, such as " ..
                                 Utils:ColorizeText("Immersion", NORMAL_FONT_COLOR_CODE) .. ".",
                                 GRAY_FONT_COLOR_CODE),
-                    get = function(info) return Addon.db.profile.main.HideNpcHead end,
+                    get = function(info) return Addon.db.profile.SoundQueueUI.HidePortrait end,
                     set = function(info, value)
-                        Addon.db.profile.main.HideNpcHead = value
+                        Addon.db.profile.SoundQueueUI.HidePortrait = value
                         Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
@@ -200,9 +200,9 @@ local GeneralTab =
                     name = "Hide Entirely",
                     desc = "Play voiceovers without ever displaying the frame.",
                     disabled = false,
-                    get = function(info) return Addon.db.profile.main.HideFrame end,
+                    get = function(info) return Addon.db.profile.SoundQueueUI.HideFrame end,
                     set = function(info, value)
-                        Addon.db.profile.main.HideFrame = value
+                        Addon.db.profile.SoundQueueUI.HideFrame = value
                         Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
@@ -227,9 +227,9 @@ local GeneralTab =
                         ["Music"] = "Music",
                         ["Dialog"] = "Dialog",
                     },
-                    get = function(info) return Addon.db.profile.main.SoundChannel end,
+                    get = function(info) return Addon.db.profile.Audio.SoundChannel end,
                     set = function(info, value)
-                        Addon.db.profile.main.SoundChannel = value
+                        Addon.db.profile.Audio.SoundChannel = value
                         Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
@@ -238,7 +238,7 @@ local GeneralTab =
                     type = "select",
                     width = 1.1,
                     order = 3,
-                    name = "NPC Greeting Playback Frequency",
+                    name = "NPC Greeting.Audio.Frequency",
                     desc = "Controls how often VoiceOver will play NPC greeting dialog.",
                     values = {
                         ["Always"] = "Always",
@@ -246,9 +246,9 @@ local GeneralTab =
                         ["OncePerNPC"] = "Play Once for All NPCs",
                         ["Never"] = "Never",
                     },
-                    get = function(info) return Addon.db.profile.main.GossipFrequency end,
+                    get = function(info) return Addon.db.profile.Audio.GossipFrequency end,
                     set = function(info, value)
-                        Addon.db.profile.main.GossipFrequency = value
+                        Addon.db.profile.Audio.GossipFrequency = value
                         Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
@@ -258,11 +258,11 @@ local GeneralTab =
                     order = 4,
                     name = "Mute Vocal NPCs Greetings While VoiceOver is Playing",
                     desc = "While VoiceOver is playing, the Dialog channel will be muted.",
-                    get = function(info) return Addon.db.profile.main.AutoToggleDialog end,
+                    get = function(info) return Addon.db.profile.Audio.AutoToggleDialog end,
                     set = function(info, value)
-                        Addon.db.profile.main.AutoToggleDialog = value
+                        Addon.db.profile.Audio.AutoToggleDialog = value
                         Addon.soundQueue.ui:RefreshConfig()
-                        if Addon.db.profile.main.AutoToggleDialog then
+                        if Addon.db.profile.Audio.AutoToggleDialog then
                             SetCVar("Sound_EnableDialog", 1)
                         end
                     end,
@@ -281,8 +281,8 @@ local GeneralTab =
                     width = 1.25,
                     name = "Enable Debug Messages",
                     desc = "Enables printing of some \"useful\" debug messages to the chat window.",
-                    get = function(info) return Addon.db.profile.main.DebugEnabled end,
-                    set = function(info, value) Addon.db.profile.main.DebugEnabled = value end,
+                    get = function(info) return Addon.db.profile.DebugEnabled end,
+                    set = function(info, value) Addon.db.profile.DebugEnabled = value end,
                 },
             }
         }

@@ -8,7 +8,6 @@ function SoundQueue:new()
 
     soundQueue.soundIdCounter = 0
     soundQueue.sounds = {}
-    soundQueue.isPaused = false
     soundQueue.ui = SoundQueueUI:new(soundQueue)
 
     return soundQueue
@@ -19,7 +18,7 @@ function SoundQueue:AddSoundToQueue(soundData)
 
     if soundData.fileName == nil or not Utils:WillSoundPlay(soundData) then
 
-        if Addon.db.profile.main.DebugEnabled then
+        if Addon.db.profile.DebugEnabled then
             print("Sound does not exist for: ", soundData.title or soundData.name)
         end
         
@@ -56,16 +55,16 @@ function SoundQueue:AddSoundToQueue(soundData)
     self.ui:UpdateSoundQueueDisplay()
 
     -- If the sound queue only contains one sound, play it immediately
-    if #self.sounds == 1 and not Addon.db.char.isPaused then
+    if #self.sounds == 1 and not Addon.db.char.IsPaused then
         self:PlaySound(soundData)
     end
 end
 
 function SoundQueue:PlaySound(soundData)
-    local channel = Addon.db.profile.main.SoundChannel
+    local channel = Addon.db.profile.Audio.SoundChannel
     local willPlay, handle = PlaySoundFile(soundData.filePath, channel)
 
-    if Addon.db.profile.main.AutoToggleDialog then
+    if Addon.db.profile.Audio.AutoToggleDialog then
         SetCVar("Sound_EnableDialog", 0)
     end
 
@@ -81,11 +80,11 @@ function SoundQueue:PlaySound(soundData)
 end
 
 function SoundQueue:PauseQueue()
-    if Addon.db.char.isPaused then
+    if Addon.db.char.IsPaused then
         return
     end
 
-    Addon.db.char.isPaused = true
+    Addon.db.char.IsPaused = true
 
     if #self.sounds > 0 then
         local currentSound = self.sounds[1]
@@ -97,11 +96,11 @@ function SoundQueue:PauseQueue()
 end
 
 function SoundQueue:ResumeQueue()
-    if not Addon.db.char.isPaused then
+    if not Addon.db.char.IsPaused then
         return
     end
 
-    Addon.db.char.isPaused = false
+    Addon.db.char.IsPaused = false
     if #self.sounds > 0 then
         local currentSound = self.sounds[1]
         self:PlaySound(currentSound)
@@ -111,7 +110,7 @@ function SoundQueue:ResumeQueue()
 end
 
 function SoundQueue:TogglePauseQueue()
-    if Addon.db.char.isPaused then
+    if Addon.db.char.IsPaused then
         self:ResumeQueue()
     else
         self:PauseQueue()
@@ -132,7 +131,7 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
         soundData.stopCallback()
     end
 
-    if removedIndex == 1 and not Addon.db.char.isPaused then
+    if removedIndex == 1 and not Addon.db.char.IsPaused then
         StopSound(soundData.handle)
         soundData.nextSoundTimer:Cancel()
 
@@ -142,7 +141,7 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
         end
     end
 
-    if #self.sounds == 0 and Addon.db.profile.main.AutoToggleDialog then
+    if #self.sounds == 0 and Addon.db.profile.Audio.AutoToggleDialog then
         SetCVar("Sound_EnableDialog", 1)
     end
 

@@ -2,22 +2,19 @@ setfenv(1, VoiceOver)
 
 Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0")
 
-local defaults =
-{
-    profile =
-    {
-        main =
-        {
-            HideFrame = false,
+local defaults = {
+    profile = {
+        SoundQueueUI = {
             LockFrame = false,
+            FrameScale = 0.7,
+            FrameStrata = "HIGH",
+            HidePortrait = false,
+            HideFrame = false,
+        },
+        Audio = {
             GossipFrequency = "OncePerQuestNPC",
             SoundChannel = "Master",
             AutoToggleDialog = false,
-            DebugEnabled = false,
-            HideNpcHead = false,
-            HideMinimapButton = false,
-            FrameStrata = "HIGH",
-            FrameScale = 0.7,
         },
         MinimapButton = {
             LibDBIcon = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
@@ -28,9 +25,10 @@ local defaults =
                 RightButton = "Clear",
             }
         },
+        DebugEnabled = false,
     },
     char = {
-        isPaused = false,
+        IsPaused = false,
         hasSeenGossipForNPC = {},
     }
 }
@@ -171,18 +169,18 @@ function Addon:GOSSIP_SHOW()
 
     local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[npcKey]
 
-    if self.db.profile.main.GossipFrequency == "OncePerQuestNPC" then
+    if self.db.profile.Audio.GossipFrequency == "OncePerQuestNPC" then
         local numActiveQuests = GetNumGossipActiveQuests()
         local numAvailableQuests = GetNumGossipAvailableQuests()
         local npcHasQuests = (numActiveQuests > 0 or numAvailableQuests > 0)
         if npcHasQuests and gossipSeenForNPC then
             return
         end
-    elseif self.db.profile.main.GossipFrequency == "OncePerNPC" then
+    elseif self.db.profile.Audio.GossipFrequency == "OncePerNPC" then
         if gossipSeenForNPC then
             return
         end
-    elseif self.db.profile.main.GossipFrequency == "Never" then
+    elseif self.db.profile.Audio.GossipFrequency == "Never" then
         return
     end
 

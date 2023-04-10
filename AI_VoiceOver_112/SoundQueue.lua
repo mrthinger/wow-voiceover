@@ -8,7 +8,6 @@ function SoundQueue.new()
 
     self.soundIdCounter = 0
     self.sounds = {}
-    self.isPaused = false
     self.soundsLength = 0
     self.isSoundPlaying = false
 
@@ -57,7 +56,7 @@ function SoundQueue:AddSoundToQueue(soundData)
     self.soundsLength = self.soundsLength + 1
 
     -- If the sound queue only contains one sound, play it immediately
-    if self.soundsLength == 1 and not Addon.db.char.isPaused then
+    if self.soundsLength == 1 and not Addon.db.char.IsPaused then
         self:PlaySound(soundData)
     end
 end
@@ -94,11 +93,11 @@ function SoundQueue:PlaySound(soundData)
 end
 
 function SoundQueue:PauseQueue()
-    if Addon.db.char.isPaused then
+    if Addon.db.char.IsPaused then
         return
     end
 
-    Addon.db.char.isPaused = true
+    Addon.db.char.IsPaused = true
 
     -- if self.soundsLength > 0 then
     --     local currentSound = self.sounds[1]
@@ -108,11 +107,11 @@ function SoundQueue:PauseQueue()
 end
 
 function SoundQueue:ResumeQueue()
-    if not Addon.db.char.isPaused then
+    if not Addon.db.char.IsPaused then
         return
     end
 
-    Addon.db.char.isPaused = false
+    Addon.db.char.IsPaused = false
     if self.soundsLength > 0 and not self.isSoundPlaying then
         local currentSound = self.sounds[1]
         self:PlaySound(currentSound)
@@ -134,7 +133,7 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
         soundData.stopCallback()
     end
 
-    if removedIndex == 1 and not Addon.db.char.isPaused then
+    if removedIndex == 1 and not Addon.db.char.IsPaused then
         if self.soundsLength > 0 then
             local nextSoundData = self.sounds[1]
             self:PlaySound(nextSoundData)
