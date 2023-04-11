@@ -34,6 +34,8 @@ local chatCommands = {
 Addon:RegisterChatCommand({ "/voiceover", "/vo" }, chatCommands)
 
 function Addon:OnInitialize()
+    DataModules:EnumerateAddons()
+
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("GOSSIP_SHOW")
     self:RegisterEvent("QUEST_COMPLETE")
@@ -53,18 +55,11 @@ function Addon:QUEST_DETAIL()
     local questText = GetQuestText()
     local targetName = UnitName("npc")
 
-    local questID = Utils:GetQuestID("accept", questTitle, targetName, questText)
-    Utils:Log("QUEST_DETAIL" .. " " .. questTitle .. " " .. targetName .. " " .. questID);
-    local fileName = tostring(questID) .. "-accept"
-
-
     local soundData = {
         event = Enums.SoundEvent.QuestAccept,
-        questID = questID,
         name = targetName,
         title = questTitle,
         text = questText,
-        fileName = fileName,
     }
     self.soundQueue:AddSoundToQueue(soundData)
 end
@@ -74,16 +69,11 @@ function Addon:QUEST_COMPLETE()
     local questText = GetQuestText()
     local targetName = UnitName("npc")
 
-    local questID = Utils:GetQuestID("complete", questTitle, targetName, questText)
-    Utils:Log("QUEST_COMPLETE" .. " " .. questTitle .. " " .. targetName .. " " .. questID);
-    local fileName = tostring(questID) .. "-complete"
     local soundData = {
         event = Enums.SoundEvent.QuestComplete,
-        questID = questID,
         name = targetName,
         title = questTitle,
         text = questText,
-        fileName = fileName,
     }
     self.soundQueue:AddSoundToQueue(soundData)
 end
@@ -91,13 +81,12 @@ end
 function Addon:GOSSIP_SHOW()
     local gossipText = GetGossipText()
     local targetName = UnitName("npc")
-    local fileName = Utils:GetNPCGossipTextHash(targetName, gossipText)
 
     local soundData = {
         event = Enums.SoundEvent.Gossip,
         name = targetName,
+        text = gossipText,
         title = targetName,
-        fileName = fileName,
     }
     self.soundQueue:AddSoundToQueue(soundData)
 end

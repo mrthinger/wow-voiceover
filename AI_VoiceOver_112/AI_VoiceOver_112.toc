@@ -15,11 +15,10 @@ Libs\AceAddon\AceAddon-2.0.lua
 Libs\AceConsole\AceConsole-2.0.lua
 
 Environment.lua
-
-generated\quest_id_lookups.lua
-generated\npc_name_gossip_file_lookups.lua
-generated\sound_length_table.lua
-FuzzySearch.lua
+Compatability.lua
+Common\Enums.lua
+Common\FuzzySearch.lua
 Utils.lua
 SoundQueue.lua
+DataModules.lua
 VoiceOver.lua
