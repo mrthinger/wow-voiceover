@@ -3,6 +3,26 @@ setfenv(1, VoiceOver)
 local CLIENT_VERSION, _, _, INTERFACE_VERSION = GetBuildInfo()
 INTERFACE_VERSION = INTERFACE_VERSION or 0 -- 1.12 doesn't return this
 
+if not select then
+    function _G.select(index, ...)
+        local result = {}
+        for i = index, arg.n do
+            table.insert(result, arg[i])
+        end
+        return unpack(result)
+    end
+end
+
+if not print then
+    function _G.print(...)
+        local text = ""
+        for i = 1, arg.n do
+            text = text .. (i > 1 and " " or "") .. tostring(arg[i])
+        end
+        DEFAULT_CHAT_FRAME:AddMessage(text)
+    end
+end
+
 if not strsplit then
     function strsplit(delimiter, text)
         local result = {}
