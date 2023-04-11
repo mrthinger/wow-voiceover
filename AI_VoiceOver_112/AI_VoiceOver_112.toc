@@ -22,4 +22,4 @@ SoundQueue.lua
 Common\DataModules.lua
 VoiceOver.lua
 
-Compatability.lua
+Compatibility.lua
