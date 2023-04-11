@@ -98,7 +98,7 @@ function DataModules:EnumerateAddons()
 end
 
 function DataModules:GetNPCGossipTextHash(soundData)
-    local table = soundData.unitGUID and "NPCToTextToTemplateHash" or "GossipLookup"
+    local table = soundData.unitGUID and "GossipLookupByNPCID" or "GossipLookupByNPCName"
     local npc = soundData.unitGUID and Utils:GetIDFromGUID(soundData.unitGUID) or soundData.name
     local text = soundData.text
 
@@ -193,7 +193,7 @@ end
 
 function DataModules:GetQuestLogNPCID(questID)
     for _, module in self:GetModules() do
-        local data = module.QuestlogNpcGuidTable
+        local data = module.NPCIDLookupByQuestID
         if data then
             local npcID = data[questID]
             if npcID then
@@ -205,7 +205,7 @@ end
 
 function DataModules:GetNPCName(npcID)
     for _, module in self:GetModules() do
-        local data = module.NPCNameLookup
+        local data = module.NPCNameLookupByNPCID
         if data then
             local npcName = data[npcID]
             if npcName then
@@ -239,7 +239,7 @@ function DataModules:PrepareSound(soundData)
     end
 
     for _, module in self:GetModules() do
-        local data = module.SoundLengthTable
+        local data = module.SoundLengthLookupByFileName
         if data then
             local playerGenderedFileName = DataModules:AddPlayerGenderToFilename(soundData.fileName)
             if data[playerGenderedFileName] then
