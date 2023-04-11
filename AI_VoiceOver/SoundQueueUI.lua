@@ -37,8 +37,6 @@ function SoundQueueUI:new(soundQueue)
 
     self.soundQueue = soundQueue
 
-    self.animtimer = time()
-
     self:InitDisplay()
     self:InitPortraitLine()
     self:InitPortrait()
@@ -215,8 +213,6 @@ local function ShouldShowBookForGUID(guid)
 end
 
 function SoundQueueUI:InitPortrait()
-    local soundQueueUI = self
-
     -- Create a container frame for the portrait
     self.frame.portrait = CreateFrame("Frame", nil, self.frame)
     self.frame.portrait:SetPoint("TOPLEFT")
@@ -234,15 +230,16 @@ function SoundQueueUI:InitPortrait()
 
             local creatureID = Utils:GetIDFromGUID(soundData.unitGUID)
 
-            if creatureID ~= self.oldCreatureID then
+            if creatureID ~= self.model.oldCreatureID then
                 self.model:SetCreature(creatureID)
                 self.model:SetCustomCamera(0)
 
                 if not Addon.db.char.IsPaused then
                     self.model:SetAnimation(60)
+                    self.model.animtimer = GetTime()
                 end
 
-                self.oldCreatureID = creatureID
+                self.model.oldCreatureID = creatureID
             else
                 self.model:SetCustomCamera(0)
             end
@@ -259,12 +256,13 @@ function SoundQueueUI:InitPortrait()
     self.frame.portrait.model:SetAllPoints()
     self.frame.portrait.model:HookScript("OnHide", function(self)
         self:ClearModel()
+        self.oldCreatureID = nil
     end)
     self.frame.portrait.model:HookScript("OnUpdate", function(self)
         self:SetCustomCamera(0)
-        if self:IsShown() and time() - soundQueueUI.animtimer >= 2 and not Addon.db.char.IsPaused then
+        if self:IsShown() and not Addon.db.char.IsPaused and GetTime() - (self.animtimer or 0) >= 2 then
             self:SetAnimation(60)
-            soundQueueUI.animtimer = time()
+            self.animtimer = GetTime()
         end
     end)
 
