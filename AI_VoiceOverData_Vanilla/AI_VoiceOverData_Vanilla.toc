@@ -2,7 +2,7 @@
 ## Title: VoiceOver Data - Vanilla
 ## Version: 0.1
 ## LoadOnDemand: 1
-## RequiredDeps: AI_VoiceOver
+## OptionalDeps: AI_VoiceOver_112, AI_VoiceOver
 ## X-Part-Of: VoiceOver
 ## X-Child-Of: VoiceOver
 ## X-VoiceOver-DataModule-Version: 1

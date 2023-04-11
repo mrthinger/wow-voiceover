@@ -15,7 +15,8 @@ function SoundQueue.new()
 end
 
 function SoundQueue:AddSoundToQueue(soundData)
-
+    DataModules:PrepareSound(soundData)
+    
     if soundData.fileName == nil then
 
         if Addon.db.profile.DebugEnabled then
@@ -50,7 +51,6 @@ function SoundQueue:AddSoundToQueue(soundData)
 
     self.soundIdCounter = self.soundIdCounter + 1
     soundData.id = self.soundIdCounter
-    Utils:PrepareSoundDataInPlace(soundData)
 
     table.insert(self.sounds, soundData)
     self.soundsLength = self.soundsLength + 1
@@ -66,16 +66,13 @@ end
 function SoundQueue:PlaySound(soundData)
     -- local channel = Enums.SoundChannel:GetName(Addon.db.profile.SoundChannel)
     local channel = "Master"
-    local isPlaying = PlaySoundFile(soundData.genderedFilePath, channel)
+    local isPlaying = PlaySoundFile(soundData.filePath, channel)
     if not isPlaying then
-        isPlaying = PlaySoundFile(soundData.filePath, channel)
-        if not isPlaying then
-            Utils:Log("Sound does not exist for: " .. soundData.title)
-            self:RemoveSoundFromQueue(soundData)
-            return
-        end
-
+        Utils:Log("Sound does not exist for: " .. soundData.title)
+        self:RemoveSoundFromQueue(soundData)
+        return
     end
+
     self.isSoundPlaying = true
 
 
