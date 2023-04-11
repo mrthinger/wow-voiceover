@@ -234,8 +234,10 @@ function SoundQueueUI:InitPortrait()
                 self.model:SetCreature(creatureID)
                 self.model:SetCustomCamera(0)
 
+                self.model.animation = 60
+                self.model.animDuration = nil
                 if not Addon.db.char.IsPaused then
-                    self.model:SetAnimation(60)
+                    self.model:SetAnimation(self.model.animation)
                     self.model.animtimer = GetTime()
                 end
 
@@ -257,11 +259,19 @@ function SoundQueueUI:InitPortrait()
     self.frame.portrait.model:HookScript("OnHide", function(self)
         self:ClearModel()
         self.oldCreatureID = nil
+        self.animation = nil
+        self.animDuration = nil
+        self.animtimer = nil
     end)
     self.frame.portrait.model:HookScript("OnUpdate", function(self)
+        -- Refresh camera and animation in case the model wasn't loaded instantly
         self:SetCustomCamera(0)
-        if self:IsShown() and not Addon.db.char.IsPaused and GetTime() - (self.animtimer or 0) >= 2 then
-            self:SetAnimation(60)
+        if self.animation and not self.animDuration then
+            self.animDuration = Utils:GetModelAnimationDuration(self:GetModelFileID(), self.animation)
+        end
+        -- Loop the animation when the timer has reached the animation duration
+        if self.animation and not Addon.db.char.IsPaused and GetTime() - (self.animtimer or 0) >= (self.animDuration or 2) then
+            self:SetAnimation(self.animation)
             self.animtimer = GetTime()
         end
     end)
