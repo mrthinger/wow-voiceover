@@ -71,9 +71,9 @@ function SoundQueue:PlaySound(soundData)
     if soundData.startCallback then
         soundData.startCallback()
     end
-    local nextSoundTimer = C_Timer.NewTimer(soundData.length + 0.55, function()
+    local nextSoundTimer = Addon:ScheduleTimer(function()
         self:RemoveSoundFromQueue(soundData)
-    end)
+    end, soundData.length + 0.55)
 
     soundData.nextSoundTimer = nextSoundTimer
     soundData.handle = handle
@@ -89,7 +89,7 @@ function SoundQueue:PauseQueue()
     if #self.sounds > 0 then
         local currentSound = self.sounds[1]
         StopSound(currentSound.handle)
-        currentSound.nextSoundTimer:Cancel()
+        Addon:CancelTimer(currentSound.nextSoundTimer)
     end
 
     self.ui:UpdatePauseDisplay()
@@ -133,7 +133,7 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
 
     if removedIndex == 1 and not Addon.db.char.IsPaused then
         StopSound(soundData.handle)
-        soundData.nextSoundTimer:Cancel()
+        Addon:CancelTimer(soundData.nextSoundTimer)
 
         if #self.sounds > 0 then
             local nextSoundData = self.sounds[1]

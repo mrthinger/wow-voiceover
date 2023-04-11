@@ -102,7 +102,7 @@ function SoundQueue:PauseQueue()
     -- if self.soundsLength > 0 then
     --     local currentSound = self.sounds[1]
     --     StopSound(currentSound.handle)
-    --     currentSound.nextSoundTimer:Cancel()
+    --     Addon:CancelTimer(currentSound.nextSoundTimer)
     -- end
 end
 

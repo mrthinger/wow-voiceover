@@ -1,6 +1,6 @@
 setfenv(1, VoiceOver)
 
-Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0")
+Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0", "AceTimer-3.0")
 
 local defaults = {
     profile = {

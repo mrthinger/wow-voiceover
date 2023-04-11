@@ -587,7 +587,7 @@ function SoundQueueUI:UpdateSoundQueueDisplay()
         self.frame.container:Hide()
     end
     -- Refresh again after updating layout (same frame in modern WoW, next frame in old WoW) to update hover state depending on the new button positions after realignment
-    C_Timer.After(0, function() self.frame.container.buttons:Update() end)
+    Addon:ScheduleTimer(function() self.frame.container.buttons:Update() end, 0)
 end
 
 function SoundQueueUI:UpdatePauseDisplay()
