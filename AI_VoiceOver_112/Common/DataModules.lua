@@ -86,7 +86,7 @@ function DataModules:EnumerateAddons()
 
             -- Maybe in the future we can load modules based on the map the player is in (select(8, GetInstanceInfo())), but for now - just load everything
             if LOAD_ALL_MODULES and IsAddOnLoadOnDemand(name) then
-                LoadAddOn(name)
+                DataModules:LoadModule(module)
             end
         end
     end
@@ -95,6 +95,20 @@ function DataModules:EnumerateAddons()
     -- for order, module in self:GetAvailableModules() do
     --     Options:AddDataModule(module, order)
     -- end
+end
+
+function DataModules:LoadModule(module)
+    if not module.LoadOnDemand or self:GetModule(module) or IsAddOnLoaded(module.AddonName) then
+        return false
+    end
+    -- We deliberately use a high ##Interface version in TOC to ensure that all clients will load it.
+    -- Otherwise pre-classic-rerelease clients will refuse to load addons with version < 20000.
+    -- Here we temporarily enable "Load out of date AddOns" to load the module, and restore the user's setting afterwards.
+    local oldLoadOutOfDateAddons = GetCVar("checkAddonVersion")
+    SetCVar("checkAddonVersion", 0)
+    local loaded = LoadAddOn(module.AddonName)
+    SetCVar("checkAddonVersion", oldLoadOutOfDateAddons)
+    return loaded
 end
 
 function DataModules:GetNPCGossipTextHash(soundData)

@@ -385,7 +385,7 @@ function Options:AddDataModule(module, order)
     end
 
     local name, title, notes, loadable, reason  = GetAddOnInfo(module.AddonName)
-    if reason == "DEMAND_LOADED" then
+    if reason == "DEMAND_LOADED" or reason == "INTERFACE_VERSION" then
         reason = nil
     end
     DataModulesTab.args[module.AddonName] = {
