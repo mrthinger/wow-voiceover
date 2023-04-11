@@ -53,6 +53,22 @@ Enums.SoundChannel =
     Dialog = 5,
 }
 
+---@enum GUID
+Enums.GUID =
+{
+    Player = 2,
+    Item = 3,
+    Creature = 8,
+    Vehicle = 9,
+    GameObject = 11,
+}
+function Enums.GUID:IsCreature(type)
+    return type == self.Creature or type == self.Vehicle
+end
+function Enums.GUID:CanHaveID(type)
+    return type == self.Creature or type == self.Vehicle or type == self.GameObject
+end
+
 
 
 ---@class Enum

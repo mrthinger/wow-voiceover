@@ -119,13 +119,18 @@ function Addon:QUEST_DETAIL()
     local questID = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
-    local guid = UnitGUID("npc")
-    local targetName = UnitName("npc")
+    local guid = Utils:GetNPCGUID()
+    local targetName = Utils:GetNPCName()
 
-    if UnitIsPlayer("npc") then
-        local npcID = DataModules:GetQuestLogNPCID(questID)
+    local type = guid and Utils:GetGUIDType(guid)
+    if type == Enums.GUID.Item then
+        -- Allow quests started from items to have VO, book icon will be displayed for them
+    elseif not type or not Enums.GUID:CanHaveID(type) then
+        -- If the quest is started by something that we cannot extract the ID of (e.g. Player, when sharing a quest) - try to fallback to a questgiver from a module's database
+        local npcID = DataModules:GetQuestLogNPCID(questID) -- TODO: Add fallbacks to item and object questgivers once VO for them is made
         if npcID then
-            guid = Utils:GetGUIDFromID(npcID)
+            type = Enums.GUID.Creature
+            guid = Utils:MakeGUID(type, npcID)
             targetName = DataModules:GetNPCName(npcID) or "Unknown Name"
         else
             return
@@ -148,8 +153,8 @@ function Addon:QUEST_COMPLETE()
     local questID = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetRewardText()
-    local guid = UnitGUID("npc")
-    local targetName = UnitName("npc")
+    local guid = Utils:GetNPCGUID()
+    local targetName = Utils:GetNPCName()
     -- print("QUEST_COMPLETE", questID, questTitle);
     local soundData = {
         event = Enums.SoundEvent.QuestComplete,
@@ -163,8 +168,8 @@ function Addon:QUEST_COMPLETE()
 end
 
 function Addon:GOSSIP_SHOW()
-    local guid = UnitGUID("npc")
-    local targetName = UnitName("npc")
+    local guid = Utils:GetNPCGUID()
+    local targetName = Utils:GetNPCName()
     local npcKey = guid or "unknown"
 
     local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[npcKey]

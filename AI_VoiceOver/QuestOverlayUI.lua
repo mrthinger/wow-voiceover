@@ -55,13 +55,13 @@ function QuestOverlayUI:UpdatePlayButton(soundTitle, questID, questLogTitleFrame
     local questOverlayUI = self
     self.questPlayButtons[questID]:SetScript("OnClick", function(self)
         if questOverlayUI.questPlayButtons[questID].soundData == nil then
-            local npcID = DataModules:GetQuestLogNPCID(questID)
+            local npcID = DataModules:GetQuestLogNPCID(questID) -- TODO: Add fallbacks to item and object questgivers once VO for them is made
             questOverlayUI.questPlayButtons[questID].soundData = {
                 event = Enums.SoundEvent.QuestAccept,
                 questID = questID,
                 name = npcID and DataModules:GetNPCName(npcID) or "Unknown Name",
                 title = soundTitle,
-                unitGUID = npcID and Utils:GetGUIDFromID(npcID)
+                unitGUID = npcID and Utils:MakeGUID(Enums.GUID.Creature, npcID)
             }
         end
 

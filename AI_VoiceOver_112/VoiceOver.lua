@@ -51,12 +51,14 @@ function Addon:VOICEOVER_NEXT_SOUND_TIMER(soundData)
 end
 
 function Addon:QUEST_DETAIL()
+    local questID = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
-    local targetName = UnitName("npc")
+    local targetName = Utils:GetNPCName()
 
     local soundData = {
         event = Enums.SoundEvent.QuestAccept,
+        questID = questID,
         name = targetName,
         title = questTitle,
         text = questText,
@@ -65,12 +67,14 @@ function Addon:QUEST_DETAIL()
 end
 
 function Addon:QUEST_COMPLETE()
+    local questID = GetQuestID()
     local questTitle = GetTitleText()
-    local questText = GetQuestText()
-    local targetName = UnitName("npc")
+    local questText = GetRewardText()
+    local targetName = Utils:GetNPCName()
 
     local soundData = {
         event = Enums.SoundEvent.QuestComplete,
+        questID = questID,
         name = targetName,
         title = questTitle,
         text = questText,
@@ -80,7 +84,7 @@ end
 
 function Addon:GOSSIP_SHOW()
     local gossipText = GetGossipText()
-    local targetName = UnitName("npc")
+    local targetName = Utils:GetNPCName()
 
     local soundData = {
         event = Enums.SoundEvent.Gossip,

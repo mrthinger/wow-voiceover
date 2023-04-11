@@ -5,9 +5,9 @@ local LOAD_ALL_MODULES = true
 
 DataModules =
 {
-    availableModules = {}, -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
-    availableModulesOrdered = {}, -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
-    registeredModules = {}, -- To keep track of which module names were already registered
+    availableModules = {},         -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
+    availableModulesOrdered = {},  -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
+    registeredModules = {},        -- To keep track of which module names were already registered
     registeredModulesOrdered = {}, -- To have a consistent ordering of modules (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
 }
 
@@ -23,11 +23,15 @@ end
 function DataModules:Register(name, module)
     assert(not self.registeredModules[name], format([[Module "%s" already registered]], name))
 
-    local metadata = assert(self.availableModules[name], format([[Module "%s" attempted to register but wasn't detected during addon enumeration]], name))
-    local moduleVersion = assert(tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Version")), format([[Module "%s" is missing data format version]], name))
+    local metadata = assert(self.availableModules[name],
+        format([[Module "%s" attempted to register but wasn't detected during addon enumeration]], name))
+    local moduleVersion = assert(tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Version")),
+        format([[Module "%s" is missing data format version]], name))
 
     -- Ideally if module format would ever change - there should be fallbacks in place to handle outdated formats
-    assert(moduleVersion == CURRENT_MODULE_VERSION, format([[Module "%s" contains outdated data format (version %d, expected %d)]], name, moduleVersion, CURRENT_MODULE_VERSION))
+    assert(moduleVersion == CURRENT_MODULE_VERSION,
+        format([[Module "%s" contains outdated data format (version %d, expected %d)]], name, moduleVersion,
+            CURRENT_MODULE_VERSION))
 
     module.METADATA = metadata
 
@@ -94,15 +98,16 @@ function DataModules:EnumerateAddons()
 end
 
 function DataModules:GetNPCGossipTextHash(soundData)
-    local npcID = Utils:GetIDFromGUID(soundData.unitGUID)
+    local table = soundData.unitGUID and "NPCToTextToTemplateHash" or "GossipLookup"
+    local npc = soundData.unitGUID and Utils:GetIDFromGUID(soundData.unitGUID) or soundData.name
     local text = soundData.text
 
     local text_entries = {}
 
     for _, module in self:GetModules() do
-        local data = module.NPCToTextToTemplateHash
+        local data = module[table]
         if data then
-            local npc_gossip_table = data[npcID]
+            local npc_gossip_table = data[npc]
             if npc_gossip_table then
                 for text, hash in pairs(npc_gossip_table) do
                     text_entries[text] = text_entries[text] or
@@ -113,6 +118,76 @@ function DataModules:GetNPCGossipTextHash(soundData)
     end
 
     local best_result = FuzzySearchBestKeys(text, text_entries)
+    return best_result and best_result.value
+end
+
+local function replaceDoubleQuotes(text)
+    return string.gsub(text, '"', "'")
+end
+
+local function getFirstNWords(text, n)
+    local firstNWords = {}
+    local count = 0
+
+    for word in string.gmatch(text, "%S+") do
+        count = count + 1
+        table.insert(firstNWords, word)
+        if count >= n then
+            break
+        end
+    end
+
+    return table.concat(firstNWords, " ")
+end
+
+local function getLastNWords(text, n)
+    local lastNWords = {}
+    local count = 0
+
+    for word in string.gmatch(text, "%S+") do
+        table.insert(lastNWords, word)
+        count = count + 1
+    end
+
+    local startIndex = math.max(1, count - n + 1)
+    local endIndex = count
+
+    return table.concat(lastNWords, " ", startIndex, endIndex)
+end
+
+function DataModules:GetQuestID(source, title, npcName, text)
+    local cleanedTitle = replaceDoubleQuotes(title)
+    local cleanedNPCName = replaceDoubleQuotes(npcName)
+    local cleanedText = replaceDoubleQuotes(getFirstNWords(text, 15)) ..
+        " " .. replaceDoubleQuotes(getLastNWords(text, 15))
+    local text_entries = {}
+
+    for _, module in self:GetModules() do
+        local data = module.QuestIDLookup
+        if data then
+            local titleLookup = data[source][cleanedTitle]
+            if titleLookup then
+                if type(titleLookup) == "number" then
+                    return titleLookup
+                else
+                    -- else titleLookup is a table and we need to search it further
+                    local npcLookup = titleLookup[cleanedNPCName]
+                    if npcLookup then
+                        if type(npcLookup) == "number" then
+                            return npcLookup
+                        else
+                            for text, ID in pairs(npcLookup) do
+                                text_entries[text] = text_entries[text] or
+                                    ID -- Respect module priority, don't overwrite the entry if there is already one
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    local best_result = FuzzySearchBestKeys(cleanedText, text_entries)
     return best_result and best_result.value
 end
 
@@ -140,19 +215,6 @@ function DataModules:GetNPCName(npcID)
     end
 end
 
-function DataModules:GetQuestIDByQuestTextHash(text, npcID)
-    local hashWithNPC = format("%s:%d", hash, npcID)
-    for _, module in self:GetModules() do
-        local data = module.QuestTextHashToQuestID
-        if data then
-            local questID = data[hashWithNPC] or data[hash]
-            if questID then
-                return questID
-            end
-        end
-    end
-end
-
 local getFileNameForEvent =
 {
     [Enums.SoundEvent.QuestAccept]   = function(soundData) return format("%d-%s", soundData.questID, "accept") end,
@@ -161,7 +223,13 @@ local getFileNameForEvent =
     [Enums.SoundEvent.QuestGreeting] = function(soundData) return DataModules:GetNPCGossipTextHash(soundData) end,
     [Enums.SoundEvent.Gossip]        = function(soundData) return DataModules:GetNPCGossipTextHash(soundData) end,
 }
-setmetatable(getFileNameForEvent, { __index = function(self, event) error(format([[Unhandled VoiceOver sound event %d "%s"]], event, Enums.SoundEvent:GetName(event) or "???")) end })
+setmetatable(getFileNameForEvent,
+    {
+        __index = function(self, event)
+            error(format([[Unhandled VoiceOver sound event %d "%s"]], event,
+                Enums.SoundEvent:GetName(event) or "???"))
+        end
+    })
 
 function DataModules:PrepareSound(soundData)
     soundData.fileName = getFileNameForEvent[soundData.event](soundData)

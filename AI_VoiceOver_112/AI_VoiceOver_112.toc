@@ -19,7 +19,7 @@ Common\Enums.lua
 Common\FuzzySearch.lua
 Utils.lua
 SoundQueue.lua
-DataModules.lua
+Common\DataModules.lua
 VoiceOver.lua
 
-Compatability.lua
+Compatibility.lua

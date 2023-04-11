@@ -8,7 +8,7 @@
     <Script file="SoundQueue.lua"/>
     <Script file="SoundQueueUI.lua"/>
     <Script file="QuestOverlayUI.lua"/>
-    <Script file="DataModules.lua"/>
+    <Script file="Common\DataModules.lua"/>
     <Script file="VoiceOver.lua"/>
 
     <Script file="Compatibility.lua"/>

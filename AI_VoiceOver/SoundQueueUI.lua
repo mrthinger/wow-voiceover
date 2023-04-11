@@ -37,8 +37,6 @@ function SoundQueueUI:new(soundQueue)
 
     self.soundQueue = soundQueue
 
-    self.animtimer = time()
-
     self:InitDisplay()
     self:InitPortraitLine()
     self:InitPortrait()
@@ -202,18 +200,32 @@ function SoundQueueUI:InitPortraitLine()
     end)
 end
 
-function SoundQueueUI:InitPortrait()
-    local soundQueueUI = self
+local function ShouldShowBookForGUID(guid)
+    local type = guid and Utils:GetGUIDType(guid)
+    if not type then
+        return true -- A fallback in case the GUID is missing
+    elseif type == Enums.GUID.Item then
+        return true -- Maybe display the item icon in the future
+    elseif type == Enums.GUID.GameObject then
+        return true -- Maybe display the object model in the future
+    end
+    return false
+end
 
+function SoundQueueUI:InitPortrait()
     -- Create a container frame for the portrait
     self.frame.portrait = CreateFrame("Frame", nil, self.frame)
     self.frame.portrait:SetPoint("TOPLEFT")
     self.frame.portrait:SetSize(PORTRAIT_SIZE, PORTRAIT_SIZE)
     function self.frame.portrait:Configure(soundData)
+        if not self:IsShown() then
+            return
+        end
+
         if not soundData then
             self.model:Hide()
             self.book:Hide()
-        elseif not soundData.unitGUID then
+        elseif ShouldShowBookForGUID(soundData.unitGUID) then
             self.model:Hide()
             self.book:Show()
         else
@@ -222,15 +234,18 @@ function SoundQueueUI:InitPortrait()
 
             local creatureID = Utils:GetIDFromGUID(soundData.unitGUID)
 
-            if creatureID ~= self.oldCreatureID then
+            if creatureID ~= self.model.oldCreatureID then
                 self.model:SetCreature(creatureID)
                 self.model:SetCustomCamera(0)
 
+                self.model.animation = 60
+                self.model.animDuration = nil
                 if not Addon.db.char.IsPaused then
-                    self.model:SetAnimation(60)
+                    self.model:SetAnimation(self.model.animation)
+                    self.model.animtimer = GetTime()
                 end
 
-                self.oldCreatureID = creatureID
+                self.model.oldCreatureID = creatureID
             else
                 self.model:SetCustomCamera(0)
             end
@@ -247,12 +262,21 @@ function SoundQueueUI:InitPortrait()
     self.frame.portrait.model:SetAllPoints()
     self.frame.portrait.model:HookScript("OnHide", function(self)
         self:ClearModel()
+        self.oldCreatureID = nil
+        self.animation = nil
+        self.animDuration = nil
+        self.animtimer = nil
     end)
     self.frame.portrait.model:HookScript("OnUpdate", function(self)
+        -- Refresh camera and animation in case the model wasn't loaded instantly
         self:SetCustomCamera(0)
-        if self:IsShown() and time() - soundQueueUI.animtimer >= 2 and not Addon.db.char.IsPaused then
-            self:SetAnimation(60)
-            soundQueueUI.animtimer = time()
+        if self.animation and not self.animDuration then
+            self.animDuration = Utils:GetModelAnimationDuration(self:GetModelFileID(), self.animation)
+        end
+        -- Loop the animation when the timer has reached the animation duration
+        if self.animation and not Addon.db.char.IsPaused and GetTime() - (self.animtimer or 0) >= (self.animDuration or 2) then
+            self:SetAnimation(self.animation)
+            self.animtimer = GetTime()
         end
     end)
 
