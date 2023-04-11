@@ -98,42 +98,16 @@ function DataModules:EnumerateAddons()
 end
 
 function DataModules:GetNPCGossipTextHash(soundData)
-    if not soundData.unitGUID then
-        return DataModules:GetNPCGossipTextHashFromName(soundData)
-    end
-
-
-    local npcID = Utils:GetIDFromGUID(soundData.unitGUID)
+    local table = soundData.unitGUID and "NPCToTextToTemplateHash" or "GossipLookup"
+    local npc = soundData.unitGUID and Utils:GetIDFromGUID(soundData.unitGUID) or soundData.name
     local text = soundData.text
 
     local text_entries = {}
 
     for _, module in self:GetModules() do
-        local data = module.NPCToTextToTemplateHash
+        local data = module[table]
         if data then
-            local npc_gossip_table = data[npcID]
-            if npc_gossip_table then
-                for text, hash in pairs(npc_gossip_table) do
-                    text_entries[text] = text_entries[text] or
-                        hash -- Respect module priority, don't overwrite the entry if there is already one
-                end
-            end
-        end
-    end
-
-    local best_result = FuzzySearchBestKeys(text, text_entries)
-    return best_result and best_result.value
-end
-
-function DataModules:GetNPCGossipTextHashFromName(soundData)
-    local npcName = soundData.name
-    local text = soundData.text
-    local text_entries = {}
-
-    for _, module in self:GetModules() do
-        local data = module.GossipLookup
-        if data then
-            local npc_gossip_table = data[npcName]
+            local npc_gossip_table = data[npc]
             if npc_gossip_table then
                 for text, hash in pairs(npc_gossip_table) do
                     text_entries[text] = text_entries[text] or
