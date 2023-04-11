@@ -218,6 +218,10 @@ function SoundQueueUI:InitPortrait()
     self.frame.portrait:SetPoint("TOPLEFT")
     self.frame.portrait:SetSize(PORTRAIT_SIZE, PORTRAIT_SIZE)
     function self.frame.portrait:Configure(soundData)
+        if not self:IsShown() then
+            return
+        end
+
         if not soundData then
             self.model:Hide()
             self.book:Hide()
