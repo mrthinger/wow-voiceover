@@ -92,11 +92,15 @@ local animationDurations = {
         [130737]  = { [60] = 1533 }, -- interface/buttons/talktomequestion_white
 
         [116921]  = { [60] = 4000 }, -- character/bloodelf/female/bloodelffemale
+        [1100258] = { [60] = 4000 }, -- character/bloodelf/female/bloodelffemale_hd
         [117170]  = { [60] = 2000 }, -- character/bloodelf/male/bloodelfmale
+        [1100087] = { [60] = 2000 }, -- character/bloodelf/male/bloodelfmale_hd
         [117400]  = { [60] = 2934 }, -- character/broken/female/brokenfemale
         [117412]  = { [60] = 2934 }, -- character/broken/male/brokenmale
         [117437]  = { [60] = 3000 }, -- character/draenei/female/draeneifemale
+        [1022598] = { [60] = 3000 }, -- character/draenei/female/draeneifemale_hd
         [117721]  = { [60] = 3334 }, -- character/draenei/male/draeneimale
+        [1005887] = { [60] = 3334 }, -- character/draenei/male/draeneimale_hd
         [118135]  = { [60] = 2000 }, -- character/dwarf/female/dwarffemale
         [950080]  = { [60] = 2000 }, -- character/dwarf/female/dwarffemale_hd
         [118355]  = { [60] = 2000 }, -- character/dwarf/male/dwarfmale
@@ -125,6 +129,7 @@ local animationDurations = {
         [974343]  = { [60] = 2000 }, -- character/nightelf/male/nightelfmale_hd
         [233367]  = { [60] = 3600 }, -- character/northrendskeleton/male/northrendskeletonmale
         [121087]  = { [60] = 2000 }, -- character/orc/female/orcfemale
+        [949470]  = { [60] = 2000 }, -- character/orc/female/orcfemale_hd
         [121287]  = { [60] = 2000 }, -- character/orc/male/orcmale
         [917116]  = { [60] = 2000 }, -- character/orc/male/orcmale_hd
         [121608]  = { [60] = 2000 }, -- character/scourge/female/scourgefemale
