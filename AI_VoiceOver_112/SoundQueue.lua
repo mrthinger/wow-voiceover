@@ -64,7 +64,7 @@ end
 
 
 function SoundQueue:PlaySound(soundData)
-    -- local channel = Addon.db.profile.SoundChannel
+    -- local channel = Enums.SoundChannel:GetName(Addon.db.profile.SoundChannel)
     local channel = "Master"
     local isPlaying = PlaySoundFile(soundData.genderedFilePath, channel)
     if not isPlaying then
@@ -102,7 +102,7 @@ function SoundQueue:PauseQueue()
     -- if self.soundsLength > 0 then
     --     local currentSound = self.sounds[1]
     --     StopSound(currentSound.handle)
-    --     currentSound.nextSoundTimer:Cancel()
+    --     Addon:CancelTimer(currentSound.nextSoundTimer)
     -- end
 end
 

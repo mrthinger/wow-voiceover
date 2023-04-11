@@ -142,7 +142,7 @@ function SoundQueueUI:InitDisplay()
     self.frame.container.stopGossip:HookScript("OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
         local soundData = self.soundQueue.sounds[1]
-        if soundData and soundData.event == "gossip" then
+        if soundData and Enums.SoundEvent:IsGossipEvent(soundData.event) then
             self.soundQueue:RemoveSoundFromQueue(soundData)
         end
     end)
@@ -480,7 +480,7 @@ function SoundQueueUI:CreateButton(i)
             self.textWidget:SetShadowColor(0, 0, 0, 1)
             self:SetPoint("TOPLEFT", soundQueueUI.frame.container.name, "BOTTOMLEFT", 0, -2)
         else
-            local isCollapsedGossipBeingPlayed = soundDataBeingPlayed and soundDataBeingPlayed.event == "gossip" and (HIDE_GOSSIP_OPTIONS or not soundDataBeingPlayed.title)
+            local isCollapsedGossipBeingPlayed = soundDataBeingPlayed and Enums.SoundEvent:IsGossipEvent(soundDataBeingPlayed.event) and (HIDE_GOSSIP_OPTIONS or not soundDataBeingPlayed.title)
             local queuePosition = buttonIndex - (isCollapsedGossipBeingPlayed and 0 or 1)
             local alpha = math.max(0.1, math.min(1, 1 - (queuePosition - 1) / 3))
             self:SetAlpha(alpha)
@@ -507,16 +507,16 @@ function SoundQueueUI:CreateButton(i)
         else
             if isBeingPlayed then
                 local event = soundData.event
-                if event == "accept" or event == "progress" or event == "complete" then
+                if Enums.SoundEvent:IsQuestEvent(event) then
                     self.textWidget:SetTextColor(245 / 255, 204 / 255, 24 / 255)
-                    if event == "accept" then
+                    if event == Enums.SoundEvent.QuestAccept then
                         self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\SoundQueueBulletAccept]])
-                    elseif event == "progress" then
+                    elseif event == Enums.SoundEvent.QuestProgress then
                         self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\SoundQueueBulletProgress]])
-                    elseif event == "complete" then
+                    elseif event == Enums.SoundEvent.QuestComplete then
                         self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\SoundQueueBulletComplete]])
                     end
-                elseif event == "gossip" then
+                elseif Enums.SoundEvent:IsGossipEvent(event) then
                     self.textWidget:SetTextColor(1, 1, 1)
                     self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\SoundQueueBulletGossip]])
                 end
@@ -558,7 +558,7 @@ function SoundQueueUI:UpdateSoundQueueDisplay()
             self.frame.container.name:SetText(soundData.name)
             lastContent = self.frame.container.name
         end
-        if soundData.event ~= "gossip" or (not HIDE_GOSSIP_OPTIONS and soundData.title) then
+        if not Enums.SoundEvent:IsGossipEvent(soundData.event) or (not HIDE_GOSSIP_OPTIONS and soundData.title) then
             if not gossipCount then
                 gossipCount = i - 1
             end
@@ -587,7 +587,7 @@ function SoundQueueUI:UpdateSoundQueueDisplay()
         self.frame.container:Hide()
     end
     -- Refresh again after updating layout (same frame in modern WoW, next frame in old WoW) to update hover state depending on the new button positions after realignment
-    C_Timer.After(0, function() self.frame.container.buttons:Update() end)
+    Addon:ScheduleTimer(function() self.frame.container.buttons:Update() end, 0)
 end
 
 function SoundQueueUI:UpdatePauseDisplay()

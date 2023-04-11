@@ -153,13 +153,15 @@ function DataModules:GetQuestIDByQuestTextHash(text, npcID)
     end
 end
 
-local getFileNameForEvent = setmetatable(
-    {
-        accept = function(soundData) return format("%d-%s", soundData.questID, "accept") end,
-        progress = function(soundData) return format("%d-%s", soundData.questID, "progress") end,
-        complete = function(soundData) return format("%d-%s", soundData.questID, "complete") end,
-        gossip = function(soundData) return DataModules:GetNPCGossipTextHash(soundData) end,
-    }, { __index = function(self, event) error(format([[Unhandled VoiceOver sound event "%s"]], event)) end })
+local getFileNameForEvent =
+{
+    [Enums.SoundEvent.QuestAccept]   = function(soundData) return format("%d-%s", soundData.questID, "accept") end,
+    [Enums.SoundEvent.QuestProgress] = function(soundData) return format("%d-%s", soundData.questID, "progress") end,
+    [Enums.SoundEvent.QuestComplete] = function(soundData) return format("%d-%s", soundData.questID, "complete") end,
+    [Enums.SoundEvent.QuestGreeting] = function(soundData) return DataModules:GetNPCGossipTextHash(soundData) end,
+    [Enums.SoundEvent.Gossip]        = function(soundData) return DataModules:GetNPCGossipTextHash(soundData) end,
+}
+setmetatable(getFileNameForEvent, { __index = function(self, event) error(format([[Unhandled VoiceOver sound event %d "%s"]], event, Enums.SoundEvent:GetName(event) or "???")) end })
 
 function DataModules:PrepareSound(soundData)
     soundData.fileName = getFileNameForEvent[soundData.event](soundData)

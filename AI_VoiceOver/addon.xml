@@ -1,6 +1,6 @@
 <Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
     <Script file="Environment.lua"/>
-    <Script file="Enums.lua"/>
+    <Script file="Common\Enums.lua"/>
     <Script file="Utils.lua"/>
     <Script file="Debug.lua"/>
     <Script file="Options.lua"/>

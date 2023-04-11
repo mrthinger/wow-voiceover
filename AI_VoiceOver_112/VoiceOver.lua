@@ -59,7 +59,7 @@ function Addon:QUEST_DETAIL()
 
 
     local soundData = {
-        event = "accept",
+        event = Enums.SoundEvent.QuestAccept,
         questID = questID,
         name = targetName,
         title = questTitle,
@@ -78,7 +78,7 @@ function Addon:QUEST_COMPLETE()
     Utils:Log("QUEST_COMPLETE" .. " " .. questTitle .. " " .. targetName .. " " .. questID);
     local fileName = tostring(questID) .. "-complete"
     local soundData = {
-        event = "complete",
+        event = Enums.SoundEvent.QuestComplete,
         questID = questID,
         name = targetName,
         title = questTitle,
@@ -94,7 +94,7 @@ function Addon:GOSSIP_SHOW()
     local fileName = Utils:GetNPCGossipTextHash(targetName, gossipText)
 
     local soundData = {
-        event = "gossip",
+        event = Enums.SoundEvent.Gossip,
         name = targetName,
         title = targetName,
         fileName = fileName,
