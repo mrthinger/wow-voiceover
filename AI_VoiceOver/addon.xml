@@ -4,7 +4,7 @@
     <Script file="Utils.lua"/>
     <Script file="Debug.lua"/>
     <Script file="Options.lua"/>
-    <Script file="FuzzySearch.lua"/>
+    <Script file="Common\FuzzySearch.lua"/>
     <Script file="SoundQueue.lua"/>
     <Script file="SoundQueueUI.lua"/>
     <Script file="QuestOverlayUI.lua"/>

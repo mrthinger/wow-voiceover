@@ -1,9 +1,8 @@
 setfenv(1, VoiceOver)
-
 local function jaccardSimilarity(a, b)
     local tokens_a, tokens_b = {}, {}
-    for token in string.gfind(a, "%S+") do tokens_a[token] = true end
-    for token in string.gfind(b, "%S+") do tokens_b[token] = true end
+    for token in string.gmatch(a, "%S+") do tokens_a[token] = true end
+    for token in string.gmatch(b, "%S+") do tokens_b[token] = true end
 
     local intersection, union = 0, 0
     for token in pairs(tokens_a) do
