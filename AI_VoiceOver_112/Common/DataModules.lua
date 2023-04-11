@@ -98,7 +98,7 @@ function DataModules:EnumerateAddons()
 end
 
 function DataModules:LoadModule(module)
-    if not module.LoadOnDemand or self:GetModule(module) or IsAddOnLoaded(module.AddonName) then
+    if not module.LoadOnDemand or self:GetModule(module.AddonName) or IsAddOnLoaded(module.AddonName) then
         return false
     end
     -- We deliberately use a high ##Interface version in TOC to ensure that all clients will load it.
