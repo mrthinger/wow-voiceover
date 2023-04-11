@@ -1,12 +1,24 @@
 setfenv(1, VoiceOver)
 Utils = {}
 
-function Utils:GetIDFromGUID(guid)
-    return guid and tonumber((select(6, strsplit("-", guid))))
+function Utils:GetGUIDType(guid)
+    return guid and Enums.GUID[select(1, strsplit("-", guid, 2))]
 end
 
-function Utils:GetGUIDFromID(id)
-    return format("Creature-%d-%d-%d-%d-%d-%d", 0, 0, 0, 0, id, 0)
+function Utils:GetIDFromGUID(guid)
+    if not guid then
+        return
+    end
+    local type, rest = strsplit("-", guid, 2)
+    type = assert(Enums.GUID[type], format("Unknown GUID type %s", type))
+    assert(Enums.GUID:CanHaveID(type), format([[GUID "%s" does not contain ID]], guid))
+    return tonumber((select(5, strsplit("-", rest))))
+end
+
+function Utils:MakeGUID(type, id)
+    assert(Enums.GUID:CanHaveID(type), format("GUID of type %d (%s) cannot contain ID", type, Enums.GUID:GetName(type) or "Unknown"))
+    type = assert(Enums.GUID:GetName(type), format("Unknown GUID type %d", type))
+    return format("%s-%d-%d-%d-%d-%d-%d", type, 0, 0, 0, 0, id, 0)
 end
 
 function Utils:WillSoundPlay(soundData)

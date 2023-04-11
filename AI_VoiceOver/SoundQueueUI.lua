@@ -202,6 +202,18 @@ function SoundQueueUI:InitPortraitLine()
     end)
 end
 
+local function ShouldShowBookForGUID(guid)
+    local type = guid and Utils:GetGUIDType(guid)
+    if not type then
+        return true -- A fallback in case the GUID is missing
+    elseif type == Enums.GUID.Item then
+        return true -- Maybe display the item icon in the future
+    elseif type == Enums.GUID.GameObject then
+        return true -- Maybe display the object model in the future
+    end
+    return false
+end
+
 function SoundQueueUI:InitPortrait()
     local soundQueueUI = self
 
@@ -213,7 +225,7 @@ function SoundQueueUI:InitPortrait()
         if not soundData then
             self.model:Hide()
             self.book:Hide()
-        elseif not soundData.unitGUID then
+        elseif ShouldShowBookForGUID(soundData.unitGUID) then
             self.model:Hide()
             self.book:Show()
         else
