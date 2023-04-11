@@ -21,6 +21,18 @@ function Utils:MakeGUID(type, id)
     return format("%s-%d-%d-%d-%d-%d-%d", type, 0, 0, 0, 0, id, 0)
 end
 
+function Utils:GetNPCName()
+    return UnitName("questnpc") or UnitName("npc")
+end
+
+function Utils:GetNPCGUID()
+    return UnitGUID("questnpc") or UnitGUID("npc")
+end
+
+function Utils:IsNPCPlayer()
+    return UnitIsPlayer("questnpc") or UnitIsPlayer("npc")
+end
+
 function Utils:WillSoundPlay(soundData)
     if not soundData.filePath then
         return false

@@ -119,8 +119,8 @@ function Addon:QUEST_DETAIL()
     local questID = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
-    local guid = UnitGUID("questnpc") or UnitGUID("npc")
-    local targetName = UnitName("questnpc") or UnitName("npc")
+    local guid = Utils:GetNPCGUID()
+    local targetName = Utils:GetNPCName()
 
     local type = guid and Utils:GetGUIDType(guid)
     if type == Enums.GUID.Item then
@@ -153,8 +153,8 @@ function Addon:QUEST_COMPLETE()
     local questID = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetRewardText()
-    local guid = UnitGUID("questnpc") or UnitGUID("npc")
-    local targetName = UnitName("questnpc") or UnitName("npc")
+    local guid = Utils:GetNPCGUID()
+    local targetName = Utils:GetNPCName()
     -- print("QUEST_COMPLETE", questID, questTitle);
     local soundData = {
         event = Enums.SoundEvent.QuestComplete,
@@ -168,8 +168,8 @@ function Addon:QUEST_COMPLETE()
 end
 
 function Addon:GOSSIP_SHOW()
-    local guid = UnitGUID("npc")
-    local targetName = UnitName("npc")
+    local guid = Utils:GetNPCGUID()
+    local targetName = Utils:GetNPCName()
     local npcKey = guid or "unknown"
 
     local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[npcKey]

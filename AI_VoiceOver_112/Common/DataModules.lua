@@ -232,15 +232,6 @@ setmetatable(getFileNameForEvent,
     })
 
 function DataModules:PrepareSound(soundData)
-    if Enums.SoundEvent:IsQuestEvent(soundData.event) and not soundData.questID then
-        local source = Enums.SoundEvent:ToString(soundData.event)
-        local questID = DataModules:GetQuestID(source, soundData.title, soundData.name, soundData.text)
-        if not questID then
-            return false
-        end
-        soundData.questID = questID
-    end
-
     soundData.fileName = getFileNameForEvent[soundData.event](soundData)
 
     if soundData.fileName == nil then
