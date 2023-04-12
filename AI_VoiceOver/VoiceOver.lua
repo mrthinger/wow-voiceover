@@ -14,7 +14,7 @@ local defaults = {
         Audio = {
             GossipFrequency = Enums.GossipFrequency.OncePerQuestNPC,
             SoundChannel = Enums.SoundChannel.Master,
-            AutoToggleDialog = false,
+            AutoToggleDialog = true,
         },
         MinimapButton = {
             LibDBIcon = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)

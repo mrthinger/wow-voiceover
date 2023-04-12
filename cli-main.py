@@ -1,6 +1,6 @@
 import argparse
-from prompt_toolkit.shortcuts import checkboxlist_dialog, radiolist_dialog, message_dialog, yes_no_dialog
-from tts_cli.sql_queries import get_gossip_dataframe, get_quest_dataframe, query_dataframe_for_all_quests_and_gossip, query_dataframe_for_area
+from prompt_toolkit.shortcuts import checkboxlist_dialog, radiolist_dialog, yes_no_dialog
+from tts_cli.sql_queries import query_dataframe_for_all_quests_and_gossip, query_dataframe_for_area
 from tts_cli.tts_utils import TTSProcessor
 from tts_cli.init_db import download_and_extract_latest_db_dump, import_sql_files_to_database
 from tts_cli.consts import RACE_DICT_INV, GENDER_DICT_INV, race_gender_tuple_to_strings

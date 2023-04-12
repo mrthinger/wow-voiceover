@@ -1,6 +1,7 @@
 setfenv(1, VoiceOver)
 
 local CURRENT_MODULE_VERSION = 1
+local FORCE_ENABLE_DISABLED_MODULES = true
 local LOAD_ALL_MODULES = true
 
 DataModules =
@@ -59,7 +60,7 @@ function DataModules:EnumerateAddons()
     local playerName = UnitName("player")
     for i = 1, GetNumAddOns() do
         local moduleVersion = tonumber(GetAddOnMetadata(i, "X-VoiceOver-DataModule-Version"))
-        if moduleVersion and GetAddOnEnableState(playerName, i) ~= 0 then
+        if moduleVersion and (FORCE_ENABLE_DISABLED_MODULES or GetAddOnEnableState(playerName, i) ~= 0) then
             local name = GetAddOnInfo(i)
             local mapsString = GetAddOnMetadata(i, "X-VoiceOver-DataModule-Maps")
             local maps = {}
@@ -86,7 +87,7 @@ function DataModules:EnumerateAddons()
 
             -- Maybe in the future we can load modules based on the map the player is in (select(8, GetInstanceInfo())), but for now - just load everything
             if LOAD_ALL_MODULES and IsAddOnLoadOnDemand(name) then
-                LoadAddOn(name)
+                DataModules:LoadModule(module)
             end
         end
     end
@@ -97,8 +98,27 @@ function DataModules:EnumerateAddons()
     end
 end
 
+function DataModules:LoadModule(module)
+    if not module.LoadOnDemand or self:GetModule(module.AddonName) or IsAddOnLoaded(module.AddonName) then
+        return false
+    end
+
+    if FORCE_ENABLE_DISABLED_MODULES and GetAddOnEnableState(UnitName("player"), module.AddonName) == 0 then
+        EnableAddOn(module.AddonName)
+    end
+
+    -- We deliberately use a high ##Interface version in TOC to ensure that all clients will load it.
+    -- Otherwise pre-classic-rerelease clients will refuse to load addons with version < 20000.
+    -- Here we temporarily enable "Load out of date AddOns" to load the module, and restore the user's setting afterwards.
+    local oldLoadOutOfDateAddons = GetCVar("checkAddonVersion")
+    SetCVar("checkAddonVersion", 0)
+    local loaded = LoadAddOn(module.AddonName)
+    SetCVar("checkAddonVersion", oldLoadOutOfDateAddons)
+    return loaded
+end
+
 function DataModules:GetNPCGossipTextHash(soundData)
-    local table = soundData.unitGUID and "NPCToTextToTemplateHash" or "GossipLookup"
+    local table = soundData.unitGUID and "GossipLookupByNPCID" or "GossipLookupByNPCName"
     local npc = soundData.unitGUID and Utils:GetIDFromGUID(soundData.unitGUID) or soundData.name
     local text = soundData.text
 
@@ -193,7 +213,7 @@ end
 
 function DataModules:GetQuestLogNPCID(questID)
     for _, module in self:GetModules() do
-        local data = module.QuestlogNpcGuidTable
+        local data = module.NPCIDLookupByQuestID
         if data then
             local npcID = data[questID]
             if npcID then
@@ -205,7 +225,7 @@ end
 
 function DataModules:GetNPCName(npcID)
     for _, module in self:GetModules() do
-        local data = module.NPCNameLookup
+        local data = module.NPCNameLookupByNPCID
         if data then
             local npcName = data[npcID]
             if npcName then
@@ -239,7 +259,7 @@ function DataModules:PrepareSound(soundData)
     end
 
     for _, module in self:GetModules() do
-        local data = module.SoundLengthTable
+        local data = module.SoundLengthLookupByFileName
         if data then
             local playerGenderedFileName = DataModules:AddPlayerGenderToFilename(soundData.fileName)
             if data[playerGenderedFileName] then

@@ -230,7 +230,7 @@ class TTSProcessor:
 
         with open(output_file, "w") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
-            f.write(f"{module_name}.NPCToTextToTemplateHash = ")
+            f.write(f"{module_name}.GossipLookupByNPCID = ")
             f.write(lua.encode(gossip_table))
             f.write("\n")
 
@@ -246,7 +246,7 @@ class TTSProcessor:
 
         with open(output_file, "w") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
-            f.write(f"{module_name}.QuestlogNpcGuidTable = ")
+            f.write(f"{module_name}.NPCIDLookupByQuestID = ")
             f.write(lua.encode(questlog_table))
             f.write("\n")
     
@@ -260,7 +260,7 @@ class TTSProcessor:
 
         with open(output_file, "w") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
-            f.write(f"{module_name}.NPCNameLookup = ")
+            f.write(f"{module_name}.NPCNameLookupByNPCID = ")
             f.write(lua.encode(npc_name_table))
             f.write("\n")
 
@@ -323,7 +323,7 @@ class TTSProcessor:
 
         with open(output_file, "w") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
-            f.write(f"{module_name}.GossipLookup = ")
+            f.write(f"{module_name}.GossipLookupByNPCName = ")
             f.write(lua.encode(gossip_table))
             f.write("\n")
 
