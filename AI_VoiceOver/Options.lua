@@ -419,7 +419,7 @@ function Options:AddDataModule(module, order)
                 name = "Load",
                 hidden = function() return reason or not module.LoadOnDemand or DataModules:GetModule(module.AddonName) end,
                 func = function()
-                    LoadAddOn(module.AddonName)
+                    DataModules:LoadModule(module)
                 end,
             },
         }
