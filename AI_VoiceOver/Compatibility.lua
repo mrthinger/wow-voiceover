@@ -211,7 +211,7 @@ if not WOW_PROJECT_ID and INTERFACE_VERSION < 70000 then
     end
 end
 
-if not WOW_PROJECT_ID and string.sub(CLIENT_VERSION, 1, 4) == "1.12" then
+if not WOW_PROJECT_ID and INTERFACE_VERSION < 11300 then
 
     function Utils:GetNPCName()
         return UnitName("npc")
