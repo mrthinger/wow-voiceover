@@ -1,6 +1,7 @@
 setfenv(1, VoiceOver)
 
 local CURRENT_MODULE_VERSION = 1
+local FORCE_ENABLE_DISABLED_MODULES = true
 local LOAD_ALL_MODULES = true
 
 DataModules =
@@ -59,7 +60,7 @@ function DataModules:EnumerateAddons()
     local playerName = UnitName("player")
     for i = 1, GetNumAddOns() do
         local moduleVersion = tonumber(GetAddOnMetadata(i, "X-VoiceOver-DataModule-Version"))
-        if moduleVersion and GetAddOnEnableState(playerName, i) ~= 0 then
+        if moduleVersion and (FORCE_ENABLE_DISABLED_MODULES or GetAddOnEnableState(playerName, i) ~= 0) then
             local name = GetAddOnInfo(i)
             local mapsString = GetAddOnMetadata(i, "X-VoiceOver-DataModule-Maps")
             local maps = {}
@@ -101,6 +102,11 @@ function DataModules:LoadModule(module)
     if not module.LoadOnDemand or self:GetModule(module.AddonName) or IsAddOnLoaded(module.AddonName) then
         return false
     end
+
+    if FORCE_ENABLE_DISABLED_MODULES and GetAddOnEnableState(UnitName("player"), module.AddonName) == 0 then
+        EnableAddOn(module.AddonName)
+    end
+
     -- We deliberately use a high ##Interface version in TOC to ensure that all clients will load it.
     -- Otherwise pre-classic-rerelease clients will refuse to load addons with version < 20000.
     -- Here we temporarily enable "Load out of date AddOns" to load the module, and restore the user's setting afterwards.
