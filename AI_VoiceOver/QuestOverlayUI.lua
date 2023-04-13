@@ -102,6 +102,10 @@ end
 
 
 function QuestOverlayUI:UpdateQuestOverlayUI()
+    if not QuestLogFrame:IsShown() then
+        return
+    end
+
     local numEntries, numQuests = GetNumQuestLogEntries()
 
     -- Hide all buttons in displayedButtons
