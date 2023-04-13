@@ -251,6 +251,7 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
         return _G["QuestLogListScrollFrameButton" .. index .. "Check"]
     end
 
+    local QuestLogTitleButton_Resize = QuestLogTitleButton_Resize -- Store original function before LeatrixPlus's "Enhance quest log" hooks into it
     local prefix
     function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
         if not prefix then
