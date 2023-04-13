@@ -243,10 +243,31 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
         return _G["QuestLogListScrollFrameButton" .. index]
     end
 
+    function Utils:GetQuestLogTitleNormalText(index)
+        return _G["QuestLogListScrollFrameButton" .. index .. "NormalText"]
+    end
+
+    function Utils:GetQuestLogTitleCheck(index)
+        return _G["QuestLogListScrollFrameButton" .. index .. "Check"]
+    end
+
+    local prefix
     function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
-        playButton:SetPoint("LEFT", questLogTitleFrame.normalText, "LEFT", 4, 0)
-        questLogTitleFrame.normalText:SetText([[|TInterface\AddOns\AI_VoiceOver\Textures\spacer:1:24|t]] ..
-            (questLogTitleFrame.normalText:GetText() or ""):trim())
+        if not prefix then
+            local text = normalText:GetText()
+            for i = 1, 20 do
+                normalText:SetText(string.rep(" ", i))
+                if normalText:GetStringWidth() >= 24 then
+                    prefix = normalText:GetText()
+                    break
+                end
+            end
+            prefix = prefix or "  "
+            normalText:SetText(text)
+        end
+
+        playButton:SetPoint("LEFT", normalText, "LEFT", 4, 0)
+        normalText:SetText(prefix .. (normalText:GetText() or ""):trim())
         QuestLogTitleButton_Resize(questLogTitleFrame)
     end
 

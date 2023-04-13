@@ -26,10 +26,24 @@ function QuestOverlayUI:CreatePlayButton(questID)
     self.questPlayButtons[questID] = playButton
 end
 
+local prefix
 function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
+    if not prefix then
+        local text = normalText:GetText()
+        for i = 1, 20 do
+            normalText:SetText(string.rep(" ", i))
+            if normalText:GetStringWidth() >= 24 then
+                prefix = normalText:GetText()
+                break
+            end
+        end
+        prefix = prefix or "  "
+        normalText:SetText(text)
+    end
+
     playButton:SetPoint("LEFT", normalText, "LEFT", 4, 0)
 
-    local formatedText = [[|TInterface\AddOns\AI_VoiceOver\Textures\spacer:1:24|t]] .. (normalText:GetText() or ""):trim()
+    local formatedText = prefix .. (normalText:GetText() or ""):trim()
 
     normalText:SetText(formatedText)
     QuestLogDummyText:SetText(formatedText)
