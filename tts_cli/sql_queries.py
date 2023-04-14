@@ -16,7 +16,8 @@ def make_connection():
 def query_dataframe_for_area(x_range, y_range, map_id):
     db = make_connection()
     sql_query = '''
-WITH filtered_creatures AS (
+WITH RECURSIVE
+filtered_creatures AS (
     SELECT *
     FROM creature
     WHERE
@@ -36,33 +37,35 @@ quest_relations AS (
     SELECT 'progress' as source, qr.quest, fc.id as creature_id, fc.position_x, fc.position_y, fc.map
     FROM filtered_creatures fc
     JOIN creature_involvedrelation qr ON qr.id = fc.id
-)
+),
+collected_gossip_menus (base_menu_id, menu_id, text_id, action_menu_id) AS (
+    WITH gossip_menu_and_options AS (
+        SELECT gm.entry, gm.text_id, NULL as action_menu_id
+            FROM gossip_menu gm
+        UNION DISTINCT
+        SELECT gm.entry, gm.text_id, gmo.action_menu_id
+            FROM gossip_menu gm
+            LEFT JOIN gossip_menu_option gmo on gmo.menu_id = gm.entry
+    )
+    SELECT gm.entry as base_menu_id, gm.entry, gm.text_id, gm.action_menu_id
+        FROM gossip_menu_and_options gm
+    UNION DISTINCT
+    SELECT cgm.base_menu_id, gm.entry, gm.text_id, gm.action_menu_id
+        FROM gossip_menu_and_options gm
+        INNER JOIN collected_gossip_menus cgm ON cgm.action_menu_id = gm.entry
+),
 creature_data AS (
     SELECT
         filtered_creatures.id,
         ct.name,
-        gm.entry AS gm_entry,
-        gm.text_id AS gm_text_id,
-        gm2.entry AS gm2_entry,
-        gm2.text_id AS gm2_text_id,
-        gm3.entry AS gm3_entry,
-        gm3.text_id AS gm3_text_id,
+        cgm.text_id,
         cdie.DisplaySexID,
         cdie.DisplayRaceID
     FROM filtered_creatures
         JOIN creature_template ct ON filtered_creatures.id = ct.entry
         JOIN db_CreatureDisplayInfo cdi ON ct.display_id1 = cdi.ID
         JOIN db_CreatureDisplayInfoExtra cdie ON cdi.ExtendedDisplayInfoID = cdie.ID
-        left JOIN gossip_menu gm ON ct.gossip_menu_id = gm.entry
-        left JOIN gossip_menu_option gmo ON gm.entry = gmo.menu_id
-        left JOIN gossip_menu gm2 ON gmo.action_menu_id = gm2.entry
-        left JOIN gossip_menu_option gmo2 ON gm2.entry = gmo2.menu_id
-        left JOIN gossip_menu gm3 ON gmo2.action_menu_id = gm3.entry
-),
-gossip_levels AS (
-    SELECT 0 AS level
-    UNION ALL SELECT 1
-    UNION ALL SELECT 2
+        LEFT JOIN collected_gossip_menus cgm ON cgm.base_menu_id = ct.gossip_menu_id
 ),
 numbers AS (
     SELECT 0 AS n
@@ -114,14 +117,8 @@ SELECT
     creature_data.name,
     creature_data.id
 FROM creature_data
-    CROSS JOIN gossip_levels
     CROSS JOIN numbers
-    JOIN npc_text nt ON
-        CASE gossip_levels.level
-            WHEN 0 THEN gm_text_id
-            WHEN 1 THEN gm2_text_id
-            WHEN 2 THEN gm3_text_id
-        END = nt.ID
+    JOIN npc_text nt ON nt.ID = creature_data.text_id
     JOIN broadcast_text bt ON
         CASE numbers.n
             WHEN 0 THEN nt.BroadcastTextID0
@@ -154,7 +151,8 @@ WHERE
 def query_dataframe_for_all_quests_and_gossip():
     db = make_connection()
     sql_query = '''
-WITH quest_relations AS (
+WITH RECURSIVE
+quest_relations AS (
     SELECT 'accept' as source, qr.quest, ct.entry as creature_id
     FROM creature_template ct
     JOIN creature_questrelation qr ON qr.id = ct.entry
@@ -167,31 +165,33 @@ WITH quest_relations AS (
     FROM creature_template ct
     JOIN creature_involvedrelation qr ON qr.id = ct.entry
 ),
+collected_gossip_menus (base_menu_id, menu_id, text_id, action_menu_id) AS (
+    WITH gossip_menu_and_options AS (
+        SELECT gm.entry, gm.text_id, NULL as action_menu_id
+            FROM gossip_menu gm
+        UNION DISTINCT
+        SELECT gm.entry, gm.text_id, gmo.action_menu_id
+            FROM gossip_menu gm
+            LEFT JOIN gossip_menu_option gmo on gmo.menu_id = gm.entry
+    )
+    SELECT gm.entry as base_menu_id, gm.entry, gm.text_id, gm.action_menu_id
+        FROM gossip_menu_and_options gm
+    UNION DISTINCT
+    SELECT cgm.base_menu_id, gm.entry, gm.text_id, gm.action_menu_id
+        FROM gossip_menu_and_options gm
+        INNER JOIN collected_gossip_menus cgm ON cgm.action_menu_id = gm.entry
+),
 creature_data AS (
     SELECT
         ct.entry as id,
         ct.name,
-        gm.entry AS gm_entry,
-        gm.text_id AS gm_text_id,
-        gm2.entry AS gm2_entry,
-        gm2.text_id AS gm2_text_id,
-        gm3.entry AS gm3_entry,
-        gm3.text_id AS gm3_text_id,
+        cgm.text_id,
         cdie.DisplaySexID,
         cdie.DisplayRaceID
     FROM creature_template ct
         JOIN db_CreatureDisplayInfo cdi ON ct.display_id1 = cdi.ID
         JOIN db_CreatureDisplayInfoExtra cdie ON cdi.ExtendedDisplayInfoID = cdie.ID
-        left JOIN gossip_menu gm ON ct.gossip_menu_id = gm.entry
-        left JOIN gossip_menu_option gmo ON gm.entry = gmo.menu_id
-        left JOIN gossip_menu gm2 ON gmo.action_menu_id = gm2.entry
-        left JOIN gossip_menu_option gmo2 ON gm2.entry = gmo2.menu_id
-        left JOIN gossip_menu gm3 ON gmo2.action_menu_id = gm3.entry
-),
-gossip_levels AS (
-    SELECT 0 AS level
-    UNION ALL SELECT 1
-    UNION ALL SELECT 2
+        LEFT JOIN collected_gossip_menus cgm ON cgm.base_menu_id = ct.gossip_menu_id
 ),
 numbers AS (
     SELECT 0 AS n
@@ -241,14 +241,8 @@ SELECT
     creature_data.name,
     creature_data.id
 FROM creature_data
-    CROSS JOIN gossip_levels
     CROSS JOIN numbers
-    JOIN npc_text nt ON
-        CASE gossip_levels.level
-            WHEN 0 THEN gm_text_id
-            WHEN 1 THEN gm2_text_id
-            WHEN 2 THEN gm3_text_id
-        END = nt.ID
+    JOIN npc_text nt ON nt.ID = creature_data.text_id
     JOIN broadcast_text bt ON
         CASE numbers.n
             WHEN 0 THEN nt.BroadcastTextID0
