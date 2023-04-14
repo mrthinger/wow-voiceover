@@ -1,11 +1,12 @@
 import pymysql
 import pandas as pd
-from tts_cli.env_vars import MYSQL_HOST, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DATABASE
+from tts_cli.env_vars import MYSQL_HOST, MYSQL_PORT, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DATABASE
 
 
 def make_connection():
     return pymysql.connect(
         host=MYSQL_HOST,
+        port=MYSQL_PORT,
         user=MYSQL_USER,
         password=MYSQL_PASSWORD,
         database=MYSQL_DATABASE
