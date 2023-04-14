@@ -52,12 +52,13 @@ function SoundQueue:AddSoundToQueue(soundData)
     soundData.id = self.soundIdCounter
 
     table.insert(self.sounds, soundData)
-    self.ui:UpdateSoundQueueDisplay()
 
     -- If the sound queue only contains one sound, play it immediately
     if #self.sounds == 1 and not Addon.db.char.IsPaused then
         self:PlaySound(soundData)
     end
+
+    self.ui:UpdateSoundQueueDisplay()
 end
 
 function SoundQueue:PlaySound(soundData)
@@ -106,7 +107,7 @@ function SoundQueue:ResumeQueue()
         self:PlaySound(currentSound)
     end
 
-    self.ui:UpdatePauseDisplay()
+    self.ui:UpdateSoundQueueDisplay()
 end
 
 function SoundQueue:TogglePauseQueue()

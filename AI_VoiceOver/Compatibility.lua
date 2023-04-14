@@ -77,23 +77,124 @@ if not GetQuestID then
     end
 end
 
+if not QUESTS_DISPLAYED then
+    if QuestLogScrollFrame then
+        QUESTS_DISPLAYED = getn(QuestLogScrollFrame.buttons)
+    end
+end
+
+if not SOUNDKIT then
+    SOUNDKIT =
+    {
+        U_CHAT_SCROLL_BUTTON = "uChatScrollButton",
+        IG_MAINMENU_OPEN = "igMainMenuOpen",
+        IG_MAINMENU_CLOSE = "igMainMenuClose",
+    }
+end
+
+-- Not sure when exactly were UI-Cursor-Move and UI-Cursor-SizeRight added, but the former was present in 6.0.1
+if not WOW_PROJECT_ID and INTERFACE_VERSION < 60000 then
+    function SetCursor() end
+end
+
+-- Patch 2.4.0 (2008-03-25): Added.
+if not WOW_PROJECT_ID and not UnitGUID then
+    -- 1.0.0 - 2.3.0
+    Enums.GUID = nil
+    Utils.GetGUIDType = nil
+    Utils.GetIDFromGUID = nil
+    Utils.MakeGUID = nil
+-- Patch 4.0.1 (2010-10-12): Bits shifted. NPCID is now characters 5-8, not 7-10 (counting from 1).
+elseif not WOW_PROJECT_ID and INTERFACE_VERSION < 40000 then
+    -- 2.4.0 - 3.3.5
+    Enums.GUID.Player     = tonumber("0000", 16)
+    Enums.GUID.Item       = tonumber("4000", 16)
+    Enums.GUID.Creature   = tonumber("F130", 16)
+    Enums.GUID.Vehicle    = tonumber("F150", 16)
+    Enums.GUID.GameObject = tonumber("F110", 16)
+
+    function Utils:GetGUIDType(guid)
+        return guid and tonumber(guid:sub(3, 3 + 4 - 1), 16)
+    end
+
+    function Utils:GetIDFromGUID(guid)
+        if not guid then
+            return
+        end
+        local type = assert(self:GetGUIDType(guid), format([[Failed to determine the type of GUID "%s"]], guid))
+        assert(Enums.GUID:GetName(type), format([[Unknown GUID type %d]], type))
+        assert(Enums.GUID:CanHaveID(type), format([[GUID "%s" does not contain ID]], guid))
+        return tonumber(guid:sub(7, 7 + 6 - 1), 16)
+    end
+
+    function Utils:MakeGUID(type, id)
+        assert(Enums.GUID:CanHaveID(type), format("GUID of type %d (%s) cannot contain ID", type, Enums.GUID:GetName(type) or "Unknown"))
+        return format("0x%04X%06X%06X", type, id, 0)
+    end
+-- Patch 6.0.2 (2014-10-14): Changed to a new format, e.g. for players: Player-[serverID]-[playerUID]
+elseif not WOW_PROJECT_ID and INTERFACE_VERSION < 60000 then
+    -- 4.0.1 - 5.4.8
+    Enums.GUID.Player     = tonumber("000", 16)
+    Enums.GUID.Item       = tonumber("400", 16)
+    Enums.GUID.Creature   = tonumber("F13", 16)
+    Enums.GUID.Vehicle    = tonumber("F15", 16)
+    Enums.GUID.GameObject = tonumber("F11", 16)
+
+    function Utils:GetGUIDType(guid)
+        return guid and tonumber(guid:sub(3, 3 + 3 - 1), 16)
+    end
+
+    function Utils:GetIDFromGUID(guid)
+        if not guid then
+            return
+        end
+        local type = assert(self:GetGUIDType(guid), format([[Failed to determine the type of GUID "%s"]], guid))
+        assert(Enums.GUID:GetName(type), format("Unknown GUID type %d", type))
+        assert(Enums.GUID:CanHaveID(type), format([[GUID "%s" does not contain ID]], guid))
+        return tonumber(guid:sub(6, 6 + 5 - 1), 16)
+    end
+
+    function Utils:MakeGUID(type, id)
+        assert(Enums.GUID:CanHaveID(type), format("GUID of type %d (%s) cannot contain ID", type, Enums.GUID:GetName(type) or "Unknown"))
+        return format("0x%03X%05X%08X", type, id, 0)
+    end
+end
+
+-- Patch 6.0.2 (2014-10-14): Removed returns 'questTag' and 'isDaily'. Added returns 'frequency', 'isOnMap', 'hasLocalPOI', 'isTask', and 'isStory'.
+if not WOW_PROJECT_ID and INTERFACE_VERSION < 60000 then
+    function GetQuestLogTitle(questIndex)
+        local title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID, displayQuestID = _G.GetQuestLogTitle(questIndex)
+        local frequency = isDaily and 2 or 1
+        return title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID
+    end
+end
+
 local FrameMixins = {}
 local ModelMixins = {}
+local hookFrame
+local hookModel
 function CreateFrame(frameType, name, parent, template)
+    if UIParent.SetBackdrop and template == "BackdropTemplate" then
+        template = nil
+    end
+
     local frame = _G.CreateFrame(frameType, name, parent, template)
-    if frameType == "Model" or frameType == "PlayerModel" or frameType == "DressUpModel" then
-        if hookModel then
-            hookModel(frame)
+    for k, v in pairs(FrameMixins) do
+        if not frame[k] then
+            frame[k] = v
         end
+    end
+    if hookFrame then
+        hookFrame(frame)
+    end
+    if frameType == "Model" or frameType == "PlayerModel" or frameType == "DressUpModel" then
         for k, v in pairs(ModelMixins) do
             if not frame[k] then
                 frame[k] = v
             end
         end
-    end
-    for k, v in pairs(FrameMixins) do
-        if not frame[k] then
-            frame[k] = v
+        if hookModel then
+            hookModel(frame)
         end
     end
     return frame
@@ -118,6 +219,7 @@ end
 function ModelMixins:SetCustomCamera(camera)
     self:SetCamera(camera)
 end
+-- Patch 7.0.3 (2016-07-19): Added.
 if not WOW_PROJECT_ID and INTERFACE_VERSION < 70000 then
     local modelToFileID = {
         ["Original"] = {
@@ -225,7 +327,99 @@ if not WOW_PROJECT_ID and INTERFACE_VERSION < 11300 then
         return UnitIsPlayer("npc")
     end
 
-elseif not WOW_PROJECT_ID and CLIENT_VERSION == "3.3.5" then
+elseif not WOW_PROJECT_ID and INTERFACE_VERSION == 30300 then
+
+    function Utils:GetQuestLogScrollOffset()
+        return HybridScrollFrame_GetOffset(QuestLogScrollFrame)
+    end
+
+    function Utils:GetQuestLogTitleFrame(index)
+        return _G["QuestLogScrollFrameButton" .. index]
+    end
+
+    function Utils:GetQuestLogTitleNormalText(index)
+        return _G["QuestLogScrollFrameButton" .. index .. "NormalText"]
+    end
+
+    function Utils:GetQuestLogTitleCheck(index)
+        return _G["QuestLogScrollFrameButton" .. index .. "Check"]
+    end
+
+    local prefix
+    local QuestLogTitleButton_Resize = QuestLogTitleButton_Resize
+    function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
+        if not prefix then
+            local text = normalText:GetText()
+            for i = 1, 20 do
+                normalText:SetText(string.rep(" ", i))
+                if normalText:GetStringWidth() >= 24 then
+                    prefix = normalText:GetText()
+                    break
+                end
+            end
+            prefix = prefix or "  "
+            normalText:SetText(text)
+        end
+
+        playButton:SetPoint("LEFT", normalText, "LEFT", 4, 0)
+        normalText:SetText(prefix .. (normalText:GetText() or ""):trim())
+        QuestLogTitleButton_Resize(questLogTitleFrame)
+    end
+
+    hooksecurefunc(Addon, "OnInitialize", function()
+        QuestLogScrollFrame.update = QuestLog_Update
+    end)
+
+    function Utils:WillSoundPlay(soundData)
+        return soundData.fileName and soundData.fileName ~= "missingSound" and soundData.length ~= nil
+    end
+
+    function hookModel(self)
+        local function HasModelLoaded(self)
+            local model = self:GetModel()
+            return model and type(model) == "string" and self:GetModelFileID() ~= 130737
+        end
+        hooksecurefunc(self, "ClearModel", function(self)
+            self._awaitingModel = nil
+            self._camera = nil
+            self._sequence = nil
+            self._sequenceStart = nil
+        end)
+        hooksecurefunc(self, "SetSequence", function(self, sequence)
+            self._sequence = sequence ~= 0 and sequence or nil
+            self._sequenceStart = GetTime()
+        end)
+        local oldSetCreature = self.SetCreature
+        function self:SetCreature(id)
+            self:ClearModel()
+            self:SetModel([[Interface\Buttons\TalkToMeQuestion_White.mdx]])
+            oldSetCreature(self, id)
+            self._awaitingModel = not HasModelLoaded(self)
+            if self._awaitingModel then
+                self:SetPosition(5, 0, 2)
+            end
+        end
+        local oldSetCamera = self.SetCamera
+        function self:SetCamera(id)
+            self._camera = id
+            if not self._awaitingModel then
+                oldSetCamera(self, id)
+            end
+        end
+        self:HookScript("OnUpdate", function(self, elapsed)
+            if self._awaitingModel and HasModelLoaded(self) then
+                self._awaitingModel = nil
+                self:SetPosition(0, 0, 0)
+
+                if self._sequence then
+                    self:SetSequence(self._sequence)
+                end
+            end
+            if self._sequence and not self._awaitingModel then
+                self:SetSequenceTime(self._sequence, (GetTime() - self._sequenceStart) * 1000)
+            end
+        end)
+    end
 
 elseif WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 

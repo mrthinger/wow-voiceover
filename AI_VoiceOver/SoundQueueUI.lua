@@ -15,6 +15,7 @@ local PORTRAIT_BORDER_OUTSET = 34 * PORTRAIT_BORDER_SCALE
 local PORTRAIT_LINE_WIDTH = 56 * PORTRAIT_BORDER_SCALE
 local FRAME_WIDTH_WITHOUT_PORTRAIT = 300
 local HIDE_GOSSIP_OPTIONS = true -- Disable to allow gossip options to show up in the button list, like quests
+local WAIT_FOR_ANIMATION_FINISH_BEFORE_IDLE = true
 
 do
     local font = CreateFont("VoiceOverNameFont")
@@ -240,14 +241,13 @@ function SoundQueueUI:InitPortrait()
 
                 self.model.animation = 60
                 self.model.animDuration = nil
-                if not Addon.db.char.IsPaused then
-                    self.model:SetAnimation(self.model.animation)
-                    self.model.animtimer = GetTime()
-                end
+                self.model.animDelay = soundData.delay
+                self.model.animtimer = nil
 
                 self.model.oldCreatureID = creatureID
-            else
-                self.model:SetCustomCamera(0)
+            elseif self.model.wasPaused then
+                self.model.animation = 60
+                self.model.animDelay = soundData.delay
             end
         end
     end
@@ -265,19 +265,46 @@ function SoundQueueUI:InitPortrait()
         self.oldCreatureID = nil
         self.animation = nil
         self.animDuration = nil
+        self.animDelay = nil
         self.animtimer = nil
     end)
-    self.frame.portrait.model:HookScript("OnUpdate", function(self)
+    self.frame.portrait.model:HookScript("OnUpdate", function(self, elapsed)
         -- Refresh camera and animation in case the model wasn't loaded instantly
         self:SetCustomCamera(0)
         if self.animation and not self.animDuration then
             self.animDuration = Utils:GetModelAnimationDuration(self:GetModelFileID(), self.animation)
         end
-        -- Loop the animation when the timer has reached the animation duration
-        if self.animation and not Addon.db.char.IsPaused and GetTime() - (self.animtimer or 0) >= (self.animDuration or 2) then
-            self:SetAnimation(self.animation)
-            self.animtimer = GetTime()
+        -- Wait out the delay, if any
+        if self.animDelay and not Addon.db.char.IsPaused then
+            self.animDelay = self.animDelay - elapsed
+            if self.animDelay < 0 then
+                self.animDelay = nil
+            else
+                return
+            end
         end
+        if not WAIT_FOR_ANIMATION_FINISH_BEFORE_IDLE and self.animation and self.animation ~= 0 and not self.animDelay and Addon.db.char.IsPaused then
+            -- Switch to idle animation as soon as the VO is paused
+            self.animation = 0
+            self.animtimer = nil
+            self:SetAnimation(self.animation)
+        end
+        -- Loop the animation when the timer has reached the animation duration
+        if self.animation and GetTime() - (self.animtimer or 0) >= (self.animDuration or 2) then
+            if Addon.db.char.IsPaused then
+                if WAIT_FOR_ANIMATION_FINISH_BEFORE_IDLE and self.animation ~= 0 and not self.animDelay then
+                    -- Switch to idle animation after the current animation is finished
+                    self.animation = 0
+                    self.animtimer = nil
+                    self:SetAnimation(self.animation)
+                end
+            else
+                -- Restart the current animation
+                self.animtimer = GetTime()
+                self:SetAnimation(self.animation)
+            end
+        end
+        self.wasPaused = Addon.db.char.IsPaused
     end)
 
     -- Create a book icon replacement when the 3D portrait is unavailable
@@ -610,8 +637,11 @@ function SoundQueueUI:UpdateSoundQueueDisplay()
     else
         self.frame.container:Hide()
     end
-    -- Refresh again after updating layout (same frame in modern WoW, next frame in old WoW) to update hover state depending on the new button positions after realignment
-    Addon:ScheduleTimer(function() self.frame.container.buttons:Update() end, 0)
+    -- Refresh again after updating layout (same frame in modern WoW, next frame in old WoW) to update name truncation and button hover state depending on the new button positions after realignment
+    Addon:ScheduleTimer(function()
+        self.frame.container.buttons:Update()
+        self.frame.container.name:Update()
+    end, 0)
 end
 
 function SoundQueueUI:UpdatePauseDisplay()
