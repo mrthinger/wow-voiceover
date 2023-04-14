@@ -257,6 +257,19 @@ FROM creature_data
 WHERE
     (DisplaySexID = 0 AND bt.male_text IS NOT NULL AND bt.male_text != '')
     OR (DisplaySexID = 1 AND bt.female_text IS NOT NULL AND bt.female_text != '')
+UNION ALL
+SELECT
+    distinct
+    'gossip' as source,
+    '' as quest,
+    '' as quest_title,
+    qg.content_default AS text,
+    creature_data.DisplayRaceID,
+    creature_data.DisplaySexID,
+    creature_data.name,
+    creature_data.id
+FROM creature_data
+    JOIN quest_greeting qg ON qg.entry=creature_data.id AND type=0
 ;
     '''
 
