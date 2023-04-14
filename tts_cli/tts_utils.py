@@ -313,13 +313,14 @@ class TTSProcessor:
             if row['quest']:
                 continue
             npc_name = row['name']
+            escaped_npc_name = npc_name.replace('"', '\'').replace('\r',' ').replace('\n',' ')
 
-            if npc_name not in gossip_table:
-                gossip_table[npc_name] = {}
+            if escaped_npc_name not in gossip_table:
+                gossip_table[escaped_npc_name] = {}
 
             escapedText = row['text'].replace('"', '\'').replace('\r',' ').replace('\n',' ')
             
-            gossip_table[npc_name][escapedText] = row['templateText_race_gender_hash']
+            gossip_table[escaped_npc_name][escapedText] = row['templateText_race_gender_hash']
 
         with open(output_file, "w") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
