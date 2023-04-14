@@ -75,7 +75,7 @@ function Addon:OnInitialize()
         local questName = GetAbandonQuestName()
         local soundsToRemove = {}
         for _, soundData in pairs(self.soundQueue.sounds) do
-            if soundData.title == questName then
+            if Enums.SoundEvent:IsQuestEvent(soundData.event) and soundData.title == questName then
                 table.insert(soundsToRemove, soundData)
             end
         end
