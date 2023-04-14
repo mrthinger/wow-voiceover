@@ -224,7 +224,7 @@ class TTSProcessor:
             if row['id'] not in gossip_table:
                 gossip_table[row['id']] = {}
 
-            escapedText = row['text'].replace('"', '\'').replace('\n','')
+            escapedText = row['text'].replace('"', '\'').replace('\r',' ').replace('\n',' ')
             
             gossip_table[row['id']][escapedText] = row['templateText_race_gender_hash']
 
@@ -278,10 +278,10 @@ class TTSProcessor:
             quest_id = int(row['quest'])
             quest_title = row['quest_title']
             quest_text = get_first_n_words(row['text'], 15) + ' ' +  get_last_n_words(row['text'], 15)
-            escaped_quest_text = replace_dollar_bs_with_space(quest_text.replace('"', '\'').replace('\n',''))
-            escaped_quest_title = quest_title.replace('"', '\'').replace('\n','')
+            escaped_quest_text = replace_dollar_bs_with_space(quest_text.replace('"', '\'').replace('\r',' ').replace('\n',' '))
+            escaped_quest_title = quest_title.replace('"', '\'').replace('\r',' ').replace('\n',' ')
             npc_name = row['name']
-            escaped_npc_name = npc_name.replace('"', '\'').replace('\n','')
+            escaped_npc_name = npc_name.replace('"', '\'').replace('\r',' ').replace('\n',' ')
 
             # table[source][title][npcName][text]
             if quest_source not in quest_id_table:
@@ -317,7 +317,7 @@ class TTSProcessor:
             if npc_name not in gossip_table:
                 gossip_table[npc_name] = {}
 
-            escapedText = row['text'].replace('"', '\'').replace('\n','')
+            escapedText = row['text'].replace('"', '\'').replace('\r',' ').replace('\n',' ')
             
             gossip_table[npc_name][escapedText] = row['templateText_race_gender_hash']
 
