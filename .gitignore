@@ -1,7 +1,6 @@
 __pycache__
 datagrip
 .venv
-sounds
 sql-data
 .env
 sql/db_dump

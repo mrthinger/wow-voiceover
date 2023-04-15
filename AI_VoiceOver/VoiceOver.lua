@@ -25,6 +25,13 @@ local defaults = {
                 RightButton = "Clear",
             }
         },
+        LegacyWrath = Version.IsLegacyWrath and {
+            PlayOnMusicChannel = {
+                Enabled = true,
+                Volume = 1,
+                FadeOutMusic = 0.5,
+            },
+        },
         DebugEnabled = false,
     },
     char = {

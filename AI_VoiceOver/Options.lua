@@ -283,6 +283,73 @@ local GeneralTab =
     }
 }
 
+local LegacyWrathTab = Version.IsLegacyWrath and {
+    type = "group",
+    name = "3.3.5 Backport",
+    order = 19,
+    args = {
+        PlayOnMusicChannel = {
+            type = "group",
+            order = 100,
+            name = "Play Voiceovers on Music Channel",
+            inline = true,
+            args = {
+                Description = {
+                    type = "description",
+                    order = 100,
+                    name = "3.3.5 client lacks the ability to stop addon sounds at will. As a workaround, you can play the voiceovers on the music channel instead, which, unlike sounds, can be stopped. Regular background music will not be playing throughout the duration of voiceovers.|n|nIf you normally play with music disabled - it will be temporarily enabled during voiceovers, but no actual background music will be played.",
+                },
+                Enabled = {
+                    type = "toggle",
+                    order = 200,
+                    name = "Enable",
+                    disabled = false,
+                    get = function(info) return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled end,
+                    set = function(info, value) Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled = value end,
+                },
+                Disabled = {
+                    type = "description",
+                    order = 300,
+                    name = format("With this option disabled you %swill not be able to pause|r voiceovers after they start playing. Attempting to pause will instead %1$spause the voiceover queue|r once the current sound has finished playing.", RED_FONT_COLOR_CODE),
+                    hidden = function(info) return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled end,
+                },
+                Settings = {
+                    type = "group",
+                    order = 400,
+                    name = "",
+                    inline = true,
+                    hidden = function(info) return not Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled end,
+                    args = {
+                        FadeOutMusic = {
+                            type = "range",
+                            order = 100,
+                            name = "Music Fade Out (secs)",
+                            desc = "Background music will fade out over this number of seconds before playing voiceovers. Has no effect if in-game music is disabled or muted.",
+                            min = 0,
+                            softMax = 2,
+                            bigStep = 0.05,
+                            get = function(info) return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.FadeOutMusic end,
+                            set = function(info, value) Addon.db.profile.LegacyWrath.PlayOnMusicChannel.FadeOutMusic = value end,
+                        },
+                        Volume = {
+                            type = "range",
+                            order = 200,
+                            name = "Voiceover Volume",
+                            desc = "Music channel volume will be temporarily adjusted to this value while the voiceovers are playing.",
+                            min = 0,
+                            max = 1,
+                            bigStep = 0.01,
+                            isPercent = true,
+                            get = function(info) return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Volume end,
+                            set = function(info, value) Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Volume = value end,
+                        },
+                    }
+                },
+            }
+        },
+    }
+}
+
 local DataModulesTab =
 {
     name = "Data Modules",
@@ -366,6 +433,7 @@ Options.table = {
     childGroups = "tab",
     args = {
         General = GeneralTab,
+        LegacyWrath = LegacyWrathTab,
         DataModules = DataModulesTab,
         Profiles = nil, -- Filled in Options:OnInitialize, order is implicity 100
 

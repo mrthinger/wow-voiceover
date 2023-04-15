@@ -73,7 +73,7 @@ function SoundQueue:PlaySound(soundData)
     end
     local nextSoundTimer = Addon:ScheduleTimer(function()
         self:RemoveSoundFromQueue(soundData, true)
-    end, soundData.length + 0.55)
+    end, (soundData.delay or 0) + soundData.length + 0.55)
 
     soundData.nextSoundTimer = nextSoundTimer
 end

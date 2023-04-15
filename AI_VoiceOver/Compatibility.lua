@@ -419,6 +419,183 @@ elseif Version.IsLegacyWrath then
         end)
     end
 
+    --[[
+        Here begins the code the plays the VO over music channel in order to support the ability to pause/stop the VO.
+        3.3.5's PlaySound/PlaySoundFile cannot be stopped by any means short of restarting the whole sound system (freezes the client for a couple of seconds).
+        But PlayMusic can be stopped with StopMusic. This, however, causes the currently played script music to fade out instead of cutting,
+            which is a problem, because by letting this happen we'll hear the VO looping until it fully fades out. This can be worked around
+            by PlayMusic'ing another file (even one that doesn't exist), as that causes the script music to be instantly interrupted.
+        Toggling Sound_EnableMusic cvar off-and-on additionally allows us to interrupt the current in-game background music.
+        The whole process looks as follows:
+        1. Sound queue requests to start playing the VO by calling Utils:PlaySound
+        2. Music volume is smoothly lowered to 0 over the config.FadeOutMusic duration
+        3. In-game background music is instantly stopped by toggling Sound_EnableMusic cvar off-and-on
+        4. Music volume is instantly changed to config.Volume level
+        5. VO sound file is played on the music channel
+        6. Once the VO's duration has ran out (soundData.stopSoundTimer) - silence.wav is played as music to instantly stop the VO and prevent it from looping
+        7. Sound queue requests to stop playing the VO by calling Utils:StopSound (either due to pause or soundData being removed from the queue) - silence.wav is played again to interrupt the VO in case it hasn't finished playing naturally
+        8. Music volume is instantly changed to 0
+        9. Music volume is smoothly raised to back to the pre-VO level over the config.FadeOutMusic duration
+        10. In-game background music is removed by calling StopMusic()
+    ]]
+    local function GetCurrentVolume()
+        return tonumber(GetCVar("Sound_MusicVolume")) or 1
+    end
+
+    -- Functions that deal with temporarily changing player's sound settings to utilize the music channel for VO playback
+    local prev_Sound_EnableMusic
+    local prev_Sound_MusicVolume
+    local function ReplaceCVars()
+        if prev_Sound_EnableMusic == nil then
+            prev_Sound_EnableMusic = GetCVar("Sound_EnableMusic")
+            prev_Sound_MusicVolume = GetCVar("Sound_MusicVolume")
+            SetCVar("Sound_EnableMusic", 1)
+        end
+    end
+    local function RestoreCVars()
+        if prev_Sound_EnableMusic ~= nil then
+            SetCVar("Sound_EnableMusic", prev_Sound_EnableMusic)
+            SetCVar("Sound_MusicVolume", prev_Sound_MusicVolume)
+            prev_Sound_EnableMusic = nil
+            prev_Sound_MusicVolume = nil
+        end
+    end
+
+    -- Functions that deal with smoothly changing the music channel's volume to avoid abrupt changes
+    local slideVolumeTarget
+    local slideVolumeRate
+    local slideVolumeCallback
+    local EPS_VOLUME = 0.01
+    local function GetMusicFadeOutDuration()
+        if tonumber(prev_Sound_EnableMusic) == 0 or tonumber(prev_Sound_MusicVolume) == 0 then
+            return 0
+        end
+        return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.FadeOutMusic or 0
+    end
+    local function StopSlideVolume()
+        slideVolumeTarget = nil
+        slideVolumeRate = nil
+        slideVolumeCallback = nil
+    end
+    local function SlideVolume(target, callback)
+        local duration = GetMusicFadeOutDuration()
+        if duration <= 0 then
+            -- Instantly change the volume if the player had reduced the duration all the way to 0
+            return false
+        end
+        local current = GetCurrentVolume()
+        if math.abs(target - current) <= EPS_VOLUME then
+            -- Instantly "change" the volume if it's already fuzzy-equal to the target volume, and cancel the ongoing slide volume ("remove currently played sound from queue" case)
+            StopSlideVolume()
+            return false
+        end
+        -- Interpolate towards the target volume over the configured duration
+        slideVolumeTarget = target
+        slideVolumeRate = (target - current) / duration
+        slideVolumeCallback = callback
+        return true
+    end
+    local volumeFrame = CreateFrame("Frame", "VoiceOverSlideVolumeFrame", UIParent)
+    volumeFrame:RegisterEvent("PLAYER_LOGOUT")
+    volumeFrame:HookScript("OnEvent", function(self, event)
+        if event == "PLAYER_LOGOUT" then
+            StopSlideVolume()
+            RestoreCVars()
+        end
+    end)
+    volumeFrame:HookScript("OnUpdate", function(self, elapsed)
+        if slideVolumeRate then
+            local current = GetCurrentVolume()
+            local target = slideVolumeTarget
+            local next = current + slideVolumeRate * elapsed
+            local finished = false
+            if math.abs(target - current) <= EPS_VOLUME or current < target and next >= target or current > target and next <= target then
+                next = target
+                finished = true
+            end
+            SetCVar("Sound_MusicVolume", next)
+            if finished then
+                if slideVolumeCallback then
+                    slideVolumeCallback()
+                end
+                StopSlideVolume()
+            end
+        end
+    end)
+
+    function Utils:PlaySound(soundData)
+        soundData.delay = nil
+        if not Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled then
+            -- Play VO as a sound, but have no ability to stop it
+            _G.PlaySoundFile(soundData.filePath)
+            return
+        end
+
+        soundData.handle = 1 -- Just put something here to flag the sound as stoppable
+
+        ReplaceCVars()
+        local function Play()
+            -- Hack to instantly interrupt the music
+            SetCVar("Sound_EnableMusic", 0)
+            SetCVar("Sound_EnableMusic", 1)
+
+            SetCVar("Sound_MusicVolume", Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Volume)
+            PlayMusic(soundData.filePath)
+
+            soundData.stopSoundTimer = Addon:ScheduleTimer(function()
+                PlayMusic([[Interface\AddOns\AI_VoiceOver\Sounds\silence.wav]]) -- Instantly interrupt the VO sound
+            end, soundData.length)
+        end
+        if SlideVolume(0, Play) then
+            soundData.delay = GetMusicFadeOutDuration()
+        else
+            Play()
+        end
+    end
+
+    function Utils:StopSound(soundData)
+        if not soundData.handle then
+            -- VO was played as a sound - we cannot stop it
+            return
+        end
+
+        Addon:CancelTimer(soundData.stopSoundTimer)
+        soundData.stopSoundTimer = nil
+
+        PlayMusic([[Interface\AddOns\AI_VoiceOver\Sounds\silence.wav]]) -- Instantly interrupt the VO sound
+        SetCVar("Sound_MusicVolume", 0)
+
+        local function ResumeMusic()
+            StopMusic()
+            RestoreCVars()
+        end
+        if not SlideVolume(tonumber(prev_Sound_MusicVolume) or 1, ResumeMusic) then
+            ResumeMusic()
+        end
+    end
+
+    -- Frame fade-in animation to help alleviate the UX damage caused by delaying the VO
+    hooksecurefunc(SoundQueueUI, "InitDisplay", function(self)
+        local fadeIn = self.frame:CreateAnimationGroup()
+        local animation = fadeIn:CreateAnimation("Alpha")
+        animation:SetOrder(1)
+        animation:SetDuration(0)
+        animation:SetChange(-1)
+        animation = fadeIn:CreateAnimation("Alpha")
+        animation:SetOrder(2)
+        animation:SetDuration(0.75)
+        animation:SetChange(1)
+        animation:SetSmoothing("OUT")
+        self.frame:HookScript("OnShow", function(self)
+            fadeIn:Stop()
+            local duration = Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled and GetMusicFadeOutDuration() or 0
+            if duration > 0 then
+                animation:SetDuration(duration)
+                fadeIn:Play()
+            end
+        end)
+    end)
+
 elseif Version.IsRetailClassic then
 
 elseif Version.IsRetailWrath then
