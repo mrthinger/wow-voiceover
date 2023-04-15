@@ -376,14 +376,15 @@ elseif Version.IsLegacyWrath then
             local model = self:GetModel()
             return model and type(model) == "string" and self:GetModelFileID() ~= 130737
         end
+        self._sequence = 0
         hooksecurefunc(self, "ClearModel", function(self)
             self._awaitingModel = nil
             self._camera = nil
-            self._sequence = nil
+            self._sequence = 0
             self._sequenceStart = nil
         end)
         hooksecurefunc(self, "SetSequence", function(self, sequence)
-            self._sequence = sequence ~= 0 and sequence or nil
+            self._sequence = sequence
             self._sequenceStart = GetTime()
         end)
         local oldSetCreature = self.SetCreature
@@ -408,11 +409,11 @@ elseif Version.IsLegacyWrath then
                 self._awaitingModel = nil
                 self:SetPosition(0, 0, 0)
 
-                if self._sequence then
+                if self._sequence ~= 0 then
                     self:SetSequence(self._sequence)
                 end
             end
-            if self._sequence and not self._awaitingModel then
+            if self._sequence ~= 0 and not self._awaitingModel then
                 self:SetSequenceTime(self._sequence, (GetTime() - self._sequenceStart) * 1000)
             end
         end)
