@@ -28,8 +28,13 @@ function Utils:SafeHookScript(frame, event, newFunc)
     end
     if oldFunc then
         frame:SetScript(event, function()
-            oldFunc(unpack(arg))
-            newFuncWithSelf(unpack(arg))
+            if arg then
+                oldFunc(unpack(arg))
+                newFuncWithSelf(unpack(arg))
+            else
+                oldFunc()
+                newFuncWithSelf()
+            end
         end)
     else
         frame:SetScript(event, newFuncWithSelf)

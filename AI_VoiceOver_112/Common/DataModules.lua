@@ -118,6 +118,9 @@ function DataModules:LoadModule(module)
 end
 
 local function replaceDoubleQuotes(text)
+    if not text then
+        return ""
+    end
     return string.gsub(text, '"', "'")
 end
 

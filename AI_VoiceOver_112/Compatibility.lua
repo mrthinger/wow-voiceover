@@ -53,14 +53,12 @@ end
 
 if not hooksecurefunc then
     function hooksecurefunc(table, name, hook)
-        print(table, name, hook)
         -- hooksecurefunc([table], name, hook)
         if not hook then
             table = _G
             name, hook = table, name
         end
 
-        print(table, name, hook)
         local old = table[name]
         assert(type(old) == "function")
         table[name] = function(...)
@@ -128,6 +126,25 @@ if not GetQuestID then
     end
 end
 
+local function hookModel(self)
+    hooksecurefunc(self, "ClearModel", function(self)
+        self._sequence = nil
+        self._sequenceStart = nil
+    end)
+    hooksecurefunc(self, "SetSequence", function(self, sequence)
+        self._sequence = sequence ~= 0 and sequence or nil
+        self._sequenceStart = GetTime()
+        self._progress = 0
+    end)
+    Utils:SafeHookScript(self, "OnUpdate", function(self, elapsed)
+        if self._sequence then
+            self._progress = self._progress + arg1
+            self:SetSequenceTime(self._sequence, self._progress * 1000)
+        end
+    end)
+end
+
+
 function CreateFrame(frameType, name, parent, template)
     local frame = _G.CreateFrame(frameType, name, parent, template)
     if not frame.SetResizeBounds then
@@ -136,6 +153,11 @@ function CreateFrame(frameType, name, parent, template)
             if maxWidth and maxHeight then
                 self:SetMaxResize(maxWidth, maxHeight)
             end
+        end
+    end
+    if frameType == "Model" or frameType == "PlayerModel" or frameType == "DressUpModel" then
+        if hookModel then
+            hookModel(frame)
         end
     end
     if not frame.SetSize then
@@ -159,30 +181,30 @@ function CreateFrame(frameType, name, parent, template)
         end
     end
 
---     if not WOW_PROJECT_ID and INTERFACE_VERSION < 11300 then
---         print("replace")
---         local oldTexture = frame.CreateTexture
+    -- setSize replacement didn't work for textures. Maybe we can get it working in the future
+    --     if not WOW_PROJECT_ID and INTERFACE_VERSION < 11300 then
+    --         print("replace")
+    --         local oldTexture = frame.CreateTexture
 
---         function frame:CreateTexture(name, layer)
--- print("b")
+    --         function frame:CreateTexture(name, layer)
+    -- print("b")
 
---             local texture = oldTexture(self, name, layer)
---             if not texture.SetSize then
+    --             local texture = oldTexture(self, name, layer)
+    --             if not texture.SetSize then
 
---                 function texture:SetSize(w, h)
---                     print("replacesetsize")
---                     self:SetWidth(w)
---                     self:SetHeight(h)
---                 end
---             end
---             return texture
---         end
---     end
+    --                 function texture:SetSize(w, h)
+    --                     print("replacesetsize")
+    --                     self:SetWidth(w)
+    --                     self:SetHeight(h)
+    --                 end
+    --             end
+    --             return texture
+    --         end
+    --     end
 
     if not frame.GetNormalTexture then
         local old = frame.SetNormalTexture
         function frame:SetNormalTexture(path)
-print("a")
             local texture = self:CreateTexture()
             texture:SetTexture(path)
             self._normalTexture = texture
@@ -202,7 +224,7 @@ print("a")
             self._pushedTexture = texture
             old(self, texture)
         end
-        
+
         function frame:GetPushedTexture()
             return self._pushedTexture
         end
@@ -216,7 +238,7 @@ print("a")
             self._highlightTexture = texture
             old(self, texture)
         end
-        
+
         function frame:GetHighlightTexture()
             return self._highlightTexture
         end

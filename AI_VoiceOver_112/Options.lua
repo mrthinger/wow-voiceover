@@ -168,15 +168,17 @@ local GeneralTab =
                     type = "range",
                     order = 4,
                     name = "Frame Scale",
-                    desc = "Automatically hides the takling frame when no voice over is playing.",
+                    desc = "Adjusts the size of the main frame",
                     softMin = 0.5,
                     softMax = 2,
                     bigStep = 0.05,
-                    isPercent = true,
+                    -- isPercent = true,
                     get = function(info) return Addon.db.profile.SoundQueueUI.FrameScale end,
                     set = function(info, value)
+                        Addon.soundQueue.ui.frame:Hide()
                         Addon.db.profile.SoundQueueUI.FrameScale = value
                         Addon.soundQueue.ui:RefreshConfig()
+                        Addon.soundQueue.ui.frame:Show()
                     end,
                 },
                 LineBreak2 = { type = "description", name = "", order = 6 },
@@ -214,19 +216,6 @@ local GeneralTab =
             inline = true,
             name = "Audio",
             args = {
-                SoundChannel = {
-                    type = "select",
-                    order = 1,
-                    name = "Sound Channel",
-                    desc = "Controls which sound channel VoiceOver will play in.",
-                    values = Enums.SoundChannel:GetValueToNameMap(),
-                    get = function(info) return Addon.db.profile.Audio.SoundChannel end,
-                    set = function(info, value)
-                        Addon.db.profile.Audio.SoundChannel = value
-                        Addon.soundQueue.ui:RefreshConfig()
-                    end,
-                },
-                LineBreak = { type = "description", name = "", order = 2 },
                 GossipFrequency = {
                     type = "select",
                     width = "double",
@@ -243,21 +232,6 @@ local GeneralTab =
                     set = function(info, value)
                         Addon.db.profile.Audio.GossipFrequency = value
                         Addon.soundQueue.ui:RefreshConfig()
-                    end,
-                },
-                AutoToggleDialog = {
-                    type = "toggle",
-                    width = "full",
-                    order = 4,
-                    name = "Mute Vocal NPCs Greetings While VoiceOver is Playing",
-                    desc = "While VoiceOver is playing, the Dialog channel will be muted.",
-                    get = function(info) return Addon.db.profile.Audio.AutoToggleDialog end,
-                    set = function(info, value)
-                        Addon.db.profile.Audio.AutoToggleDialog = value
-                        Addon.soundQueue.ui:RefreshConfig()
-                        if Addon.db.profile.Audio.AutoToggleDialog then
-                            SetCVar("Sound_EnableDialog", 1)
-                        end
                     end,
                 },
             }
@@ -430,10 +404,10 @@ function Options:Initialize()
     self.table.args.Profiles = AceDBOptions:GetOptionsTable(Addon.db)
 
     -- Create options table
-    print("Registering options table...", "Options")
+    -- print("Registering options table...", "Options")
     Addon:RegisterOptionsTable("VoiceOver", self.table, "vo")
     AceConfigDialog:AddToBlizOptions("VoiceOver", "VoiceOver")
-    print("Done!", "Options")
+    -- print("Done!", "Options")
 
     -- Create the option frame
     ---@type AceGUIFrame

@@ -3,12 +3,11 @@ setfenv(1, VoiceOver)
 SoundQueue = {}
 SoundQueue.__index = SoundQueue
 
-function SoundQueue.new()
+function SoundQueue:new()
     local self = setmetatable({}, SoundQueue)
 
     self.soundIdCounter = 0
     self.sounds = {}
-    self.isSoundPlaying = false
     self.ui = SoundQueueUI:new(self)
 
     return self
@@ -16,13 +15,12 @@ end
 
 function SoundQueue:AddSoundToQueue(soundData)
     DataModules:PrepareSound(soundData)
-    
-    if soundData.fileName == nil then
 
+    if soundData.fileName == nil then
         if Addon.db.profile.DebugEnabled then
-            Utils:Log("Sound does not exist for: " .. soundData.title)
+            Utils:Log("Sound does not exist for: " .. (soundData.title or "No Title"))
         end
-        
+
         if soundData.stopCallback then
             soundData.stopCallback()
         end
@@ -62,12 +60,12 @@ function SoundQueue:AddSoundToQueue(soundData)
     end
 end
 
-
-
 function SoundQueue:PlaySound(soundData)
     local isPlaying = PlaySoundFile(soundData.filePath)
     if not isPlaying then
-        Utils:Log("Sound does not exist for: " .. soundData.title)
+        if Addon.db.profile.DebugEnabled then
+            Utils:Log("Sound does not exist for: " .. soundData.title)
+        end
         self:RemoveSoundFromQueue(soundData)
         return
     end
@@ -81,8 +79,6 @@ function SoundQueue:PlaySound(soundData)
         self:RemoveSoundFromQueue(soundData)
     end, soundData.length + 0.55)
     soundData.nextSoundTimer = nextSoundTimer
-
-
 end
 
 function SoundQueue:PauseQueue()
@@ -101,7 +97,6 @@ function SoundQueue:PauseQueue()
     end
 
     self.ui:UpdatePauseDisplay()
-
 end
 
 function SoundQueue:ResumeQueue()
@@ -115,7 +110,6 @@ function SoundQueue:ResumeQueue()
         self:PlaySound(currentSound)
     end
     self.ui:UpdatePauseDisplay()
-
 end
 
 function SoundQueue:RemoveSoundFromQueue(soundData)
@@ -123,6 +117,12 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
     for index, queuedSound in ipairs(self.sounds) do
         if queuedSound.id == soundData.id then
             removedIndex = index
+            if queuedSound.modelFrame then
+                queuedSound.modelFrame:ClearAllPoints()
+                queuedSound.modelFrame:SetPoint("BOTTOMLEFT", 0, 0)
+                queuedSound.modelFrame:SetSize(1, 1)
+                queuedSound.modelFrame._inUse = false
+            end
             table.remove(self.sounds, index)
             break
         end
@@ -144,7 +144,6 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
     end
 
     self.ui:UpdateSoundQueueDisplay()
-
 end
 
 function SoundQueue:TogglePauseQueue()

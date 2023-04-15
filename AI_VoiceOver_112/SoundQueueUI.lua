@@ -59,6 +59,7 @@ function SoundQueueUI:InitDisplay()
         self:ClearAllPoints()
         self:SetPoint("BOTTOM", 0, 200)
     end
+
     self.frame:Reset()
     self.frame:SetMovable(true)         -- Allow the frame to be moved
     self.frame:SetResizable(true)       -- Allow the frame to be resized
@@ -69,9 +70,8 @@ function SoundQueueUI:InitDisplay()
     -- Create a background gradient behind the queue container
     self.frame.background = self.frame:CreateTexture("bg", "BACKGROUND")
     self.frame.background:SetPoint("RIGHT", 0, 0)
-    local loaded = self.frame.background:SetTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\BackgroundGradient]])
+    self.frame.background:SetTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\BackgroundGradient]])
 
-    Utils:Log("loaded bg" .. tostring(loaded))
     -- Create a button to resize the main frame
     self.frame.resizer = CreateFrame("Button", nil, self.frame)
     self.frame.resizer:SetPoint("BOTTOMRIGHT", 0, 0)
@@ -80,7 +80,8 @@ function SoundQueueUI:InitDisplay()
     self.frame.resizer:SetPushedTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\SizeGrabber-Down]])
     self.frame.resizer:SetHighlightTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\SizeGrabber-Highlight]])
 
-    Utils:SafeHookScript(self.frame.resizer, "OnEnter", function() SetCursor([[Interface\Cursor\UI-Cursor-SizeRight]]) end)
+    Utils:SafeHookScript(self.frame.resizer, "OnEnter",
+    function() SetCursor([[Interface\Cursor\UI-Cursor-SizeRight]]) end)
     Utils:SafeHookScript(self.frame.resizer, "OnLeave", function() SetCursor(nil) end)
     Utils:SafeHookScript(self.frame.resizer, "OnMouseDown", function()
         self.frame.resizer:GetHighlightTexture():Hide()
@@ -90,7 +91,7 @@ function SoundQueueUI:InitDisplay()
         self.frame.resizer:GetHighlightTexture():Show()
         self.frame:StopMovingOrSizing()
     end)
-    
+
 
     -- Creature queue buttons container
     self.frame.container = CreateFrame("Frame", nil, self.frame)
@@ -111,15 +112,20 @@ function SoundQueueUI:InitDisplay()
     function self.frame.container.name:Update()
         self:SetWidth(0)
         self:SetText(self:GetText())
-        self:SetWidth(math.min(self:GetParent():GetWidth() - (soundQueueUI.frame.container.stopGossip:IsShown() and 32 + SKIP_GOSSIP_BUTTON_OFFSET or 0), self:GetStringWidth()))
+        self:SetWidth(math.min(
+        self:GetParent():GetWidth() -
+        (soundQueueUI.frame.container.stopGossip:IsShown() and 32 + SKIP_GOSSIP_BUTTON_OFFSET or 0),
+        self:GetStringWidth()))
     end
 
     -- Create Stop Gossip button
     self.frame.container.stopGossip = CreateFrame("Button", nil, self.frame.container)
     self.frame.container.stopGossip:SetSize(32, 32)
-    self.frame.container.stopGossip:SetPoint("BOTTOMLEFT", self.frame.container.name, "RIGHT", SKIP_GOSSIP_BUTTON_OFFSET, 0)
+    self.frame.container.stopGossip:SetPoint("BOTTOMLEFT", self.frame.container.name, "RIGHT", SKIP_GOSSIP_BUTTON_OFFSET,
+    0)
     function self.frame.container.stopGossip:SetGossipCount(gossipCount)
-        local texture = gossipCount > 1 and [[Interface\AddOns\AI_VoiceOver_112\Textures\StopGossipMore]] or [[Interface\AddOns\AI_VoiceOver_112\Textures\StopGossip]]
+        local texture = gossipCount > 1 and [[Interface\AddOns\AI_VoiceOver_112\Textures\StopGossipMore]] or
+        [[Interface\AddOns\AI_VoiceOver_112\Textures\StopGossip]]
         self:SetShown(gossipCount > 0)
         self:SetHighlightTexture(texture, "ADD")
         self:SetNormalTexture(texture)
@@ -131,6 +137,7 @@ function SoundQueueUI:InitDisplay()
             GameTooltip:Show()
         end
     end
+
     self.frame.container.stopGossip:SetGossipCount(0)
     self.frame.container.stopGossip:GetHighlightTexture():SetAlpha(0.5)
     self.frame.container.stopGossip:GetPushedTexture():SetAlpha(0.5)
@@ -140,9 +147,9 @@ function SoundQueueUI:InitDisplay()
         GameTooltip:SetText(self.tooltip)
         GameTooltip:Show()
     end)
-    
+
     Utils:SafeHookScript(self.frame.container.stopGossip, "OnLeave", function() GameTooltip:Hide() end)
-    
+
     Utils:SafeHookScript(self.frame.container.stopGossip, "OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
         local soundData = self.soundQueue.sounds[1]
@@ -150,7 +157,7 @@ function SoundQueueUI:InitDisplay()
             self.soundQueue:RemoveSoundFromQueue(soundData)
         end
     end)
-    
+
     Utils:SafeHookScript(self.frame, "OnSizeChanged", function()
         self.frame.container.name:Update()
         self.frame.container.buttons:Update()
@@ -161,9 +168,11 @@ function SoundQueueUI:InitPortraitLine()
     -- Create a vertical line that will be visible instead of the portrait if the player turned the portrait off
     self.frame.portraitLine = self.frame:CreateTexture(nil, "BORDER")
     self.frame.portraitLine:SetPoint("TOPLEFT", -PORTRAIT_LINE_WIDTH / 2 + 2, PORTRAIT_BORDER_OUTSET)
-    self.frame.portraitLine:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMLEFT", PORTRAIT_LINE_WIDTH / 2 + 2, -PORTRAIT_BORDER_OUTSET)
+    self.frame.portraitLine:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMLEFT", PORTRAIT_LINE_WIDTH / 2 + 2,
+    -PORTRAIT_BORDER_OUTSET)
     self.frame.portraitLine:SetTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\PortraitFrameAtlas]])
-    self.frame.portraitLine:SetTexCoord(456 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE, 0, PORTRAIT_ATLAS_BORDER_SIZE / PORTRAIT_ATLAS_SIZE)
+    self.frame.portraitLine:SetTexCoord(456 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE, 0,
+    PORTRAIT_ATLAS_BORDER_SIZE / PORTRAIT_ATLAS_SIZE)
 
     -- Create a play/pause button on the vertical line that will be visible if the player turned the portrait off
     self.frame.miniPause = CreateFrame("Button", nil, self.frame)
@@ -187,29 +196,33 @@ function SoundQueueUI:InitPortraitLine()
     self.frame.miniPause.background:SetHeight(32)
     function self.frame.miniPause:Update()
         if Addon.db.char.IsPaused then
-            self:GetNormalTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
-            self:GetPushedTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetNormalTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE,
+            419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetPushedTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE,
+            419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0.75)
         else
-            self:GetNormalTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
-            self:GetPushedTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetNormalTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE,
+            419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetPushedTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE,
+            419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0.75)
         end
     end
+
     self.frame.miniPause:Update()
     Utils:SafeHookScript(self.frame.miniPause, "OnEnter", function(self)
         self:GetNormalTexture():SetAlpha(1)
     end)
-    
+
     Utils:SafeHookScript(self.frame.miniPause, "OnLeave", function(self)
         self:GetNormalTexture():SetAlpha(0.75)
     end)
-    
+
     Utils:SafeHookScript(self.frame.miniPause, "OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
         self.soundQueue:TogglePauseQueue()
     end)
-    
 end
 
 local function ShouldShowBookForGUID(guid)
@@ -234,33 +247,59 @@ function SoundQueueUI:InitPortrait()
             return
         end
 
+
         if not soundData then
-            self.model:Hide()
+            if self.model then
+                self.model:Hide()
+            end
             self.book:Hide()
-        elseif ShouldShowBookForGUID(soundData.unitGUID) then
-            self.model:Hide()
+        elseif not soundData.modelFrame then
+            if self.model then
+                self.model:Hide()
+            end
             self.book:Show()
         else
+            self.model = soundData.modelFrame
+
             self.model:Show()
             self.book:Hide()
 
-            local creatureID = Utils:GetIDFromGUID(soundData.unitGUID)
+            self.model:SetParent(self)
+            self.model:SetAllPoints()
 
-            if creatureID ~= self.model.oldCreatureID then
-                self.model:SetCreature(creatureID)
-                self.model:SetCustomCamera(0)
+            self.model.animation = 60
+            self.model.animDuration = nil
 
-                self.model.animation = 60
-                self.model.animDuration = nil
-                if not Addon.db.char.IsPaused then
-                    self.model:SetAnimation(self.model.animation)
-                    self.model.animtimer = GetTime()
-                end
 
-                self.model.oldCreatureID = creatureID
-            else
-                self.model:SetCustomCamera(0)
+            if not self.model._hooksInitialized then
+                Utils:SafeHookScript(self.model, "OnHide", function(self)
+                    self = this
+                    self:ClearModel()
+                    self.oldCreatureID = nil
+                    self.animation = nil
+                    self.animDuration = nil
+                    self.animtimer = nil
+                end)
+                Utils:SafeHookScript(self.model, "OnUpdate", function(self)
+                    self = this
+                    -- Refresh camera and animation in case the model wasn't loaded instantly
+                    self:SetCamera(0)
+                    -- Loop the animation when the timer has reached the animation duration
+                    if self.animation and not Addon.db.char.IsPaused and GetTime() - (self.animtimer or 0) >= (self.animDuration or 2) then
+                        self:SetSequence(self.animation)
+                        self.animtimer = GetTime()
+                    end
+                end)
+                self.model._hooksInitialized = true
             end
+
+
+            if not Addon.db.char.IsPaused then
+                self.model:SetSequence(self.model.animation)
+                self.model.animtimer = GetTime()
+            end
+
+            self.model:SetCamera(0)
         end
     end
 
@@ -268,29 +307,6 @@ function SoundQueueUI:InitPortrait()
     self.frame.portrait.background = self.frame.portrait:CreateTexture(nil, "BACKGROUND")
     self.frame.portrait.background:SetAllPoints()
     self.frame.portrait.background:SetTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\PortraitFrameBackground]])
-
-    -- Create a 3D model
-    self.frame.portrait.model = CreateFrame("DressUpModel", nil, self.frame.portrait)
-    self.frame.portrait.model:SetAllPoints()
-    Utils:SafeHookScript(self.frame.portrait.model, "OnHide", function(self)
-        self:ClearModel()
-        self.oldCreatureID = nil
-        self.animation = nil
-        self.animDuration = nil
-        self.animtimer = nil
-    end)
-    Utils:SafeHookScript(self.frame.portrait.model, "OnUpdate", function(self)
-        -- Refresh camera and animation in case the model wasn't loaded instantly
-        self:SetCustomCamera(0)
-        if self.animation and not self.animDuration then
-            self.animDuration = Utils:GetModelAnimationDuration(self:GetModelFileID(), self.animation)
-        end
-        -- Loop the animation when the timer has reached the animation duration
-        if self.animation and not Addon.db.char.IsPaused and GetTime() - (self.animtimer or 0) >= (self.animDuration or 2) then
-            self:SetAnimation(self.animation)
-            self.animtimer = GetTime()
-        end
-    end)
 
     -- Create a book icon replacement when the 3D portrait is unavailable
     self.frame.portrait.book = self.frame.portrait:CreateTexture(nil, "ARTWORK")
@@ -300,11 +316,12 @@ function SoundQueueUI:InitPortrait()
 
     -- Create a play/pause button with a semi-transparent background (mimicing the portrait frame's background to create an illusion of the 3D model becoming semi-transparent)
     self.frame.portrait.pause = CreateFrame("Button", nil, self.frame.portrait)
-    self.frame.portrait.pause:SetFrameLevel(self.frame.portrait.model:GetFrameLevel() + 1)
+    self.frame.portrait.pause:SetFrameLevel(self.frame.portrait:GetFrameLevel() + 2)
     self.frame.portrait.pause:SetAllPoints()
     self.frame.portrait.pause.background = self.frame.portrait.pause:CreateTexture(nil, "BACKGROUND")
     self.frame.portrait.pause.background:SetAllPoints()
-    self.frame.portrait.pause.background:SetTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\PortraitFrameBackground]])
+    self.frame.portrait.pause.background:SetTexture(
+    [[Interface\AddOns\AI_VoiceOver_112\Textures\PortraitFrameBackground]])
     self.frame.portrait.pause.background:SetAlpha(0.75)
     self.frame.portrait.pause:SetNormalTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\PortraitFrameAtlas]])
     self.frame.portrait.pause:GetNormalTexture():ClearAllPoints()
@@ -319,16 +336,21 @@ function SoundQueueUI:InitPortrait()
     function self.frame.portrait.pause:Update()
         if Addon.db.char.IsPaused then
             self.background:Show()
-            self:GetNormalTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
-            self:GetPushedTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetNormalTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE,
+            419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetPushedTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE,
+            419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0.75)
         else
             self.background:Hide()
-            self:GetNormalTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
-            self:GetPushedTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetNormalTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE,
+            419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+            self:GetPushedTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE,
+            419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0)
         end
     end
+
     self.frame.portrait.pause:Update()
     Utils:SafeHookScript(self.frame.portrait.pause, "OnEnter", function(self)
         self:GetNormalTexture():SetAlpha(1)
@@ -351,7 +373,8 @@ function SoundQueueUI:InitPortrait()
     self.frame.portrait.border.texture:SetPoint("TOPLEFT", -PORTRAIT_BORDER_OUTSET, PORTRAIT_BORDER_OUTSET)
     self.frame.portrait.border.texture:SetPoint("BOTTOMRIGHT", PORTRAIT_BORDER_OUTSET, -PORTRAIT_BORDER_OUTSET)
     self.frame.portrait.border.texture:SetTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\PortraitFrameAtlas]])
-    self.frame.portrait.border.texture:SetTexCoord(0, PORTRAIT_ATLAS_BORDER_SIZE / PORTRAIT_ATLAS_SIZE, 0, PORTRAIT_ATLAS_BORDER_SIZE / PORTRAIT_ATLAS_SIZE)
+    self.frame.portrait.border.texture:SetTexCoord(0, PORTRAIT_ATLAS_BORDER_SIZE / PORTRAIT_ATLAS_SIZE, 0,
+    PORTRAIT_ATLAS_BORDER_SIZE / PORTRAIT_ATLAS_SIZE)
 end
 
 function SoundQueueUI:InitMover()
@@ -360,13 +383,15 @@ function SoundQueueUI:InitMover()
     self.frame.mover:SetSize(26, 26)
     self.frame.mover:SetPoint("CENTER", self.frame.portrait.border, "BOTTOMLEFT", 5, 6)
     self.frame.mover:SetNormalTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\PortraitFrameAtlas]])
-    self.frame.mover:GetNormalTexture():SetTexCoord(462 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE, 462 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+    self.frame.mover:GetNormalTexture():SetTexCoord(462 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE,
+    462 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
     self.frame.mover:GetNormalTexture():ClearAllPoints()
     self.frame.mover:GetNormalTexture():SetPoint("CENTER", 0, 0)
     self.frame.mover:GetNormalTexture():SetWidth(16)
     self.frame.mover:GetNormalTexture():SetHeight(16)
     self.frame.mover:SetPushedTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\PortraitFrameAtlas]])
-    self.frame.mover:GetPushedTexture():SetTexCoord(462 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE, 462 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
+    self.frame.mover:GetPushedTexture():SetTexCoord(462 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE,
+    462 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
     self.frame.mover:GetPushedTexture():ClearAllPoints()
     self.frame.mover:GetPushedTexture():SetPoint("CENTER", 0, 0)
     self.frame.mover:GetPushedTexture():SetWidth(14)
@@ -381,7 +406,8 @@ function SoundQueueUI:InitMover()
         SetCursor([[Interface\Cursor\UI-Cursor-Move]])
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText("Move the Frame", HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b)
-        GameTooltip:AddLine("Frame position can be locked in settings.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1)
+        GameTooltip:AddLine("Frame position can be locked in settings.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g,
+        NORMAL_FONT_COLOR.b, 1)
         GameTooltip:Show()
     end)
     Utils:SafeHookScript(self.frame.mover, "OnLeave", function(self)
@@ -396,24 +422,20 @@ function SoundQueueUI:InitMover()
         if Addon.db.profile.SoundQueueUI.LockFrame then return end
         self.frame:StopMovingOrSizing()
     end)
-    
 end
 
 function SoundQueueUI:InitMinimapButton()
-    local soundQueueUI = self
     local buttons =
     {
-        { "LeftButton", "Left Click" },
+        { "LeftButton",   "Left Click" },
         { "MiddleButton", "Middle Click" },
-        { "RightButton", "Right Click" },
+        { "RightButton",  "Right Click" },
     }
     local object = LibDataBroker:NewDataObject("VoiceOver", {
         type = "launcher",
         text = "VoiceOver",
         icon = [[Interface\AddOns\AI_VoiceOver_112\Textures\MinimapButton]],
-
         OnClick = function(self, button)
-            print("onclick")
             local command = Addon.db.profile.MinimapButton.Commands[button]
             if command and command ~= "" then
                 local handler = Options.table.args.SlashCommands.args[command]
@@ -423,7 +445,6 @@ function SoundQueueUI:InitMinimapButton()
                 end
             end
         end,
-
         OnTooltipShow = function(tooltip)
             tooltip:SetText("VoiceOver")
             for _, info in ipairs(buttons) do
@@ -507,6 +528,7 @@ function SoundQueueUI:CreateButton(i)
         self.soundData = soundData
         self:Update()
     end
+
     function button:Update(pushed, hovered)
         if pushed == nil then pushed = self.pushed else self.pushed = pushed end
         if hovered == nil then hovered = self.hovered else self.hovered = hovered end
@@ -525,12 +547,16 @@ function SoundQueueUI:CreateButton(i)
             self.textWidget:SetShadowColor(0, 0, 0, 1)
             self:SetPoint("TOPLEFT", soundQueueUI.frame.container.name, "BOTTOMLEFT", 0, -2)
         else
-            local isCollapsedGossipBeingPlayed = soundDataBeingPlayed and Enums.SoundEvent:IsGossipEvent(soundDataBeingPlayed.event) and (HIDE_GOSSIP_OPTIONS or not soundDataBeingPlayed.title)
+            local isCollapsedGossipBeingPlayed = soundDataBeingPlayed and
+            Enums.SoundEvent:IsGossipEvent(soundDataBeingPlayed.event) and
+            (HIDE_GOSSIP_OPTIONS or not soundDataBeingPlayed.title)
             local queuePosition = buttonIndex - (isCollapsedGossipBeingPlayed and 0 or 1)
             local alpha = math.max(0.1, math.min(1, 1 - (queuePosition - 1) / 3))
             self:SetAlpha(alpha)
             self.textWidget:SetShadowColor(0, 0, 0, 0.5 + 0.5 * alpha) -- Technically isn't necessary, but it looks better this way
-            self:SetPoint("TOPLEFT", soundQueueUI.frame.container.buttons[buttonIndex - 1] or soundQueueUI.frame.container.name, "BOTTOMLEFT", 0, queuePosition == 1 and -8 or -2)
+            self:SetPoint("TOPLEFT",
+            soundQueueUI.frame.container.buttons[buttonIndex - 1] or soundQueueUI.frame.container.name, "BOTTOMLEFT", 0,
+            queuePosition == 1 and -8 or -2)
         end
 
         self.textWidget:ClearAllPoints()
@@ -558,9 +584,11 @@ function SoundQueueUI:CreateButton(i)
                     if event == Enums.SoundEvent.QuestAccept then
                         self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\SoundQueueBulletAccept]])
                     elseif event == Enums.SoundEvent.QuestProgress then
-                        self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\SoundQueueBulletProgress]])
+                        self.iconWidget:SetTexture(
+                        [[Interface\AddOns\AI_VoiceOver_112\Textures\SoundQueueBulletProgress]])
                     elseif event == Enums.SoundEvent.QuestComplete then
-                        self.iconWidget:SetTexture([[Interface\AddOns\AI_VoiceOver_112\Textures\SoundQueueBulletComplete]])
+                        self.iconWidget:SetTexture(
+                        [[Interface\AddOns\AI_VoiceOver_112\Textures\SoundQueueBulletComplete]])
                     end
                 elseif Enums.SoundEvent:IsGossipEvent(event) then
                     self.textWidget:SetTextColor(1, 1, 1)
@@ -577,12 +605,13 @@ function SoundQueueUI:CreateButton(i)
         end
     end
 
-    Utils:SafeHookScript(button, "OnClick", function(self) soundQueueUI.soundQueue:RemoveSoundFromQueue(self.soundData) end)
+    Utils:SafeHookScript(button, "OnClick",
+    function(self) soundQueueUI.soundQueue:RemoveSoundFromQueue(self.soundData) end)
     Utils:SafeHookScript(button, "OnMouseDown", function(self) self:Update(true) end)
     Utils:SafeHookScript(button, "OnMouseUp", function(self) self:Update(false) end)
     Utils:SafeHookScript(button, "OnEnter", function(self) self:Update(nil, true) end)
     Utils:SafeHookScript(button, "OnLeave", function(self) self:Update(nil, false) end)
-    
+
     button:Update()
 
     return button
@@ -631,7 +660,9 @@ function SoundQueueUI:UpdateSoundQueueDisplay()
     if lastContent then
         local contentTop = self.frame.container.name:GetTop()
         local contentBottom = lastContent:GetBottom()
-        self.frame.container:SetHeight(contentTop - contentBottom)
+        if contentTop and contentBottom then
+            self.frame.container:SetHeight(contentTop - contentBottom)
+        end
     else
         self.frame.container:Hide()
     end

@@ -14,8 +14,6 @@ local defaults = {
         },
         Audio = {
             GossipFrequency = Enums.GossipFrequency.OncePerQuestNPC,
-            SoundChannel = Enums.SoundChannel.Master,
-            AutoToggleDialog = true,
         },
         MinimapButton = {
             LibDBIcon = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
@@ -26,7 +24,7 @@ local defaults = {
                 RightButton = "Clear",
             }
         },
-        DebugEnabled = true,
+        DebugEnabled = false,
     },
     char = {
         IsPaused = false,
@@ -43,18 +41,36 @@ function Addon:OnInitialize()
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("GOSSIP_SHOW")
     self:RegisterEvent("QUEST_COMPLETE")
-    Utils:Log(tostring(self.db.char.IsPaused))
 
+    self.soundQueue = SoundQueue:new()
+end
 
-    self.soundQueue = SoundQueue.new()
+local modelFrames = {}
+
+local function NewOrReuseModelFrame()
+    for _, frame in ipairs(modelFrames) do
+        if not frame._inUse then
+            frame:SetUnit("npc")
+            frame:SetModelScale(5)
+            frame._inUse = true
+            return frame
+        end
+    end
+
+    local newFrame = CreateFrame("DressUpModel")
+    newFrame:SetUnit("npc")
+    newFrame:SetModelScale(5)
+    newFrame._inUse = true
+    table.insert(modelFrames, newFrame)
+    return newFrame
 end
 
 function Addon:QUEST_DETAIL()
-    Utils:Log(tostring(self.db.char.IsPaused))
     local questID = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
     local targetName = Utils:GetNPCName()
+    local modelFrame = NewOrReuseModelFrame()
 
     local soundData = {
         event = Enums.SoundEvent.QuestAccept,
@@ -62,6 +78,7 @@ function Addon:QUEST_DETAIL()
         name = targetName,
         title = questTitle,
         text = questText,
+        modelFrame = modelFrame,
     }
     self.soundQueue:AddSoundToQueue(soundData)
 end
@@ -71,6 +88,8 @@ function Addon:QUEST_COMPLETE()
     local questTitle = GetTitleText()
     local questText = GetRewardText()
     local targetName = Utils:GetNPCName()
+    local modelFrame = NewOrReuseModelFrame()
+
 
     local soundData = {
         event = Enums.SoundEvent.QuestComplete,
@@ -78,19 +97,45 @@ function Addon:QUEST_COMPLETE()
         name = targetName,
         title = questTitle,
         text = questText,
+        modelFrame = modelFrame,
     }
     self.soundQueue:AddSoundToQueue(soundData)
 end
 
+
+
 function Addon:GOSSIP_SHOW()
     local gossipText = GetGossipText()
     local targetName = Utils:GetNPCName()
+
+    local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[targetName]
+
+    if self.db.profile.Audio.GossipFrequency == Enums.GossipFrequency.OncePerQuestNPC then
+        local activeQuests = GetGossipActiveQuests()
+        local availableQuests = GetGossipAvailableQuests()
+        local npcHasQuests = (activeQuests ~= nil or availableQuests ~= nil)
+        if npcHasQuests and gossipSeenForNPC then
+            return
+        end
+    elseif self.db.profile.Audio.GossipFrequency == Enums.GossipFrequency.OncePerNPC then
+        if gossipSeenForNPC then
+            return
+        end
+    elseif self.db.profile.Audio.GossipFrequency == Enums.GossipFrequency.Never then
+        return
+    end
+
+    local modelFrame = NewOrReuseModelFrame()
 
     local soundData = {
         event = Enums.SoundEvent.Gossip,
         name = targetName,
         text = gossipText,
         title = targetName,
+        modelFrame = modelFrame,
+        startCallback = function()
+            self.db.char.hasSeenGossipForNPC[targetName] = true
+        end
     }
     self.soundQueue:AddSoundToQueue(soundData)
 end

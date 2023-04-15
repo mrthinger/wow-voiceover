@@ -121,7 +121,7 @@ local function updatePosition(button)
 	button:SetPoint("CENTER", Minimap, "CENTER", x, y)
 end
 
-local function onClick(self, b) self = this b = arg1 print(self, b, self.dataObject, self.dataObject.OnClick) if self.dataObject.OnClick then self.dataObject.OnClick(self, b) end end
+local function onClick(self, b) self = this b = arg1 if self.dataObject.OnClick then self.dataObject.OnClick(self, b) end end
 local function onMouseDown(self) self = this self.icon:SetTexCoord(0, 1, 0, 1) end
 local function onMouseUp(self) self = this self.icon:SetTexCoord(0.05, 0.95, 0.05, 0.95) end
 
