@@ -90,7 +90,7 @@ if not SOUNDKIT then
 end
 
 -- Not sure when exactly were UI-Cursor-Move and UI-Cursor-SizeRight added, but the former was present in 6.0.1
-if Version:IsLegacyVersionBelow(60000) then
+if Version:IsBelowLegacyVersion(60000) then
     function SetCursor() end
 end
 
@@ -102,7 +102,7 @@ if Version.IsAnyLegacy and not UnitGUID then
     Utils.GetIDFromGUID = nil
     Utils.MakeGUID = nil
 -- Patch 4.0.1 (2010-10-12): Bits shifted. NPCID is now characters 5-8, not 7-10 (counting from 1).
-elseif Version:IsLegacyVersionBelow(40000) then
+elseif Version:IsBelowLegacyVersion(40000) then
     -- 2.4.0 - 3.3.5
     Enums.GUID.Player     = tonumber("0000", 16)
     Enums.GUID.Item       = tonumber("4000", 16)
@@ -129,7 +129,7 @@ elseif Version:IsLegacyVersionBelow(40000) then
         return format("0x%04X%06X%06X", type, id, 0)
     end
 -- Patch 6.0.2 (2014-10-14): Changed to a new format, e.g. for players: Player-[serverID]-[playerUID]
-elseif Version:IsLegacyVersionBelow(60000) then
+elseif Version:IsBelowLegacyVersion(60000) then
     -- 4.0.1 - 5.4.8
     Enums.GUID.Player     = tonumber("000", 16)
     Enums.GUID.Item       = tonumber("400", 16)
@@ -158,7 +158,7 @@ elseif Version:IsLegacyVersionBelow(60000) then
 end
 
 -- Patch 6.0.2 (2014-10-14): Removed returns 'questTag' and 'isDaily'. Added returns 'frequency', 'isOnMap', 'hasLocalPOI', 'isTask', and 'isStory'.
-if Version:IsLegacyVersionBelow(60000) then
+if Version:IsBelowLegacyVersion(60000) then
     function GetQuestLogTitle(questIndex)
         local title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID, displayQuestID = _G.GetQuestLogTitle(questIndex)
         local frequency = isDaily and 2 or 1
@@ -217,7 +217,7 @@ function ModelMixins:SetCustomCamera(camera)
     self:SetCamera(camera)
 end
 -- Patch 7.0.3 (2016-07-19): Added.
-if Version:IsLegacyVersionBelow(70000) then
+if Version:IsBelowLegacyVersion(70000) then
     local modelToFileID = {
         ["Original"] = {
             ["interface/buttons/talktomequestion_white"]                = 130737,
@@ -310,7 +310,7 @@ if Version:IsLegacyVersionBelow(70000) then
     end
 end
 
-if Version.IsLegacyClassic then
+if Version.IsLegacyVanilla then
 
     function Utils:GetNPCName()
         return UnitName("npc")
@@ -596,7 +596,7 @@ elseif Version.IsLegacyWrath then
         end)
     end)
 
-elseif Version.IsRetailClassic then
+elseif Version.IsRetailVanilla then
 
 elseif Version.IsRetailWrath then
 

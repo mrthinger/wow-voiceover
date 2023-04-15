@@ -214,7 +214,7 @@ local GeneralTab =
             inline = true,
             name = "Audio",
             args = {
-                SoundChannel = Version:IsRetailOrLegacyVersionAbove(40000) and {
+                SoundChannel = Version:IsRetailOrAboveLegacyVersion(40000) and {
                     type = "select",
                     width = 0.75,
                     order = 1,
@@ -246,7 +246,7 @@ local GeneralTab =
                         Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
-                AutoToggleDialog = Version:IsRetailOrLegacyVersionAbove(60100) and {
+                AutoToggleDialog = Version:IsRetailOrAboveLegacyVersion(60100) and {
                     type = "toggle",
                     width = 2.25,
                     order = 4,
