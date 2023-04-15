@@ -39,7 +39,7 @@ function SoundQueue:AddSoundToQueue(soundData)
     -- Don't play gossip if there are quest sounds in the queue
     local questSoundExists = false
     for _, queuedSound in ipairs(self.sounds) do
-        if queuedSound.questID then
+        if Enums.SoundEvent:IsQuestEvent(queuedSound.event) then
             questSoundExists = true
             break
         end
@@ -57,7 +57,7 @@ function SoundQueue:AddSoundToQueue(soundData)
 
 
     -- If the sound queue only contains one sound, play it immediately
-    if table.getn(self.sounds) == 1 and not Addon.db.char.IsPaused then
+    if getn(self.sounds) == 1 and not Addon.db.char.IsPaused then
         self:PlaySound(soundData)
     end
 end
@@ -72,22 +72,16 @@ function SoundQueue:PlaySound(soundData)
         return
     end
 
-    self.isSoundPlaying = true
-
-    -- TODO: dialog is played on Sounds Channel in 112, maybe change this option to lower sound volume why vo is playing
-    -- if Addon.db.profile.Audio.AutoToggleDialog then
-    --     -- SetCVar("Sound_EnableDialog", 0)
-    -- end
 
     if soundData.startCallback then
         soundData.startCallback()
     end
 
-    Addon:ScheduleTimer(function()
-        Utils:Log("delayfun")
+    local nextSoundTimer = Addon:ScheduleTimer(function()
         self:RemoveSoundFromQueue(soundData)
-        self.isSoundPlaying = false
     end, soundData.length + 0.55)
+    soundData.nextSoundTimer = nextSoundTimer
+
 
 end
 
@@ -97,8 +91,15 @@ function SoundQueue:PauseQueue()
     end
 
     Addon.db.char.IsPaused = true
-    SetCVar("MasterSoundEffects", 0)
-    SetCVar("MasterSoundEffects", 1)
+
+
+    if getn(self.sounds) > 0 then
+        local currentSound = self.sounds[1]
+        SetCVar("MasterSoundEffects", 0)
+        SetCVar("MasterSoundEffects", 1)
+        Addon:CancelTimer(currentSound.nextSoundTimer)
+    end
+
     self.ui:UpdatePauseDisplay()
 
 end
@@ -109,7 +110,7 @@ function SoundQueue:ResumeQueue()
     end
 
     Addon.db.char.IsPaused = false
-    if table.getn(self.sounds) > 0 and not self.isSoundPlaying then
+    if getn(self.sounds) > 0 then
         local currentSound = self.sounds[1]
         self:PlaySound(currentSound)
     end
@@ -132,16 +133,16 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
     end
 
     if removedIndex == 1 and not Addon.db.char.IsPaused then
-        if table.getn(self.sounds) > 0 then
+        SetCVar("MasterSoundEffects", 0)
+        SetCVar("MasterSoundEffects", 1)
+        Addon:CancelTimer(soundData.nextSoundTimer)
+
+        if getn(self.sounds) > 0 then
             local nextSoundData = self.sounds[1]
             self:PlaySound(nextSoundData)
         end
     end
 
-    -- TODO: dialog is played on Sounds Channel in 112, maybe change this option to lower sound volume why vo is playing
-    -- if table.getn(self.sounds) == 0 and Addon.db.profile.Audio.AutoToggleDialog then
-    --     SetCVar("Sound_EnableDialog", 1)
-    -- end
     self.ui:UpdateSoundQueueDisplay()
 
 end
@@ -155,7 +156,7 @@ function SoundQueue:TogglePauseQueue()
 end
 
 function SoundQueue:RemoveAllSoundsFromQueue()
-    for i = table.getn(self.sounds), 1, -1 do
+    for i = getn(self.sounds), 1, -1 do
         if (self.sounds[i]) then
             self:RemoveSoundFromQueue(self.sounds[i])
         end

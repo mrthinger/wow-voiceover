@@ -589,7 +589,7 @@ function SoundQueueUI:CreateButton(i)
 end
 
 function SoundQueueUI:UpdateSoundQueueDisplay()
-    self.frame:SetShown(not Addon.db.profile.SoundQueueUI.HideFrame and table.getn(self.soundQueue.sounds) > 0)
+    self.frame:SetShown(not Addon.db.profile.SoundQueueUI.HideFrame and getn(self.soundQueue.sounds) > 0)
 
     self:UpdatePauseDisplay()
 
@@ -620,11 +620,11 @@ function SoundQueueUI:UpdateSoundQueueDisplay()
             break
         end
     end
-    for i = lastButtonIndex + 1, table.getn(self.frame.container.buttons) do
+    for i = lastButtonIndex + 1, getn(self.frame.container.buttons) do
         self.frame.container.buttons[i]:Configure(nil)
     end
 
-    self.frame.container.stopGossip:SetGossipCount(gossipCount or table.getn(self.soundQueue.sounds))
+    self.frame.container.stopGossip:SetGossipCount(gossipCount or getn(self.soundQueue.sounds))
     self.frame.container.name:Update()
 
     -- Align the container vertically to the middle
