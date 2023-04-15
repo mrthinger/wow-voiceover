@@ -46,6 +46,7 @@ local selectedGossipOption
 function Addon:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("VoiceOverDB", defaults)
     self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
+    self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
 
     self.soundQueue = SoundQueue:new()
     self.questOverlayUI = QuestOverlayUI:new(self.soundQueue)
