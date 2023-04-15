@@ -423,6 +423,19 @@ elseif Version.IsLegacyWrath then
         end)
     end
 
+    hooksecurefunc(SoundQueueUI, "InitPortrait", function(self)
+        self.frame.portrait.pause:HookScript("OnEnter", function()
+            if self.frame.portrait.model._awaitingModel then
+                GameTooltip:SetOwner(self.frame.portrait.pause, "ANCHOR_NONE")
+                GameTooltip:SetPoint("BOTTOMLEFT", self.frame.portrait.pause, "BOTTOMRIGHT", 4, -4)
+                GameTooltip:SetText("Uncached NPC", HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b)
+                GameTooltip:AddLine("Encounter this NPC in the world again to be able to see their model.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1)
+                GameTooltip:Show()
+            end
+        end)
+        self.frame.portrait.pause:HookScript("OnLeave", GameTooltip_Hide)
+    end)
+
     --[[
         Here begins the code the plays the VO over music channel in order to support the ability to pause/stop the VO.
         3.3.5's PlaySound/PlaySoundFile cannot be stopped by any means short of restarting the whole sound system (freezes the client for a couple of seconds).
