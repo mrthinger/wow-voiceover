@@ -1,8 +1,5 @@
 setfenv(1, VoiceOver)
 
-local CLIENT_VERSION, _, _, INTERFACE_VERSION = GetBuildInfo()
-INTERFACE_VERSION = INTERFACE_VERSION or 0 -- 1.12 doesn't return this
-
 if not select then
     function _G.select(index, ...)
         local result = {}
@@ -93,19 +90,19 @@ if not SOUNDKIT then
 end
 
 -- Not sure when exactly were UI-Cursor-Move and UI-Cursor-SizeRight added, but the former was present in 6.0.1
-if not WOW_PROJECT_ID and INTERFACE_VERSION < 60000 then
+if Version:IsLegacyVersionBelow(60000) then
     function SetCursor() end
 end
 
 -- Patch 2.4.0 (2008-03-25): Added.
-if not WOW_PROJECT_ID and not UnitGUID then
+if Version.IsAnyLegacy and not UnitGUID then
     -- 1.0.0 - 2.3.0
     Enums.GUID = nil
     Utils.GetGUIDType = nil
     Utils.GetIDFromGUID = nil
     Utils.MakeGUID = nil
 -- Patch 4.0.1 (2010-10-12): Bits shifted. NPCID is now characters 5-8, not 7-10 (counting from 1).
-elseif not WOW_PROJECT_ID and INTERFACE_VERSION < 40000 then
+elseif Version:IsLegacyVersionBelow(40000) then
     -- 2.4.0 - 3.3.5
     Enums.GUID.Player     = tonumber("0000", 16)
     Enums.GUID.Item       = tonumber("4000", 16)
@@ -132,7 +129,7 @@ elseif not WOW_PROJECT_ID and INTERFACE_VERSION < 40000 then
         return format("0x%04X%06X%06X", type, id, 0)
     end
 -- Patch 6.0.2 (2014-10-14): Changed to a new format, e.g. for players: Player-[serverID]-[playerUID]
-elseif not WOW_PROJECT_ID and INTERFACE_VERSION < 60000 then
+elseif Version:IsLegacyVersionBelow(60000) then
     -- 4.0.1 - 5.4.8
     Enums.GUID.Player     = tonumber("000", 16)
     Enums.GUID.Item       = tonumber("400", 16)
@@ -161,7 +158,7 @@ elseif not WOW_PROJECT_ID and INTERFACE_VERSION < 60000 then
 end
 
 -- Patch 6.0.2 (2014-10-14): Removed returns 'questTag' and 'isDaily'. Added returns 'frequency', 'isOnMap', 'hasLocalPOI', 'isTask', and 'isStory'.
-if not WOW_PROJECT_ID and INTERFACE_VERSION < 60000 then
+if Version:IsLegacyVersionBelow(60000) then
     function GetQuestLogTitle(questIndex)
         local title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID, displayQuestID = _G.GetQuestLogTitle(questIndex)
         local frequency = isDaily and 2 or 1
@@ -220,7 +217,7 @@ function ModelMixins:SetCustomCamera(camera)
     self:SetCamera(camera)
 end
 -- Patch 7.0.3 (2016-07-19): Added.
-if not WOW_PROJECT_ID and INTERFACE_VERSION < 70000 then
+if Version:IsLegacyVersionBelow(70000) then
     local modelToFileID = {
         ["Original"] = {
             ["interface/buttons/talktomequestion_white"]                = 130737,
@@ -313,7 +310,7 @@ if not WOW_PROJECT_ID and INTERFACE_VERSION < 70000 then
     end
 end
 
-if not WOW_PROJECT_ID and INTERFACE_VERSION < 11300 then
+if Version.IsLegacyClassic then
 
     function Utils:GetNPCName()
         return UnitName("npc")
@@ -327,7 +324,7 @@ if not WOW_PROJECT_ID and INTERFACE_VERSION < 11300 then
         return UnitIsPlayer("npc")
     end
 
-elseif not WOW_PROJECT_ID and INTERFACE_VERSION == 30300 then
+elseif Version.IsLegacyWrath then
 
     function Utils:GetQuestLogScrollOffset()
         return HybridScrollFrame_GetOffset(QuestLogScrollFrame)
@@ -421,9 +418,9 @@ elseif not WOW_PROJECT_ID and INTERFACE_VERSION == 30300 then
         end)
     end
 
-elseif WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+elseif Version.IsRetailClassic then
 
-elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
+elseif Version.IsRetailWrath then
 
     GetGossipText = C_GossipInfo.GetText
     GetNumGossipActiveQuests = C_GossipInfo.GetNumActiveQuests
@@ -448,7 +445,7 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
         QuestLogListScrollFrame.update = QuestLog_Update
     end)
 
-elseif WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+elseif Version.IsRetailMainline then
 
     function Utils:GetCurrentModelSet()
         return "HD"
