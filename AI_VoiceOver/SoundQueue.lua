@@ -62,8 +62,7 @@ function SoundQueue:AddSoundToQueue(soundData)
 end
 
 function SoundQueue:PlaySound(soundData)
-    local channel = Enums.SoundChannel:GetName(Addon.db.profile.Audio.SoundChannel)
-    local willPlay, handle = PlaySoundFile(soundData.filePath, channel)
+    Utils:PlaySound(soundData)
 
     if Addon.db.profile.Audio.AutoToggleDialog then
         SetCVar("Sound_EnableDialog", 0)
@@ -77,7 +76,6 @@ function SoundQueue:PlaySound(soundData)
     end, soundData.length + 0.55)
 
     soundData.nextSoundTimer = nextSoundTimer
-    soundData.handle = handle
 end
 
 function SoundQueue:PauseQueue()
@@ -89,7 +87,7 @@ function SoundQueue:PauseQueue()
 
     if #self.sounds > 0 then
         local currentSound = self.sounds[1]
-        StopSound(currentSound.handle)
+        Utils:StopSound(currentSound)
         Addon:CancelTimer(currentSound.nextSoundTimer)
     end
 
@@ -133,7 +131,7 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
     end
 
     if removedIndex == 1 and not Addon.db.char.IsPaused then
-        StopSound(soundData.handle)
+        Utils:StopSound(soundData)
         Addon:CancelTimer(soundData.nextSoundTimer)
 
         if #self.sounds > 0 then
