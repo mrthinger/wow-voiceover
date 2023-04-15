@@ -383,10 +383,14 @@ elseif Version.IsLegacyWrath then
             self._sequence = 0
             self._sequenceStart = nil
         end)
-        hooksecurefunc(self, "SetSequence", function(self, sequence)
+        local oldSetSequence = self.SetSequence
+        function self:SetSequence(sequence)
             self._sequence = sequence
             self._sequenceStart = GetTime()
-        end)
+            if not self._awaitingModel then
+                oldSetSequence(self, sequence)
+            end
+        end
         local oldSetCreature = self.SetCreature
         function self:SetCreature(id)
             self:ClearModel()
