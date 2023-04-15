@@ -1,56 +1,56 @@
 setfenv(1, VoiceOver)
 
-Addon = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0", "AceDB-2.0", "AceConsole-2.0")
 
+Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0", "AceTimer-3.0", "AceConfig-3.0")
 
-Addon:RegisterDB("VoiceOverDB", "VoiceOverDBPerChar")
--- Register your default values for the character and profile databases
-Addon:RegisterDefaults('char', {})
-
-Addon:RegisterDefaults('profile', {})
-
-local chatCommands = {
-    type = 'group',
-    args = {
-        pause = {
-            type = 'execute',
-            name = "Pause",
-            desc = "Pauses sound playback after the current sound finishes",
-            func = function()
-                Addon.soundQueue:PauseQueue()
-            end
+local defaults = {
+    profile = {
+        SoundQueueUI = {
+            LockFrame = false,
+            FrameScale = 0.7,
+            FrameStrata = "HIGH",
+            HidePortrait = false,
+            HideFrame = false,
         },
-        resume = {
-            type = 'execute',
-            name = "Resume",
-            desc = "Resumes sound playback",
-            func = function()
-                Addon.soundQueue:ResumeQueue()
-            end
+        Audio = {
+            GossipFrequency = Enums.GossipFrequency.OncePerQuestNPC,
+            SoundChannel = Enums.SoundChannel.Master,
+            AutoToggleDialog = true,
         },
+        MinimapButton = {
+            LibDBIcon = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
+            Commands = {
+                -- References keys from Options.table.args.SlashCommands.args table
+                LeftButton = "Options",
+                MiddleButton = "PlayPause",
+                RightButton = "Clear",
+            }
+        },
+        DebugEnabled = true,
     },
+    char = {
+        IsPaused = false,
+        hasSeenGossipForNPC = {},
+    }
 }
 
-Addon:RegisterChatCommand({ "/voiceover", "/vo" }, chatCommands)
-
 function Addon:OnInitialize()
+    self.db = LibStub("AceDB-3.0"):New("VoiceOverDB", defaults)
+
     DataModules:EnumerateAddons()
+    Options:Initialize()
 
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("GOSSIP_SHOW")
     self:RegisterEvent("QUEST_COMPLETE")
-    self:RegisterEvent("VOICEOVER_NEXT_SOUND_TIMER")
+    Utils:Log(tostring(self.db.char.IsPaused))
+
 
     self.soundQueue = SoundQueue.new()
 end
 
-function Addon:VOICEOVER_NEXT_SOUND_TIMER(soundData)
-    Utils:Log("delayfun")
-    self.soundQueue:RemoveSoundFromQueue(soundData)
-    self.soundQueue.isSoundPlaying = false
-end
-
 function Addon:QUEST_DETAIL()
+    Utils:Log(tostring(self.db.char.IsPaused))
     local questID = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()

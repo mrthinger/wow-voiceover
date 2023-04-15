@@ -8,8 +8,8 @@ function SoundQueue.new()
 
     self.soundIdCounter = 0
     self.sounds = {}
-    self.soundsLength = 0
     self.isSoundPlaying = false
+    self.ui = SoundQueueUI:new(self)
 
     return self
 end
@@ -53,10 +53,11 @@ function SoundQueue:AddSoundToQueue(soundData)
     soundData.id = self.soundIdCounter
 
     table.insert(self.sounds, soundData)
-    self.soundsLength = self.soundsLength + 1
+    self.ui:UpdateSoundQueueDisplay()
+
 
     -- If the sound queue only contains one sound, play it immediately
-    if self.soundsLength == 1 and not Addon.db.char.IsPaused then
+    if table.getn(self.sounds) == 1 and not Addon.db.char.IsPaused then
         self:PlaySound(soundData)
     end
 end
@@ -64,9 +65,7 @@ end
 
 
 function SoundQueue:PlaySound(soundData)
-    -- local channel = Enums.SoundChannel:GetName(Addon.db.profile.SoundChannel)
-    local channel = "Master"
-    local isPlaying = PlaySoundFile(soundData.filePath, channel)
+    local isPlaying = PlaySoundFile(soundData.filePath)
     if not isPlaying then
         Utils:Log("Sound does not exist for: " .. soundData.title)
         self:RemoveSoundFromQueue(soundData)
@@ -75,17 +74,20 @@ function SoundQueue:PlaySound(soundData)
 
     self.isSoundPlaying = true
 
-
-    if Addon.db.profile.AutoToggleDialog then
-        SetCVar("Sound_EnableDialog", 0)
-    end
+    -- TODO: dialog is played on Sounds Channel in 112, maybe change this option to lower sound volume why vo is playing
+    -- if Addon.db.profile.Audio.AutoToggleDialog then
+    --     -- SetCVar("Sound_EnableDialog", 0)
+    -- end
 
     if soundData.startCallback then
         soundData.startCallback()
     end
 
-    Addon:ScheduleEvent("VOICEOVER_NEXT_SOUND_TIMER", soundData.length + 0.55, soundData)
-
+    Addon:ScheduleTimer(function()
+        Utils:Log("delayfun")
+        self:RemoveSoundFromQueue(soundData)
+        self.isSoundPlaying = false
+    end, soundData.length + 0.55)
 
 end
 
@@ -95,12 +97,10 @@ function SoundQueue:PauseQueue()
     end
 
     Addon.db.char.IsPaused = true
+    SetCVar("MasterSoundEffects", 0)
+    SetCVar("MasterSoundEffects", 1)
+    self.ui:UpdatePauseDisplay()
 
-    -- if self.soundsLength > 0 then
-    --     local currentSound = self.sounds[1]
-    --     StopSound(currentSound.handle)
-    --     Addon:CancelTimer(currentSound.nextSoundTimer)
-    -- end
 end
 
 function SoundQueue:ResumeQueue()
@@ -109,10 +109,12 @@ function SoundQueue:ResumeQueue()
     end
 
     Addon.db.char.IsPaused = false
-    if self.soundsLength > 0 and not self.isSoundPlaying then
+    if table.getn(self.sounds) > 0 and not self.isSoundPlaying then
         local currentSound = self.sounds[1]
         self:PlaySound(currentSound)
     end
+    self.ui:UpdatePauseDisplay()
+
 end
 
 function SoundQueue:RemoveSoundFromQueue(soundData)
@@ -121,7 +123,6 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
         if queuedSound.id == soundData.id then
             removedIndex = index
             table.remove(self.sounds, index)
-            self.soundsLength = self.soundsLength - 1
             break
         end
     end
@@ -131,20 +132,30 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
     end
 
     if removedIndex == 1 and not Addon.db.char.IsPaused then
-        if self.soundsLength > 0 then
+        if table.getn(self.sounds) > 0 then
             local nextSoundData = self.sounds[1]
             self:PlaySound(nextSoundData)
         end
     end
 
-    if self.soundsLength == 0 and Addon.db.profile.AutoToggleDialog then
-        SetCVar("Sound_EnableDialog", 1)
-    end
+    -- TODO: dialog is played on Sounds Channel in 112, maybe change this option to lower sound volume why vo is playing
+    -- if table.getn(self.sounds) == 0 and Addon.db.profile.Audio.AutoToggleDialog then
+    --     SetCVar("Sound_EnableDialog", 1)
+    -- end
+    self.ui:UpdateSoundQueueDisplay()
 
 end
 
+function SoundQueue:TogglePauseQueue()
+    if Addon.db.char.IsPaused then
+        self:ResumeQueue()
+    else
+        self:PauseQueue()
+    end
+end
+
 function SoundQueue:RemoveAllSoundsFromQueue()
-    for i = self.soundsLength, 1, -1 do
+    for i = table.getn(self.sounds), 1, -1 do
         if (self.sounds[i]) then
             self:RemoveSoundFromQueue(self.sounds[i])
         end

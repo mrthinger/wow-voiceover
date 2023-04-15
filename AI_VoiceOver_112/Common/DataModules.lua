@@ -93,9 +93,9 @@ function DataModules:EnumerateAddons()
     end
 
     table.sort(self.availableModulesOrdered, SortModules)
-    -- for order, module in self:GetAvailableModules() do
-    --     Options:AddDataModule(module, order)
-    -- end
+    for order, module in self:GetAvailableModules() do
+        Options:AddDataModule(module, order)
+    end
 end
 
 function DataModules:LoadModule(module)
@@ -117,9 +117,13 @@ function DataModules:LoadModule(module)
     return loaded
 end
 
+local function replaceDoubleQuotes(text)
+    return string.gsub(text, '"', "'")
+end
+
 function DataModules:GetNPCGossipTextHash(soundData)
     local table = soundData.unitGUID and "GossipLookupByNPCID" or "GossipLookupByNPCName"
-    local npc = soundData.unitGUID and Utils:GetIDFromGUID(soundData.unitGUID) or soundData.name
+    local npc = soundData.unitGUID and Utils:GetIDFromGUID(soundData.unitGUID) or replaceDoubleQuotes(soundData.name)
     local text = soundData.text
 
     local text_entries = {}
@@ -139,10 +143,6 @@ function DataModules:GetNPCGossipTextHash(soundData)
 
     local best_result = FuzzySearchBestKeys(text, text_entries)
     return best_result and best_result.value
-end
-
-local function replaceDoubleQuotes(text)
-    return string.gsub(text, '"', "'")
 end
 
 local function getFirstNWords(text, n)
