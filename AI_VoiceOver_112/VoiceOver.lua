@@ -67,6 +67,9 @@ end
 
 function Addon:QUEST_DETAIL()
     local questID = GetQuestID()
+    if questID == 0 then
+        return
+    end
     local questTitle = GetTitleText()
     local questText = GetQuestText()
     local targetName = Utils:GetNPCName()
@@ -85,6 +88,9 @@ end
 
 function Addon:QUEST_COMPLETE()
     local questID = GetQuestID()
+    if questID == 0 then
+        return
+    end
     local questTitle = GetTitleText()
     local questText = GetRewardText()
     local targetName = Utils:GetNPCName()
