@@ -246,10 +246,22 @@ local GeneralTab =
                         Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
+                LineBreak2 = { type = "description", name = "", order = 4 },
+                ToggleSyncToWindowState = {
+                    type = "toggle",
+                    order = 5,
+                    width = 2,
+                    name = "Sync Dialog to Window State",
+                    desc = "VoiceOver dialog will automatically stop when the gossip/quest window is closed.",
+                    get = function(info) return Addon.db.profile.Audio.StopAudioOnDisengage end,
+                    set = function(info, value)
+                        Addon.db.profile.Audio.StopAudioOnDisengage = value
+                    end,
+                },
                 AutoToggleDialog = {
                     type = "toggle",
                     width = 2.25,
-                    order = 4,
+                    order = 6,
                     name = "Mute Vocal NPCs Greetings While VoiceOver is Playing",
                     desc = "While VoiceOver is playing, the Dialog channel will be muted.",
                     get = function(info) return Addon.db.profile.Audio.AutoToggleDialog end,
