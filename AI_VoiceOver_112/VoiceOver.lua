@@ -1,60 +1,79 @@
 setfenv(1, VoiceOver)
 
-Addon = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0", "AceDB-2.0", "AceConsole-2.0")
 
+Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0", "AceTimer-3.0", "AceConfig-3.0")
 
-Addon:RegisterDB("VoiceOverDB", "VoiceOverDBPerChar")
--- Register your default values for the character and profile databases
-Addon:RegisterDefaults('char', {})
-
-Addon:RegisterDefaults('profile', {})
-
-local chatCommands = {
-    type = 'group',
-    args = {
-        pause = {
-            type = 'execute',
-            name = "Pause",
-            desc = "Pauses sound playback after the current sound finishes",
-            func = function()
-                Addon.soundQueue:PauseQueue()
-            end
+local defaults = {
+    profile = {
+        SoundQueueUI = {
+            LockFrame = false,
+            FrameScale = 0.7,
+            FrameStrata = "HIGH",
+            HidePortrait = false,
+            HideFrame = false,
         },
-        resume = {
-            type = 'execute',
-            name = "Resume",
-            desc = "Resumes sound playback",
-            func = function()
-                Addon.soundQueue:ResumeQueue()
-            end
+        Audio = {
+            GossipFrequency = Enums.GossipFrequency.OncePerQuestNPC,
         },
+        MinimapButton = {
+            LibDBIcon = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
+            Commands = {
+                -- References keys from Options.table.args.SlashCommands.args table
+                LeftButton = "Options",
+                MiddleButton = "PlayPause",
+                RightButton = "Clear",
+            }
+        },
+        DebugEnabled = false,
     },
+    char = {
+        IsPaused = false,
+        hasSeenGossipForNPC = {},
+    }
 }
 
-Addon:RegisterChatCommand({ "/voiceover", "/vo" }, chatCommands)
-
 function Addon:OnInitialize()
+    self.db = LibStub("AceDB-3.0"):New("VoiceOverDB", defaults)
+
     DataModules:EnumerateAddons()
+    Options:Initialize()
 
     self:RegisterEvent("QUEST_DETAIL")
     self:RegisterEvent("GOSSIP_SHOW")
     self:RegisterEvent("QUEST_COMPLETE")
-    self:RegisterEvent("VOICEOVER_NEXT_SOUND_TIMER")
 
-    self.soundQueue = SoundQueue.new()
+    self.soundQueue = SoundQueue:new()
 end
 
-function Addon:VOICEOVER_NEXT_SOUND_TIMER(soundData)
-    Utils:Log("delayfun")
-    self.soundQueue:RemoveSoundFromQueue(soundData)
-    self.soundQueue.isSoundPlaying = false
+local modelFrames = {}
+
+local function NewOrReuseModelFrame()
+    for _, frame in ipairs(modelFrames) do
+        if not frame._inUse then
+            frame:SetUnit("npc")
+            frame:SetModelScale(5)
+            frame._inUse = true
+            return frame
+        end
+    end
+
+    local newFrame = CreateFrame("DressUpModel")
+    newFrame:SetUnit("npc")
+    newFrame:SetModelScale(5)
+    newFrame._inUse = true
+    table.insert(modelFrames, newFrame)
+    return newFrame
 end
 
 function Addon:QUEST_DETAIL()
     local questID = GetQuestID()
+    if questID == 0 then
+        return
+    end
     local questTitle = GetTitleText()
     local questText = GetQuestText()
     local targetName = Utils:GetNPCName()
+    local modelFrame = NewOrReuseModelFrame()
 
     local soundData = {
         event = Enums.SoundEvent.QuestAccept,
@@ -62,15 +81,21 @@ function Addon:QUEST_DETAIL()
         name = targetName,
         title = questTitle,
         text = questText,
+        modelFrame = modelFrame,
     }
     self.soundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:QUEST_COMPLETE()
     local questID = GetQuestID()
+    if questID == 0 then
+        return
+    end
     local questTitle = GetTitleText()
     local questText = GetRewardText()
     local targetName = Utils:GetNPCName()
+    local modelFrame = NewOrReuseModelFrame()
+
 
     local soundData = {
         event = Enums.SoundEvent.QuestComplete,
@@ -78,19 +103,45 @@ function Addon:QUEST_COMPLETE()
         name = targetName,
         title = questTitle,
         text = questText,
+        modelFrame = modelFrame,
     }
     self.soundQueue:AddSoundToQueue(soundData)
 end
 
+
+
 function Addon:GOSSIP_SHOW()
     local gossipText = GetGossipText()
     local targetName = Utils:GetNPCName()
+
+    local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[targetName]
+
+    if self.db.profile.Audio.GossipFrequency == Enums.GossipFrequency.OncePerQuestNPC then
+        local activeQuests = GetGossipActiveQuests()
+        local availableQuests = GetGossipAvailableQuests()
+        local npcHasQuests = (activeQuests ~= nil or availableQuests ~= nil)
+        if npcHasQuests and gossipSeenForNPC then
+            return
+        end
+    elseif self.db.profile.Audio.GossipFrequency == Enums.GossipFrequency.OncePerNPC then
+        if gossipSeenForNPC then
+            return
+        end
+    elseif self.db.profile.Audio.GossipFrequency == Enums.GossipFrequency.Never then
+        return
+    end
+
+    local modelFrame = NewOrReuseModelFrame()
 
     local soundData = {
         event = Enums.SoundEvent.Gossip,
         name = targetName,
         text = gossipText,
         title = targetName,
+        modelFrame = modelFrame,
+        startCallback = function()
+            self.db.char.hasSeenGossipForNPC[targetName] = true
+        end
     }
     self.soundQueue:AddSoundToQueue(soundData)
 end

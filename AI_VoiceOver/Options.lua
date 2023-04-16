@@ -265,6 +265,18 @@ local GeneralTab =
                         end
                     end,
                 },
+                LineBreak2 = { type = "description", name = "", order = 5 },
+                ToggleSyncToWindowState = {
+                    type = "toggle",
+                    order = 6,
+                    width = 2,
+                    name = "Sync Dialog to Window State",
+                    desc = "VoiceOver dialog will automatically stop when the gossip/quest window is closed.",
+                    get = function(info) return Addon.db.profile.Audio.StopAudioOnDisengage end,
+                    set = function(info, value)
+                        Addon.db.profile.Audio.StopAudioOnDisengage = value
+                    end,
+                },
             }
         },
         Debug = {

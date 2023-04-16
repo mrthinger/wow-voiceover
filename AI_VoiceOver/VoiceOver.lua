@@ -15,6 +15,7 @@ local defaults = {
             GossipFrequency = Enums.GossipFrequency.OncePerQuestNPC,
             SoundChannel = Enums.SoundChannel.Master,
             AutoToggleDialog = Version:IsRetailOrAboveLegacyVersion(60100),
+            StopAudioOnDisengage = false,
         },
         MinimapButton = {
             LibDBIcon = {}, -- Table used by LibDBIcon to store position (minimapPos), dragging lock (lock) and hidden state (hide)
@@ -43,6 +44,8 @@ local defaults = {
 
 local lastGossipOptions
 local selectedGossipOption
+local currentQuestSoundData
+local currentGossipSoundData
 
 function Addon:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("VoiceOverDB", defaults)
@@ -56,10 +59,12 @@ function Addon:OnInitialize()
     Options:Initialize()
 
     self:RegisterEvent("QUEST_DETAIL")
+    -- self:RegisterEvent("QUEST_PROGRESS")
+    self:RegisterEvent("QUEST_COMPLETE")
+    self:RegisterEvent("QUEST_GREETING")
+    self:RegisterEvent("QUEST_FINISHED")
     self:RegisterEvent("GOSSIP_SHOW")
     self:RegisterEvent("GOSSIP_CLOSED")
-    self:RegisterEvent("QUEST_COMPLETE")
-    -- self:RegisterEvent("QUEST_PROGRESS")
 
     StaticPopupDialogs["VOICEOVER_DUPLICATE_ADDON"] =
     {
@@ -84,7 +89,7 @@ function Addon:OnInitialize()
         local questName = GetAbandonQuestName()
         local soundsToRemove = {}
         for _, soundData in pairs(self.soundQueue.sounds) do
-            if soundData.title == questName then
+            if Enums.SoundEvent:IsQuestEvent(soundData.event) and soundData.title == questName then
                 table.insert(soundsToRemove, soundData)
             end
         end
@@ -156,6 +161,9 @@ function Addon:QUEST_DETAIL()
         unitGUID = guid
     }
     self.soundQueue:AddSoundToQueue(soundData)
+
+    -- Save current quest sound data for dialog/frame sync option
+    currentQuestSoundData = soundData
 end
 
 function Addon:QUEST_COMPLETE()
@@ -174,11 +182,12 @@ function Addon:QUEST_COMPLETE()
         unitGUID = guid
     }
     self.soundQueue:AddSoundToQueue(soundData)
+
+    -- Save current quest sound data for dialog/frame sync option
+    currentQuestSoundData = soundData
 end
 
-function Addon:GOSSIP_SHOW()
-    local guid = Utils:GetNPCGUID()
-    local targetName = Utils:GetNPCName()
+function Addon:ShouldPlayGossip(guid, text)
     local npcKey = guid or "unknown"
 
     local gossipSeenForNPC = self.db.char.hasSeenGossipForNPC[npcKey]
@@ -198,8 +207,46 @@ function Addon:GOSSIP_SHOW()
         return
     end
 
+    return true, npcKey
+end
+
+function Addon:QUEST_GREETING()
+    local guid = Utils:GetNPCGUID()
+    local targetName = Utils:GetNPCName()
+    local greetingText = GetGreetingText()
+
+    local play, npcKey = self:ShouldPlayGossip(guid, greetingText)
+    if not play then
+        return
+    end
+
     -- Play the gossip sound
+    local soundData = {
+        event = Enums.SoundEvent.QuestGreeting,
+        name = targetName,
+        text = greetingText,
+        unitGUID = guid,
+        startCallback = function()
+            self.db.char.hasSeenGossipForNPC[npcKey] = true
+        end
+    }
+    self.soundQueue:AddSoundToQueue(soundData)
+
+    -- Save current gossip sound data for dialog/frame sync option
+    currentGossipSoundData = soundData
+end
+
+function Addon:GOSSIP_SHOW()
+    local guid = Utils:GetNPCGUID()
+    local targetName = Utils:GetNPCName()
     local gossipText = GetGossipText()
+
+    local play, npcKey = self:ShouldPlayGossip(guid, gossipText)
+    if not play then
+        return
+    end
+
+    -- Play the gossip sound
     local soundData = {
         event = Enums.SoundEvent.Gossip,
         name = targetName,
@@ -212,6 +259,9 @@ function Addon:GOSSIP_SHOW()
     }
     self.soundQueue:AddSoundToQueue(soundData)
 
+    -- Save current gossip sound data for dialog/frame sync option
+    currentGossipSoundData = soundData
+
     selectedGossipOption = nil
     lastGossipOptions = nil
     if C_GossipInfo and C_GossipInfo.GetOptions then
@@ -221,6 +271,18 @@ function Addon:GOSSIP_SHOW()
     end
 end
 
+function Addon:QUEST_FINISHED()
+    if Addon.db.profile.Audio.StopAudioOnDisengage and currentQuestSoundData then
+        self.soundQueue:RemoveSoundFromQueue(currentQuestSoundData)
+    end
+    currentQuestSoundData = nil
+end
+
 function Addon:GOSSIP_CLOSED()
+    if Addon.db.profile.Audio.StopAudioOnDisengage and currentGossipSoundData then
+        self.soundQueue:RemoveSoundFromQueue(currentGossipSoundData)
+    end
+    currentGossipSoundData = nil
+
     selectedGossipOption = nil
 end

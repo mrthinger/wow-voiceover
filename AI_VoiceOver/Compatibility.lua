@@ -608,9 +608,10 @@ elseif Version.IsLegacyWrath then
         animation:SetDuration(0.75)
         animation:SetChange(1)
         animation:SetSmoothing("OUT")
-        self.frame:HookScript("OnShow", function(self)
+        self.frame:HookScript("OnShow", function()
             fadeIn:Stop()
-            local duration = Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled and GetMusicFadeOutDuration() or 0
+            local soundData = self.soundQueue.sounds[1]
+            local duration = soundData and soundData.delay or 0
             if duration > 0 then
                 animation:SetDuration(duration)
                 fadeIn:Play()
@@ -634,10 +635,32 @@ elseif Version.IsRetailWrath then
         return _G["QuestLogListScrollFrameButton" .. index]
     end
 
+    function Utils:GetQuestLogTitleNormalText(index)
+        return _G["QuestLogListScrollFrameButton" .. index .. "NormalText"]
+    end
+
+    function Utils:GetQuestLogTitleCheck(index)
+        return _G["QuestLogListScrollFrameButton" .. index .. "Check"]
+    end
+
+    local QuestLogTitleButton_Resize = QuestLogTitleButton_Resize -- Store original function before LeatrixPlus's "Enhance quest log" hooks into it
+    local prefix
     function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
-        playButton:SetPoint("LEFT", questLogTitleFrame.normalText, "LEFT", 4, 0)
-        questLogTitleFrame.normalText:SetText([[|TInterface\AddOns\AI_VoiceOver\Textures\spacer:1:24|t]] ..
-            (questLogTitleFrame.normalText:GetText() or ""):trim())
+        if not prefix then
+            local text = normalText:GetText()
+            for i = 1, 20 do
+                normalText:SetText(string.rep(" ", i))
+                if normalText:GetStringWidth() >= 24 then
+                    prefix = normalText:GetText()
+                    break
+                end
+            end
+            prefix = prefix or "  "
+            normalText:SetText(text)
+        end
+
+        playButton:SetPoint("LEFT", normalText, "LEFT", 4, 0)
+        normalText:SetText(prefix .. (normalText:GetText() or ""):trim())
         QuestLogTitleButton_Resize(questLogTitleFrame)
     end
 

@@ -1,4 +1,4 @@
-from tts_cli.env_vars import MYSQL_HOST, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DATABASE
+from tts_cli.env_vars import MYSQL_HOST, MYSQL_PORT, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DATABASE
 import pymysql
 import io
 import zipfile
@@ -62,6 +62,7 @@ def execute_scripts_from_file(cursor, filename, progress_update_fn):
 def import_sql_files_to_database():
     db = pymysql.connect(
         host=MYSQL_HOST,
+        port=MYSQL_PORT,
         user=MYSQL_USER,
         password=MYSQL_PASSWORD
     )

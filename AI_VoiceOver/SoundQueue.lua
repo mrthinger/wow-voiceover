@@ -141,6 +141,10 @@ function SoundQueue:RemoveSoundFromQueue(soundData, finishedPlaying)
         end
     end
 
+    if not removedIndex then
+        return
+    end
+
     if soundData.stopCallback then
         soundData.stopCallback()
     end
