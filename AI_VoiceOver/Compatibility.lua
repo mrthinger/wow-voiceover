@@ -401,9 +401,6 @@ elseif Version.IsLegacyWrath then
             self:SetModel([[Interface\Buttons\TalkToMeQuestion_White.mdx]])
             oldSetCreature(self, id)
             self._awaitingModel = not HasModelLoaded(self)
-            if self._awaitingModel then
-                self:SetPosition(5, 0, 2)
-            end
         end
         local oldSetCamera = self.SetCamera
         function self:SetCamera(id)
@@ -415,11 +412,15 @@ elseif Version.IsLegacyWrath then
         self:HookScript("OnUpdate", function(self, elapsed)
             if self._awaitingModel and HasModelLoaded(self) then
                 self._awaitingModel = nil
+                self:SetModelScale(2)
                 self:SetPosition(0, 0, 0)
 
                 if self._sequence ~= 0 then
                     self:SetSequence(self._sequence)
                 end
+            elseif self._awaitingModel then
+                self:SetModelScale(0.71 / self:GetEffectiveScale())
+                self:SetPosition(5 * self:GetModelScale(), 0, 2 * self:GetModelScale())
             end
             if self._sequence ~= 0 and not self._awaitingModel then
                 self:SetSequenceTime(self._sequence, (GetTime() - self._sequenceStart) * 1000)

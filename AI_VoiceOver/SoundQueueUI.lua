@@ -273,6 +273,7 @@ function SoundQueueUI:InitPortrait()
     -- Create a 3D model
     self.frame.portrait.model = CreateFrame("DressUpModel", nil, self.frame.portrait)
     self.frame.portrait.model:SetAllPoints()
+    self.frame.portrait.model:SetModelScale(2)
     self.frame.portrait.model:HookScript("OnHide", function(self)
         self:ClearModel()
         self.oldCreatureID = nil
