@@ -3,6 +3,15 @@ setfenv(1, VoiceOver)
 local CLIENT_VERSION, _, _, INTERFACE_VERSION = GetBuildInfo()
 INTERFACE_VERSION = INTERFACE_VERSION or 0 -- 1.12 doesn't return this
 
+if not SOUNDKIT then
+    SOUNDKIT =
+    {
+        U_CHAT_SCROLL_BUTTON = "uChatScrollButton",
+        IG_MAINMENU_OPEN = "igMainMenuOpen",
+        IG_MAINMENU_CLOSE = "igMainMenuClose",
+    }
+end
+
 if not select then
     function _G.select(index, ...)
         local result = {}
@@ -42,6 +51,31 @@ if not string.gmatch then
     string.gmatch = string.gfind
 end
 
+if not hooksecurefunc then
+    function hooksecurefunc(table, name, hook)
+        -- hooksecurefunc([table], name, hook)
+        if not hook then
+            table = _G
+            name, hook = table, name
+        end
+
+        local old = table[name]
+        assert(type(old) == "function")
+        table[name] = function(...)
+            local result = { old(unpack(arg)) }
+            hook(unpack(arg))
+            return unpack(result)
+        end
+    end
+end
+
+hooksecurefunc(GameTooltip, "SetOwner", function(self, owner, anchor)
+    self._owner = owner
+end)
+function GameTooltip:GetOwner()
+    return self._owner
+end
+
 if not GetAddOnEnableState then
     function GetAddOnEnableState(character, addon)
         addon = addon or character -- GetAddOnEnableState([character], addon)
@@ -63,9 +97,24 @@ if not GetQuestID then
     local old_QUEST_DETAIL = Addon.QUEST_DETAIL
     local old_QUEST_PROGRESS = Addon.QUEST_PROGRESS
     local old_QUEST_COMPLETE = Addon.QUEST_COMPLETE
-    function Addon:QUEST_DETAIL()   source = "accept"   text = GetQuestText()    old_QUEST_DETAIL(self) end
-    function Addon:QUEST_PROGRESS() source = "progress" text = GetProgressText() old_QUEST_PROGRESS(self) end
-    function Addon:QUEST_COMPLETE() source = "complete" text = GetRewardText()   old_QUEST_COMPLETE(self) end
+    function Addon:QUEST_DETAIL()
+        source = "accept"
+        text = GetQuestText()
+        old_QUEST_DETAIL(self)
+    end
+
+    function Addon:QUEST_PROGRESS()
+        source = "progress"
+        text = GetProgressText()
+        old_QUEST_PROGRESS(self)
+    end
+
+    function Addon:QUEST_COMPLETE()
+        source = "complete"
+        text = GetRewardText()
+        old_QUEST_COMPLETE(self)
+    end
+
     function GetQuestID()
         local npcName = Utils:GetNPCName()
         if Utils:IsNPCPlayer() then
@@ -77,21 +126,128 @@ if not GetQuestID then
     end
 end
 
+local function hookModel(self)
+    hooksecurefunc(self, "ClearModel", function(self)
+        self._sequence = nil
+        self._sequenceStart = nil
+    end)
+    hooksecurefunc(self, "SetSequence", function(self, sequence)
+        self._sequence = sequence ~= 0 and sequence or nil
+        self._sequenceStart = GetTime()
+        self._progress = 0
+    end)
+    Utils:SafeHookScript(self, "OnUpdate", function(self, elapsed)
+        if self._sequence then
+            self._progress = self._progress + arg1
+            self:SetSequenceTime(self._sequence, self._progress * 1000)
+        end
+    end)
+end
+
+
 function CreateFrame(frameType, name, parent, template)
     local frame = _G.CreateFrame(frameType, name, parent, template)
     if not frame.SetResizeBounds then
         function frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
-            frame:SetMinResize(minWidth, minHeight)
+            self:SetMinResize(minWidth, minHeight)
             if maxWidth and maxHeight then
-                frame:SetMaxResize(maxWidth, maxHeight)
+                self:SetMaxResize(maxWidth, maxHeight)
             end
         end
     end
+    if frameType == "Model" or frameType == "PlayerModel" or frameType == "DressUpModel" then
+        if hookModel then
+            hookModel(frame)
+        end
+    end
+    if not frame.SetSize then
+        function frame:SetSize(width, height)
+            if not height then
+                self:SetWidth(width)
+                self:SetHeight(width)
+            else
+                self:SetWidth(width)
+                self:SetHeight(height)
+            end
+        end
+    end
+    if not frame.SetShown then
+        function frame:SetShown(isVisible)
+            if isVisible then
+                self:Show()
+            else
+                self:Hide()
+            end
+        end
+    end
+
+    -- setSize replacement didn't work for textures. Maybe we can get it working in the future
+    --     if not WOW_PROJECT_ID and INTERFACE_VERSION < 11300 then
+    --         print("replace")
+    --         local oldTexture = frame.CreateTexture
+
+    --         function frame:CreateTexture(name, layer)
+    -- print("b")
+
+    --             local texture = oldTexture(self, name, layer)
+    --             if not texture.SetSize then
+
+    --                 function texture:SetSize(w, h)
+    --                     print("replacesetsize")
+    --                     self:SetWidth(w)
+    --                     self:SetHeight(h)
+    --                 end
+    --             end
+    --             return texture
+    --         end
+    --     end
+
+    if not frame.GetNormalTexture then
+        local old = frame.SetNormalTexture
+        function frame:SetNormalTexture(path)
+            local texture = self:CreateTexture()
+            texture:SetTexture(path)
+            self._normalTexture = texture
+            old(self, texture)
+        end
+
+        function frame:GetNormalTexture()
+            return self._normalTexture
+        end
+    end
+
+    if not frame.GetPushedTexture then
+        local old = frame.SetPushedTexture
+        function frame:SetPushedTexture(path)
+            local texture = self:CreateTexture()
+            texture:SetTexture(path)
+            self._pushedTexture = texture
+            old(self, texture)
+        end
+
+        function frame:GetPushedTexture()
+            return self._pushedTexture
+        end
+    end
+
+    if not frame.GetHighlightTexture then
+        local old = frame.SetHighlightTexture
+        function frame:SetHighlightTexture(path)
+            local texture = self:CreateTexture()
+            texture:SetTexture(path)
+            self._highlightTexture = texture
+            old(self, texture)
+        end
+
+        function frame:GetHighlightTexture()
+            return self._highlightTexture
+        end
+    end
+
     return frame
 end
 
 if not WOW_PROJECT_ID and INTERFACE_VERSION < 11300 then
-
     function Utils:GetNPCName()
         return UnitName("npc")
     end
@@ -103,13 +259,11 @@ if not WOW_PROJECT_ID and INTERFACE_VERSION < 11300 then
     function Utils:IsNPCPlayer()
         return UnitIsPlayer("npc")
     end
-
 elseif not WOW_PROJECT_ID and CLIENT_VERSION == "3.3.5" then
 
 elseif WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 
 elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
-
     GetGossipText = C_GossipInfo.GetText
     GetNumGossipActiveQuests = C_GossipInfo.GetNumActiveQuests
     GetNumGossipAvailableQuests = C_GossipInfo.GetNumAvailableQuests
@@ -132,7 +286,6 @@ elseif WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
     hooksecurefunc(Addon, "OnInitialize", function()
         QuestLogListScrollFrame.update = QuestLog_Update
     end)
-
 elseif WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
 
 end

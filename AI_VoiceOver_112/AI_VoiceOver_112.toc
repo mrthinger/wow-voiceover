@@ -3,21 +3,28 @@
 ## Notes: Adds voiceovers to npcs.
 ## Version: 0.3
 ## SavedVariables: VoiceOverDB
-## SavedVariablesPerCharacter: VoiceOverDBPerChar
 
-
-
-Libs\AceLibrary\AceLibrary.lua
-Libs\AceOO\AceOO-2.0.lua
-Libs\AceEvent\AceEvent-2.0.lua
-Libs\AceDB\AceDB-2.0.lua
-Libs\AceAddon\AceAddon-2.0.lua
-Libs\AceConsole\AceConsole-2.0.lua
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\AceCore-3.0\AceCore-3.0.xml
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceGUI-3.0\widgets\widgets.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceTimer-3.0\AceTimer-3.0.xml
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 
 Environment.lua
 Common\Enums.lua
 Common\FuzzySearch.lua
 Utils.lua
+Options.lua
+SoundQueueUI.lua
 SoundQueue.lua
 Common\DataModules.lua
 VoiceOver.lua
