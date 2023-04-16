@@ -1,19 +1,12 @@
 --[[-----------------------------------------------------------------------------
 InteractiveLabel Widget
 -------------------------------------------------------------------------------]]
-local Type, Version = "InteractiveLabel", 20
+local Type, Version = "InteractiveLabel", 21
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
 local select, pairs = select, pairs
-
--- WoW APIs
-local CreateFrame, UIParent = CreateFrame, UIParent
-
--- Global vars/functions that we don't upvalue since they might get hooked, or upgraded
--- List them here for Mikk's FindGlobals script
--- GLOBALS: GameFontHighlightSmall
 
 --[[-----------------------------------------------------------------------------
 Scripts

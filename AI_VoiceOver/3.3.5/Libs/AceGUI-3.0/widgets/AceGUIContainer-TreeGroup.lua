@@ -2,14 +2,14 @@
 TreeGroup Container
 Container that uses a tree control to switch between groups.
 -------------------------------------------------------------------------------]]
-local Type, Version = "TreeGroup", 30
+local Type, Version = "TreeGroup", 43
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
 local next, pairs, ipairs, assert, type = next, pairs, ipairs, assert, type
 local math_min, math_max, floor = math.min, math.max, floor
-local select, tremove, unpack = select, table.remove, unpack
+local select, tremove, unpack, tconcat = select, table.remove, unpack, table.concat
 
 -- WoW APIs
 local CreateFrame, UIParent = CreateFrame, UIParent
@@ -34,7 +34,7 @@ do
 	function del(t)
 		for k in pairs(t) do
 			t[k] = nil
-		end	
+		end
 		pool[t] = true
 	end
 end
@@ -57,7 +57,6 @@ end
 local function UpdateButton(button, treeline, selected, canExpand, isExpanded)
 	local self = button.obj
 	local toggle = button.toggle
-	local frame = self.frame
 	local text = treeline.text or ""
 	local icon = treeline.icon
 	local iconCoords = treeline.iconCoords
@@ -65,7 +64,7 @@ local function UpdateButton(button, treeline, selected, canExpand, isExpanded)
 	local value = treeline.value
 	local uniquevalue = treeline.uniquevalue
 	local disabled = treeline.disabled
-	
+
 	button.treeline = treeline
 	button.value = value
 	button.uniquevalue = uniquevalue
@@ -76,8 +75,6 @@ local function UpdateButton(button, treeline, selected, canExpand, isExpanded)
 		button:UnlockHighlight()
 		button.selected = false
 	end
-	local normalTexture = button:GetNormalTexture()
-	local line = button.line
 	button.level = level
 	if ( level == 1 ) then
 		button:SetNormalFontObject("GameFontNormal")
@@ -88,7 +85,7 @@ local function UpdateButton(button, treeline, selected, canExpand, isExpanded)
 		button:SetHighlightFontObject("GameFontHighlightSmall")
 		button.text:SetPoint("LEFT", (icon and 16 or 0) + 8 * level, 2)
 	end
-	
+
 	if disabled then
 		button:EnableMouse(false)
 		button.text:SetText("|cff808080"..text..FONT_COLOR_CODE_CLOSE)
@@ -96,20 +93,20 @@ local function UpdateButton(button, treeline, selected, canExpand, isExpanded)
 		button.text:SetText(text)
 		button:EnableMouse(true)
 	end
-	
+
 	if icon then
 		button.icon:SetTexture(icon)
 		button.icon:SetPoint("LEFT", 8 * level, (level == 1) and 0 or 1)
 	else
 		button.icon:SetTexture(nil)
 	end
-	
+
 	if iconCoords then
 		button.icon:SetTexCoord(unpack(iconCoords))
 	else
 		button.icon:SetTexCoord(0, 1, 0, 1)
 	end
-	
+
 	if canExpand then
 		if not isExpanded then
 			toggle:SetNormalTexture("Interface\\Buttons\\UI-PlusButton-UP")
@@ -199,7 +196,6 @@ end
 
 local function Button_OnDoubleClick(button)
 	local self = button.obj
-	local status = self.status or self.localstatus
 	local status = (self.status or self.localstatus).groups
 	status[button.uniquevalue] = not status[button.uniquevalue]
 	self:RefreshTree()
@@ -269,18 +265,19 @@ end
 local function Dragger_OnMouseUp(frame)
 	local treeframe = frame:GetParent()
 	local self = treeframe.obj
-	local frame = treeframe:GetParent()
+	local treeframeParent = treeframe:GetParent()
 	treeframe:StopMovingOrSizing()
 	--treeframe:SetScript("OnUpdate", nil)
 	treeframe:SetUserPlaced(false)
 	--Without this :GetHeight will get stuck on the current height, causing the tree contents to not resize
 	treeframe:SetHeight(0)
-	treeframe:SetPoint("TOPLEFT", frame, "TOPLEFT",0,0)
-	treeframe:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT",0,0)
-	
+	treeframe:ClearAllPoints()
+	treeframe:SetPoint("TOPLEFT", treeframeParent, "TOPLEFT",0,0)
+	treeframe:SetPoint("BOTTOMLEFT", treeframeParent, "BOTTOMLEFT",0,0)
+
 	local status = self.status or self.localstatus
 	status.treewidth = treeframe:GetWidth()
-	
+
 	treeframe.obj:Fire("OnTreeResize",treeframe:GetWidth())
 	-- recalculate the content width
 	treeframe.obj:OnWidthSet(status.fullwidth)
@@ -335,6 +332,8 @@ local methods = {
 		button.toggle.button = button
 		button.toggle:SetScript("OnClick",Expand_OnClick)
 
+		button.text:SetHeight(14) -- Prevents text wrapping
+
 		return button
 	end,
 
@@ -350,7 +349,7 @@ local methods = {
 		if not status.treewidth then
 			status.treewidth = DEFAULT_TREE_WIDTH
 		end
-		if not status.treesizable then
+		if status.treesizable == nil then
 			status.treesizable = DEFAULT_TREE_SIZABLE
 		end
 		self:SetTreeWidth(status.treewidth,status.treesizable)
@@ -360,8 +359,8 @@ local methods = {
 	--sets the tree to be displayed
 	["SetTree"] = function(self, tree, filter)
 		self.filter = filter
-		if tree then 
-			assert(type(tree) == "table") 
+		if tree then
+			assert(type(tree) == "table")
 		end
 		self.tree = tree
 		self:RefreshTree()
@@ -369,8 +368,7 @@ local methods = {
 
 	["BuildLevel"] = function(self, tree, level, parent)
 		local groups = (self.status or self.localstatus).groups
-		local hasChildren = self.hasChildren
-		
+
 		for i, v in ipairs(tree) do
 			if v.children then
 				if not self.filter or ShouldDisplayLevel(v.children) then
@@ -385,8 +383,8 @@ local methods = {
 		end
 	end,
 
-	["RefreshTree"] = function(self)
-		local buttons = self.buttons 
+	["RefreshTree"] = function(self,scrollToSelection)
+		local buttons = self.buttons
 		local lines = self.lines
 
 		for i, v in ipairs(buttons) do
@@ -408,13 +406,19 @@ local methods = {
 
 		local treeframe = self.treeframe
 
+		status.scrollToSelection = status.scrollToSelection or scrollToSelection	-- needs to be cached in case the control hasn't been drawn yet (code bails out below)
+
 		self:BuildLevel(tree, 1)
 
 		local numlines = #lines
 
 		local maxlines = (floor(((self.treeframe:GetHeight()or 0) - 20 ) / 18))
+		if maxlines <= 0 then return end
 
 		local first, last
+
+		scrollToSelection = status.scrollToSelection
+		status.scrollToSelection = nil
 
 		if numlines <= maxlines then
 			--the whole tree fits in the frame
@@ -429,10 +433,34 @@ local methods = {
 			--check if we are scrolled down too far
 			if numlines - status.scrollvalue < maxlines then
 				status.scrollvalue = numlines - maxlines
-				self.scrollbar:SetValue(status.scrollvalue)
 			end
 			self.noupdate = nil
 			first, last = status.scrollvalue+1, status.scrollvalue + maxlines
+			--show selection?
+			if scrollToSelection and status.selected then
+				local show
+				for i,line in ipairs(lines) do	-- find the line number
+					if line.uniquevalue==status.selected then
+						show=i
+					end
+				end
+				if not show then
+					-- selection was deleted or something?
+				elseif show>=first and show<=last then
+					-- all good
+				else
+					-- scrolling needed!
+					if show<first then
+						status.scrollvalue = show-1
+					else
+						status.scrollvalue = show-maxlines
+					end
+					first, last = status.scrollvalue+1, status.scrollvalue + maxlines
+				end
+			end
+			if self.scrollbar:GetValue() ~= status.scrollvalue then
+				self.scrollbar:SetValue(status.scrollvalue)
+			end
 		end
 
 		local buttonnum = 1
@@ -446,13 +474,13 @@ local methods = {
 				button:SetParent(treeframe)
 				button:SetFrameLevel(treeframe:GetFrameLevel()+1)
 				button:ClearAllPoints()
-				if i == 1 then
+				if buttonnum == 1 then
 					if self.showscroll then
-						button:SetPoint("TOPRIGHT", self.treeframe,"TOPRIGHT",-22,-10)
-						button:SetPoint("TOPLEFT", self.treeframe, "TOPLEFT", 0, -10)
+						button:SetPoint("TOPRIGHT", -22, -10)
+						button:SetPoint("TOPLEFT", 0, -10)
 					else
-						button:SetPoint("TOPRIGHT", self.treeframe,"TOPRIGHT",0,-10)
-						button:SetPoint("TOPLEFT", self.treeframe, "TOPLEFT", 0, -10)
+						button:SetPoint("TOPRIGHT", 0, -10)
+						button:SetPoint("TOPLEFT", 0, -10)
 					end
 				else
 					button:SetPoint("TOPRIGHT", buttons[buttonnum-1], "BOTTOMRIGHT",0,0)
@@ -464,8 +492,9 @@ local methods = {
 			button:Show()
 			buttonnum = buttonnum + 1
 		end
+
 	end,
-	
+
 	["SetSelected"] = function(self, value)
 		local status = self.status or self.localstatus
 		if status.selected ~= value then
@@ -478,11 +507,12 @@ local methods = {
 		self.filter = false
 		local status = self.status or self.localstatus
 		local groups = status.groups
-		for i = 1, select('#', ...) do
-			groups[BuildUniqueValue(select(i, ...))] = true
+		local path = {...}
+		for i = 1, #path do
+			groups[tconcat(path, "\001", 1, i)] = true
 		end
 		status.selected = uniquevalue
-		self:RefreshTree()
+		self:RefreshTree(true)
 		self:Fire("OnGroupSelected", uniquevalue)
 	end,
 
@@ -514,16 +544,16 @@ local methods = {
 		local treeframe = self.treeframe
 		local status = self.status or self.localstatus
 		status.fullwidth = width
-		
+
 		local contentwidth = width - status.treewidth - 20
 		if contentwidth < 0 then
 			contentwidth = 0
 		end
 		content:SetWidth(contentwidth)
 		content.width = contentwidth
-		
+
 		local maxtreewidth = math_min(400, width - 50)
-		
+
 		if maxtreewidth > 100 and status.treewidth > maxtreewidth then
 			self:SetTreeWidth(maxtreewidth, status.treesizable)
 		end
@@ -549,20 +579,25 @@ local methods = {
 				treewidth = DEFAULT_TREE_WIDTH
 			else
 				resizable = false
-				treewidth = DEFAULT_TREE_WIDTH 
+				treewidth = DEFAULT_TREE_WIDTH
 			end
 		end
 		self.treeframe:SetWidth(treewidth)
 		self.dragger:EnableMouse(resizable)
-		
+
 		local status = self.status or self.localstatus
 		status.treewidth = treewidth
 		status.treesizable = resizable
-		
+
 		-- recalculate the content width
 		if status.fullwidth then
 			self:OnWidthSet(status.fullwidth)
 		end
+	end,
+
+	["GetTreeWidth"] = function(self)
+		local status = self.status or self.localstatus
+		return status.treewidth or DEFAULT_TREE_WIDTH
 	end,
 
 	["LayoutFinished"] = function(self, width, height)

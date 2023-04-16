@@ -33,11 +33,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 --
 
 local DBICON10 = "LibDBIcon-1.0"
-local DBICON10_MINOR = tonumber(("$Rev: 15 $"):match("(%d+)"))
+local DBICON10_MINOR = tonumber(("$Rev: 21 $"):match("(%d+)"))
 if not LibStub then error(DBICON10 .. " requires LibStub.") end
 local ldb = LibStub("LibDataBroker-1.1", true)
 if not ldb then error(DBICON10 .. " requires LibDataBroker-1.1.") end
-local lib = LibStub:NewLibrary(DBICON10, DBICON10_MINOR)
+local lib, oldminor = LibStub:NewLibrary(DBICON10, DBICON10_MINOR)
 if not lib then return end
 
 lib.disabled = lib.disabled or nil
@@ -47,9 +47,33 @@ lib.notCreated = lib.notCreated or {}
 
 function lib:IconCallback(event, name, key, value, dataobj)
 	if lib.objects[name] then
-		lib.objects[name].icon:SetTexture(dataobj.icon)
+		if key == "icon" then
+			lib.objects[name].icon:SetTexture(dataobj and dataobj.icon or value)
+		elseif key == "iconCoords" then
+			lib.objects[name].icon:UpdateCoord()
+		elseif key == "iconR" then
+			local _, g, b = lib.objects[name].icon:GetVertexColor()
+			lib.objects[name].icon:SetVertexColor(value, g, b)
+		elseif key == "iconG" then
+			local r, _, b = lib.objects[name].icon:GetVertexColor()
+			lib.objects[name].icon:SetVertexColor(r, value, b)
+		elseif key == "iconB" then
+			local r, g = lib.objects[name].icon:GetVertexColor()
+			lib.objects[name].icon:SetVertexColor(r, g, value)
+		end
 	end
 end
+
+if oldminor and oldminor < 21 then
+	if not lib.newCallbackRegistered then
+		ldb.RegisterCallback(lib, "LibDataBroker_AttributeChanged__iconCoords", "IconCallback")
+		ldb.RegisterCallback(lib, "LibDataBroker_AttributeChanged__iconR", "IconCallback")
+		ldb.RegisterCallback(lib, "LibDataBroker_AttributeChanged__iconG", "IconCallback")
+		ldb.RegisterCallback(lib, "LibDataBroker_AttributeChanged__iconB", "IconCallback")
+		lib.newCallbackRegistered = true
+	end
+end
+
 if not lib.callbackRegistered then
 	ldb.RegisterCallback(lib, "LibDataBroker_AttributeChanged__icon", "IconCallback")
 	lib.callbackRegistered = true
@@ -165,7 +189,11 @@ local function createButton(name, object, db)
 	overlay:SetWidth(53); overlay:SetHeight(53)
 	overlay:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 	overlay:SetPoint("TOPLEFT")
-	local icon = button:CreateTexture(nil, "BACKGROUND")
+	local background = button:CreateTexture(nil, "BACKGROUND")
+	background:SetSize(20, 20)
+	background:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+	background:SetPoint("TOPLEFT", 7, -5)
+	local icon = button:CreateTexture(nil, "ARTWORK")
 	icon:SetWidth(20); icon:SetHeight(20)
 	icon:SetTexture(object.icon)
 	icon:SetTexCoord(0.05, 0.95, 0.05, 0.95)

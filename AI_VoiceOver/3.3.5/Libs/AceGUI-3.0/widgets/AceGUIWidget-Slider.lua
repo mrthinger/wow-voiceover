@@ -57,10 +57,9 @@ local function Frame_OnMouseDown(frame)
 	AceGUI:ClearFocus()
 end
 
-local function Slider_OnValueChanged(frame)
+local function Slider_OnValueChanged(frame, newvalue)
 	local self = frame.obj
 	if not frame.setup then
-		local newvalue = frame:GetValue()
 		if newvalue ~= self.value and not self.disabled then
 			self.value = newvalue
 			self:Fire("OnValueChanged", newvalue)
@@ -102,7 +101,7 @@ local function EditBox_OnEnterPressed(frame)
 	else
 		value = tonumber(value)
 	end
-	
+
 	if value then
 		PlaySound("igMainMenuOptionCheckBoxOn")
 		self.slider:SetValue(value)

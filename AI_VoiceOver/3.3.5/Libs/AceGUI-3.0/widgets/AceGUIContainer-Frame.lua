@@ -1,7 +1,7 @@
 --[[-----------------------------------------------------------------------------
 Frame Container
 -------------------------------------------------------------------------------]]
-local Type, Version = "Frame", 21
+local Type, Version = "Frame", 25
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -23,6 +23,10 @@ Scripts
 local function Button_OnClick(frame)
 	PlaySound("gsTitleOptionExit")
 	frame.obj:Hide()
+end
+
+local function Frame_OnShow(frame)
+	frame.obj:Fire("OnShow")
 end
 
 local function Frame_OnClose(frame)
@@ -83,6 +87,7 @@ local methods = {
 		self:SetStatusText()
 		self:ApplyStatus()
 		self:Show()
+        self:EnableResize(true)
 	end,
 
 	["OnRelease"] = function(self)
@@ -112,6 +117,7 @@ local methods = {
 
 	["SetTitle"] = function(self, title)
 		self.titletext:SetText(title)
+		self.titlebg:SetWidth((self.titletext:GetWidth() or 0) + 10)
 	end,
 
 	["SetStatusText"] = function(self, text)
@@ -124,6 +130,13 @@ local methods = {
 
 	["Show"] = function(self)
 		self.frame:Show()
+	end,
+
+	["EnableResize"] = function(self, state)
+		local func = state and "Show" or "Hide"
+		self.sizer_se[func](self.sizer_se)
+		self.sizer_s[func](self.sizer_s)
+		self.sizer_e[func](self.sizer_e)
 	end,
 
 	-- called to set an external table to store status in
@@ -177,6 +190,7 @@ local function Constructor()
 	frame:SetBackdropColor(0, 0, 0, 1)
 	frame:SetMinResize(400, 200)
 	frame:SetToplevel(true)
+	frame:SetScript("OnShow", Frame_OnShow)
 	frame:SetScript("OnHide", Frame_OnClose)
 	frame:SetScript("OnMouseDown", Frame_OnMouseDown)
 
@@ -283,6 +297,10 @@ local function Constructor()
 		localstatus = {},
 		titletext   = titletext,
 		statustext  = statustext,
+		titlebg     = titlebg,
+		sizer_se    = sizer_se,
+		sizer_s     = sizer_s,
+		sizer_e     = sizer_e,
 		content     = content,
 		frame       = frame,
 		type        = Type

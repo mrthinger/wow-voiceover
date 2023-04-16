@@ -1,7 +1,7 @@
 --[[-----------------------------------------------------------------------------
 Checkbox Widget
 -------------------------------------------------------------------------------]]
-local Type, Version = "CheckBox", 21
+local Type, Version = "CheckBox", 26
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -26,7 +26,7 @@ local function AlignImage(self)
 		self.text:SetPoint("LEFT", self.checkbg, "RIGHT")
 		self.text:SetPoint("RIGHT")
 	else
-		self.text:SetPoint("LEFT", self.image,"RIGHT", 1, 0)
+		self.text:SetPoint("LEFT", self.image, "RIGHT", 1, 0)
 		self.text:SetPoint("RIGHT")
 	end
 end
@@ -91,7 +91,7 @@ local methods = {
 		if self.desc then
 			self.desc:SetWidth(width - 30)
 			if self.desc:GetText() and self.desc:GetText() ~= "" then
-				self:SetHeight(28 + self.desc:GetHeight())
+				self:SetHeight(28 + self.desc:GetStringHeight())
 			end
 		end
 	end,
@@ -102,6 +102,9 @@ local methods = {
 			self.frame:Disable()
 			self.text:SetTextColor(0.5, 0.5, 0.5)
 			SetDesaturation(self.check, true)
+			if self.desc then
+				self.desc:SetTextColor(0.5, 0.5, 0.5)
+			end
 		else
 			self.frame:Enable()
 			self.text:SetTextColor(1, 1, 1)
@@ -110,23 +113,26 @@ local methods = {
 			else
 				SetDesaturation(self.check, false)
 			end
+			if self.desc then
+				self.desc:SetTextColor(1, 1, 1)
+			end
 		end
 	end,
 
-	["SetValue"] = function(self,value)
+	["SetValue"] = function(self, value)
 		local check = self.check
 		self.checked = value
 		if value then
-			SetDesaturation(self.check, false)
-			self.check:Show()
+			SetDesaturation(check, false)
+			check:Show()
 		else
 			--Nil is the unknown tristate value
 			if self.tristate and value == nil then
-				SetDesaturation(self.check, true)
-				self.check:Show()
+				SetDesaturation(check, true)
+				check:Show()
 			else
-				SetDesaturation(self.check, false)
-				self.check:Hide()
+				SetDesaturation(check, false)
+				check:Hide()
 			end
 		end
 		self:SetDisabled(self.disabled)
@@ -197,6 +203,7 @@ local methods = {
 				desc:ClearAllPoints()
 				desc:SetPoint("TOPLEFT", self.checkbg, "TOPRIGHT", 5, -21)
 				desc:SetWidth(self.frame.width - 30)
+				desc:SetPoint("RIGHT", self.frame, "RIGHT", -30, 0)
 				desc:SetJustifyH("LEFT")
 				desc:SetJustifyV("TOP")
 				self.desc = desc
@@ -204,7 +211,7 @@ local methods = {
 			self.desc:Show()
 			--self.text:SetFontObject(GameFontNormal)
 			self.desc:SetText(desc)
-			self:SetHeight(28 + self.desc:GetHeight())
+			self:SetHeight(28 + self.desc:GetStringHeight())
 		else
 			if self.desc then
 				self.desc:SetText("")
@@ -214,11 +221,11 @@ local methods = {
 			self:SetHeight(24)
 		end
 	end,
-	
+
 	["SetImage"] = function(self, path, ...)
 		local image = self.image
 		image:SetTexture(path)
-		
+
 		if image:GetTexture() then
 			local n = select("#", ...)
 			if n == 4 or n == 8 then

@@ -2,7 +2,7 @@
 DropdownGroup Container
 Container controlled by a dropdown on the top.
 -------------------------------------------------------------------------------]]
-local Type, Version = "DropdownGroup", 20
+local Type, Version = "DropdownGroup", 21
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -50,8 +50,8 @@ local methods = {
 		end
 	end,
 
-	["SetGroupList"] = function(self,list)
-		self.dropdown:SetList(list)
+	["SetGroupList"] = function(self,list,order)
+		self.dropdown:SetList(list,order)
 	end,
 
 	["SetStatusTable"] = function(self, status)
@@ -150,7 +150,7 @@ local function Constructor()
 		widget[method] = func
 	end
 	dropdown.parentgroup = widget
-	
+
 	return AceGUI:RegisterAsContainer(widget)
 end
 
