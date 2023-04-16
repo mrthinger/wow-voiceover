@@ -31,6 +31,7 @@ local defaults = {
                 Volume = 1,
                 FadeOutMusic = 0.5,
             },
+            HDModels = false,
         },
         DebugEnabled = false,
     },

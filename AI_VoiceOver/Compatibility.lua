@@ -371,6 +371,10 @@ elseif Version.IsLegacyWrath then
         return soundData.fileName and soundData.fileName ~= "missingSound" and soundData.length ~= nil
     end
 
+    function Utils:GetCurrentModelSet()
+        return Addon.db.profile.LegacyWrath.HDModels and "HD" or "Original"
+    end
+
     function hookModel(self)
         local function HasModelLoaded(self)
             local model = self:GetModel()

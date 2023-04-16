@@ -303,7 +303,6 @@ local LegacyWrathTab = Version.IsLegacyWrath and {
                     type = "toggle",
                     order = 200,
                     name = "Enable",
-                    disabled = false,
                     get = function(info) return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled end,
                     set = function(info, value) Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled = value end,
                 },
@@ -344,6 +343,22 @@ local LegacyWrathTab = Version.IsLegacyWrath and {
                             set = function(info, value) Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Volume = value end,
                         },
                     }
+                },
+            }
+        },
+        Portraits = {
+            type = "group",
+            order = 200,
+            name = "Animated Portraits",
+            inline = true,
+            args = {
+                HDModels = {
+                    type = "toggle",
+                    order = 100,
+                    name = "I Have HD Models",
+                    desc = "Turn this on if you're using patches with HD character models. This will correct the animation timings for HD models of Undead and Goblin NPCs.",
+                    get = function(info) return Addon.db.profile.LegacyWrath.HDModels end,
+                    set = function(info, value) Addon.db.profile.LegacyWrath.HDModels = value end,
                 },
             }
         },
