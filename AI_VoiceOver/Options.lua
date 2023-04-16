@@ -8,6 +8,10 @@ local AceDBOptions = LibStub("AceDBOptions-3.0")
 ------------------------------------------------------------
 -- Construction of the options table for AceConfigDialog --
 
+local function SortAceConfigOptions(a, b)
+    return (a.order or 100) < (b.order or 100)
+end
+
 -- Needed to preserve order (modern AceGUI has support for custom sorting of dropdown items, but old versions don't)
 local FRAME_STRATAS =
 {
@@ -24,7 +28,7 @@ function slashCommandsHandler:values(info)
         self.indexToName = { "Nothing" }
         self.indexToCommand = { "" }
         self.commandToIndex = { [""] = 1 }
-        for command, handler in Utils:Ordered(Options.table.args.SlashCommands.args, function(a, b) return (a.order or 100) < (b.order or 100) end) do
+        for command, handler in Utils:Ordered(Options.table.args.SlashCommands.args, SortAceConfigOptions) do
             if not handler.dropdownHidden then
                 table.insert(self.indexToName, handler.name)
                 table.insert(self.indexToCommand, command)
@@ -516,7 +520,12 @@ function Options:Initialize()
     -- Create options table
     Debug:Print("Registering options table...", "Options")
     LibStub("AceConfig-3.0"):RegisterOptionsTable("VoiceOver", self.table, "vo")
-    AceConfigDialog:AddToBlizOptions("VoiceOver", "VoiceOver")
+    AceConfigDialog:AddToBlizOptions("VoiceOver")
+    for key, tab in Utils:Ordered(Options.table.args, SortAceConfigOptions) do
+        if not tab.hidden and not tab.dialogHidden then
+            AceConfigDialog:AddToBlizOptions("VoiceOver", tab.name, "VoiceOver", key)
+        end
+    end
     Debug:Print("Done!", "Options")
 
     -- Create the option frame
