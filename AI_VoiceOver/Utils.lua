@@ -176,3 +176,8 @@ function Utils:GetModelAnimationDuration(model, animation)
     local duration = animations and animations[animation]
     return duration and duration / 1000
 end
+
+function Utils:CreateNPCModelFrame()
+end
+function Utils:FreeNPCModelFrame(frame)
+end

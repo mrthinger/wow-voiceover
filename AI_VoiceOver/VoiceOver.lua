@@ -14,7 +14,7 @@ local defaults = {
         Audio = {
             GossipFrequency = Enums.GossipFrequency.OncePerQuestNPC,
             SoundChannel = Enums.SoundChannel.Master,
-            AutoToggleDialog = Version:IsRetailOrAboveLegacyVersion(60100),
+            AutoToggleDialog = Version.IsLegacyVanilla or Version:IsRetailOrAboveLegacyVersion(60100),
             StopAudioOnDisengage = false,
         },
         MinimapButton = {
@@ -39,6 +39,7 @@ local defaults = {
     char = {
         IsPaused = false,
         hasSeenGossipForNPC = {},
+        RecentQuestTitleToID = Version:IsBelowLegacyVersion(30300) and {},
     }
 }
 
@@ -129,12 +130,30 @@ function Addon:RefreshConfig()
     self.soundQueue.ui:RefreshConfig()
 end
 
+local function GossipSoundDataAdded(soundData)
+    soundData.modelFrame = Utils:CreateNPCModelFrame()
+
+    -- Save current gossip sound data for dialog/frame sync option
+    currentGossipSoundData = soundData
+end
+
+local function QuestSoundDataAdded(soundData)
+    soundData.modelFrame = Utils:CreateNPCModelFrame()
+
+    -- Save current quest sound data for dialog/frame sync option
+    currentQuestSoundData = soundData
+end
+
 function Addon:QUEST_DETAIL()
     local questID = GetQuestID()
     local questTitle = GetTitleText()
     local questText = GetQuestText()
     local guid = Utils:GetNPCGUID()
     local targetName = Utils:GetNPCName()
+
+    if Addon.db.char.RecentQuestTitleToID and questID ~= 0 then
+        Addon.db.char.RecentQuestTitleToID[questTitle] = questID
+    end
 
     local type = guid and Utils:GetGUIDType(guid)
     if type == Enums.GUID.Item then
@@ -158,12 +177,10 @@ function Addon:QUEST_DETAIL()
         name = targetName,
         title = questTitle,
         text = questText,
-        unitGUID = guid
+        unitGUID = guid,
+        addedCallback = QuestSoundDataAdded,
     }
     self.soundQueue:AddSoundToQueue(soundData)
-
-    -- Save current quest sound data for dialog/frame sync option
-    currentQuestSoundData = soundData
 end
 
 function Addon:QUEST_COMPLETE()
@@ -172,6 +189,11 @@ function Addon:QUEST_COMPLETE()
     local questText = GetRewardText()
     local guid = Utils:GetNPCGUID()
     local targetName = Utils:GetNPCName()
+
+    if Addon.db.char.RecentQuestTitleToID and questID ~= 0 then
+        Addon.db.char.RecentQuestTitleToID[questTitle] = questID
+    end
+
     -- print("QUEST_COMPLETE", questID, questTitle);
     local soundData = {
         event = Enums.SoundEvent.QuestComplete,
@@ -179,12 +201,10 @@ function Addon:QUEST_COMPLETE()
         name = targetName,
         title = questTitle,
         text = questText,
-        unitGUID = guid
+        unitGUID = guid,
+        addedCallback = QuestSoundDataAdded,
     }
     self.soundQueue:AddSoundToQueue(soundData)
-
-    -- Save current quest sound data for dialog/frame sync option
-    currentQuestSoundData = soundData
 end
 
 function Addon:ShouldPlayGossip(guid, text)
@@ -226,14 +246,12 @@ function Addon:QUEST_GREETING()
         name = targetName,
         text = greetingText,
         unitGUID = guid,
+        addedCallback = GossipSoundDataAdded,
         startCallback = function()
             self.db.char.hasSeenGossipForNPC[npcKey] = true
         end
     }
     self.soundQueue:AddSoundToQueue(soundData)
-
-    -- Save current gossip sound data for dialog/frame sync option
-    currentGossipSoundData = soundData
 end
 
 function Addon:GOSSIP_SHOW()
@@ -253,14 +271,12 @@ function Addon:GOSSIP_SHOW()
         title = selectedGossipOption and format([["%s"]], selectedGossipOption),
         text = gossipText,
         unitGUID = guid,
+        addedCallback = GossipSoundDataAdded,
         startCallback = function()
             self.db.char.hasSeenGossipForNPC[npcKey] = true
         end
     }
     self.soundQueue:AddSoundToQueue(soundData)
-
-    -- Save current gossip sound data for dialog/frame sync option
-    currentGossipSoundData = soundData
 
     selectedGossipOption = nil
     lastGossipOptions = nil

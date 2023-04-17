@@ -100,15 +100,16 @@ function SoundQueueUI:InitDisplay()
     end
 
     -- Create NPC name text
-    local SKIP_GOSSIP_BUTTON_OFFSET = -5
+    local SKIP_GOSSIP_BUTTON_OFFSET = -6
     self.frame.container.name = self.frame.container:CreateFontString(nil, "ARTWORK", "VoiceOverNameFont")
     self.frame.container.name:SetPoint("TOPLEFT")
     self.frame.container.name:SetWordWrap(false)
     self.frame.container.name:SetTextColor(214 / 255, 214 / 255, 214 / 255)
     function self.frame.container.name:Update()
+        local containerWidth = Version.IsLegacyVanilla and ((self:GetParent():GetRight() or 0) - (self:GetParent():GetLeft() or 0)) or self:GetParent():GetWidth() -- 1.12 quirk
         self:SetWidth(0)
         self:SetText(self:GetText())
-        self:SetWidth(math.min(self:GetParent():GetWidth() - (soundQueueUI.frame.container.stopGossip:IsShown() and 32 + SKIP_GOSSIP_BUTTON_OFFSET or 0), self:GetStringWidth()))
+        self:SetWidth(math.min(containerWidth - (soundQueueUI.frame.container.stopGossip:IsShown() and 32 + SKIP_GOSSIP_BUTTON_OFFSET or 0), self:GetStringWidth() + 1))
     end
 
     -- Create Stop Gossip button
@@ -212,7 +213,15 @@ function SoundQueueUI:InitPortraitLine()
     end)
 end
 
-local function ShouldShowBookForGUID(guid)
+local function ShouldShowBookFor(soundData)
+    if soundData.modelFrame then
+        if type(soundData.modelFrame:GetModel()) ~= "string" then
+            return true -- Show book for missing and unloaded models
+        end
+        return false
+    end
+
+    local guid = soundData.unitGUID
     local type = guid and Utils:GetGUIDType(guid)
     if not type then
         return true -- A fallback in case the GUID is missing
@@ -239,18 +248,79 @@ function SoundQueueUI:InitPortrait()
         if not soundData then
             self.model:Hide()
             self.book:Hide()
-        elseif ShouldShowBookForGUID(soundData.unitGUID) then
+        elseif ShouldShowBookFor(soundData) then
             self.model:Hide()
             self.book:Show()
         else
+            self.model = soundData.modelFrame or self.model
+
+            if not self.model._initialized then
+                self.model._initialized = true
+                self.model:HookScript("OnHide", function(self)
+                    self:ClearModel()
+                    self.oldCreatureID = nil
+                    self.animation = nil
+                    self.animDuration = nil
+                    self.animDelay = nil
+                    self.animtimer = nil
+                end)
+                self.model:HookScript("OnUpdate", function(self, elapsed)
+                    -- Refresh camera and animation in case the model wasn't loaded instantly
+                    self:SetCustomCamera(0)
+                    if self.animation and not self.animDuration then
+                        self.animDuration = Utils:GetModelAnimationDuration(self:GetModelFileID(), self.animation)
+                    end
+                    -- Wait out the delay, if any
+                    if self.animDelay and not Addon.db.char.IsPaused then
+                        self.animDelay = self.animDelay - elapsed
+                        if self.animDelay < 0 then
+                            self.animDelay = nil
+                        else
+                            return
+                        end
+                    end
+                    local isPaused = not soundQueueUI.soundQueue:IsPlaying()
+                    if not WAIT_FOR_ANIMATION_FINISH_BEFORE_IDLE and self.animation and self.animation ~= 0 and not self.animDelay and isPaused then
+                        -- Switch to idle animation as soon as the VO is paused
+                        self.animation = 0
+                        self.animtimer = nil
+                        self:SetAnimation(self.animation)
+                    end
+                    -- Loop the animation when the timer has reached the animation duration
+                    if self.animation and GetTime() - (self.animtimer or 0) >= (self.animDuration or 2) then
+                        if isPaused then
+                            if WAIT_FOR_ANIMATION_FINISH_BEFORE_IDLE and self.animation ~= 0 and not self.animDelay then
+                                -- Switch to idle animation after the current animation is finished
+                                self.animation = 0
+                                self.animtimer = nil
+                                self:SetAnimation(self.animation)
+                            end
+                        else
+                            -- Restart the current animation
+                            self.animtimer = GetTime()
+                            self:SetAnimation(self.animation)
+                        end
+                    end
+                    self.wasPaused = isPaused
+                end)
+            end
+
             self.model:Show()
             self.book:Hide()
 
-            local creatureID = Utils:GetIDFromGUID(soundData.unitGUID)
+            self.model:SetAllPoints()
+
+            local creatureID
+            if soundData.unitGUID then
+                creatureID = Utils:GetIDFromGUID(soundData.unitGUID)
+            else
+                creatureID = soundData.id -- 1.12 case, just a uniqueness check, to avoid resetting animtimer if something in the queue changed, but not the currently displayed model
+            end
 
             if creatureID ~= self.model.oldCreatureID then
                 self.model:SetCreature(creatureID)
                 self.model:SetCustomCamera(0)
+                self.model:SetModelScale(2)
 
                 self.model.animation = 60
                 self.model.animDuration = nil
@@ -272,55 +342,6 @@ function SoundQueueUI:InitPortrait()
 
     -- Create a 3D model
     self.frame.portrait.model = CreateFrame("DressUpModel", nil, self.frame.portrait)
-    self.frame.portrait.model:SetAllPoints()
-    self.frame.portrait.model:SetModelScale(2)
-    self.frame.portrait.model:HookScript("OnHide", function(self)
-        self:ClearModel()
-        self.oldCreatureID = nil
-        self.animation = nil
-        self.animDuration = nil
-        self.animDelay = nil
-        self.animtimer = nil
-    end)
-    self.frame.portrait.model:HookScript("OnUpdate", function(self, elapsed)
-        -- Refresh camera and animation in case the model wasn't loaded instantly
-        self:SetCustomCamera(0)
-        if self.animation and not self.animDuration then
-            self.animDuration = Utils:GetModelAnimationDuration(self:GetModelFileID(), self.animation)
-        end
-        -- Wait out the delay, if any
-        if self.animDelay and not Addon.db.char.IsPaused then
-            self.animDelay = self.animDelay - elapsed
-            if self.animDelay < 0 then
-                self.animDelay = nil
-            else
-                return
-            end
-        end
-        local isPaused = not soundQueueUI.soundQueue:IsPlaying()
-        if not WAIT_FOR_ANIMATION_FINISH_BEFORE_IDLE and self.animation and self.animation ~= 0 and not self.animDelay and isPaused then
-            -- Switch to idle animation as soon as the VO is paused
-            self.animation = 0
-            self.animtimer = nil
-            self:SetAnimation(self.animation)
-        end
-        -- Loop the animation when the timer has reached the animation duration
-        if self.animation and GetTime() - (self.animtimer or 0) >= (self.animDuration or 2) then
-            if isPaused then
-                if WAIT_FOR_ANIMATION_FINISH_BEFORE_IDLE and self.animation ~= 0 and not self.animDelay then
-                    -- Switch to idle animation after the current animation is finished
-                    self.animation = 0
-                    self.animtimer = nil
-                    self:SetAnimation(self.animation)
-                end
-            else
-                -- Restart the current animation
-                self.animtimer = GetTime()
-                self:SetAnimation(self.animation)
-            end
-        end
-        self.wasPaused = isPaused
-    end)
 
     -- Create a book icon replacement when the 3D portrait is unavailable
     self.frame.portrait.book = self.frame.portrait:CreateTexture(nil, "ARTWORK")
@@ -562,7 +583,8 @@ function SoundQueueUI:CreateButton(i)
         self.textWidget:ClearAllPoints()
         self.textWidget:SetPoint("LEFT", 16 + 5, 0)
         self.textWidget:SetText(soundData.title)
-        self:SetWidth(math.min(self:GetParent():GetWidth(), 16 + 5 + self.textWidget:GetWidth()))
+        local containerWidth = Version.IsLegacyVanilla and ((self:GetParent():GetRight() or 0) - (self:GetParent():GetLeft() or 0)) or self:GetParent():GetWidth() -- 1.12 quirk
+        self:SetWidth(math.min(containerWidth, 16 + 5 + self.textWidget:GetWidth() + 1))
         self.textWidget:SetPoint("RIGHT")
 
         if hovered then
@@ -611,14 +633,15 @@ function SoundQueueUI:CreateButton(i)
 end
 
 function SoundQueueUI:UpdateSoundQueueDisplay()
-    self.frame:SetShown(not Addon.db.profile.SoundQueueUI.HideFrame and #self.soundQueue.sounds > 0)
+    self.frame:SetShown(not Addon.db.profile.SoundQueueUI.HideFrame and getn(self.soundQueue.sounds) > 0)
 
     self:UpdatePauseDisplay()
 
     self.frame.portrait:Configure(self.soundQueue.sounds[1])
 
-    self.frame.container:Show()
     self.frame.container:SetHeight(self.frame:GetHeight())
+    self.frame.container:Hide() -- 1.12 quirk
+    self.frame.container:Show()
     local gossipCount
     local lastButtonIndex = 0
     local lastContent
@@ -642,17 +665,17 @@ function SoundQueueUI:UpdateSoundQueueDisplay()
             break
         end
     end
-    for i = lastButtonIndex + 1, #self.frame.container.buttons do
+    for i = lastButtonIndex + 1, getn(self.frame.container.buttons) do
         self.frame.container.buttons[i]:Configure(nil)
     end
 
-    self.frame.container.stopGossip:SetGossipCount(gossipCount or #self.soundQueue.sounds)
+    self.frame.container.stopGossip:SetGossipCount(gossipCount or getn(self.soundQueue.sounds))
     self.frame.container.name:Update()
 
     -- Align the container vertically to the middle
     if lastContent then
-        local contentTop = self.frame.container.name:GetTop()
-        local contentBottom = lastContent:GetBottom()
+        local contentTop = self.frame.container.name:GetTop() or 0
+        local contentBottom = lastContent:GetBottom() or 0
         self.frame.container:SetHeight(contentTop - contentBottom)
     else
         self.frame.container:Hide()

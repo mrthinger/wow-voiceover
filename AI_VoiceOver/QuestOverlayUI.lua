@@ -18,8 +18,8 @@ function QuestOverlayUI:CreatePlayButton(questID)
     playButton:SetWidth(20)
     playButton:SetHeight(20)
     playButton:SetHitRectInsets(2, 2, 2, 2)
-    playButton:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
-    playButton:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    playButton:SetNormalTexture([[Interface\AddOns\AI_VoiceOver\Textures\QuestLogPlayButton]])
+    playButton:SetDisabledTexture([[Interface\AddOns\AI_VoiceOver\Textures\QuestLogPlayButton]])
     playButton:GetDisabledTexture():SetDesaturated(true)
     playButton:GetDisabledTexture():SetAlpha(0.33)
     playButton:SetHighlightTexture("Interface\\BUTTONS\\UI-Panel-MinimizeButton-Highlight")
@@ -43,7 +43,7 @@ function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalT
 
     playButton:SetPoint("LEFT", normalText, "LEFT", 4, 0)
 
-    local formatedText = prefix .. (normalText:GetText() or ""):trim()
+    local formatedText = prefix .. string.trim(normalText:GetText() or "")
 
     normalText:SetText(formatedText)
     QuestLogDummyText:SetText(formatedText)
@@ -52,8 +52,7 @@ function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalT
 end
 
 function QuestOverlayUI:UpdatePlayButtonTexture(questID, isPlaying)
-    local texturePath = isPlaying and "Interface\\TIMEMANAGER\\ResetButton" or
-    "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up"
+    local texturePath = isPlaying and [[Interface\AddOns\AI_VoiceOver\Textures\QuestLogStopButton]] or [[Interface\AddOns\AI_VoiceOver\Textures\QuestLogPlayButton]]
 
     if self.questPlayButtons[questID] then
         self.questPlayButtons[questID]:SetNormalTexture(texturePath)
@@ -134,11 +133,11 @@ function QuestOverlayUI:UpdateQuestOverlayUI()
         local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID = GetQuestLogTitle(
             questIndex)
 
-        if not self.questPlayButtons[questID] then
-            self:CreatePlayButton(questID)
-        end
-
         if not isHeader then
+            if not self.questPlayButtons[questID] then
+                self:CreatePlayButton(questID)
+            end
+
             if DataModules:PrepareSound({ event = Enums.SoundEvent.QuestAccept, questID = questID }) then
                 self:UpdatePlayButton(title, questID, questLogTitleFrame, normalText, questCheck)
                 self.questPlayButtons[questID]:Enable()

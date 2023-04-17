@@ -15,4 +15,5 @@ setfenv(1, VoiceOver) must be added to every .lua file to allow it to work withi
 and this Environment file must be loaded before all others
 ]]
 
-VoiceOver = setmetatable({}, { __index = _G })
+local _G = getfenv(0)
+VoiceOver = setmetatable({ _G = _G }, { __index = _G })

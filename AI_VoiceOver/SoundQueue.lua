@@ -23,7 +23,7 @@ function SoundQueue:AddSoundToQueue(soundData)
         end
         
         if soundData.stopCallback then
-            soundData.stopCallback()
+            soundData.stopCallback(soundData)
         end
         return
     end
@@ -53,8 +53,12 @@ function SoundQueue:AddSoundToQueue(soundData)
 
     table.insert(self.sounds, soundData)
 
+    if soundData.addedCallback then
+        soundData.addedCallback(soundData)
+    end
+
     -- If the sound queue only contains one sound, play it immediately
-    if #self.sounds == 1 and not Addon.db.char.IsPaused then
+    if getn(self.sounds) == 1 and not Addon.db.char.IsPaused then
         self:PlaySound(soundData)
     end
 
@@ -64,12 +68,12 @@ end
 function SoundQueue:PlaySound(soundData)
     Utils:PlaySound(soundData)
 
-    if Addon.db.profile.Audio.AutoToggleDialog then
+    if Addon.db.profile.Audio.AutoToggleDialog and Version:IsRetailOrAboveLegacyVersion(60100) then
         SetCVar("Sound_EnableDialog", 0)
     end
 
     if soundData.startCallback then
-        soundData.startCallback()
+        soundData.startCallback(soundData)
     end
     local nextSoundTimer = Addon:ScheduleTimer(function()
         self:RemoveSoundFromQueue(soundData, true)
@@ -145,8 +149,10 @@ function SoundQueue:RemoveSoundFromQueue(soundData, finishedPlaying)
         return
     end
 
+    Utils:FreeNPCModelFrame(soundData.modelFrame)
+
     if soundData.stopCallback then
-        soundData.stopCallback()
+        soundData.stopCallback(soundData)
     end
 
     if removedIndex == 1 and not Addon.db.char.IsPaused then
@@ -159,7 +165,7 @@ function SoundQueue:RemoveSoundFromQueue(soundData, finishedPlaying)
         end
     end
 
-    if #self.sounds == 0 and Addon.db.profile.Audio.AutoToggleDialog then
+    if getn(self.sounds) == 0 and Addon.db.profile.Audio.AutoToggleDialog and Version:IsRetailOrAboveLegacyVersion(60100) then
         SetCVar("Sound_EnableDialog", 1)
     end
 
@@ -167,7 +173,7 @@ function SoundQueue:RemoveSoundFromQueue(soundData, finishedPlaying)
 end
 
 function SoundQueue:RemoveAllSoundsFromQueue()
-    for i = #self.sounds, 1, -1 do
+    for i = getn(self.sounds), 1, -1 do
         local queuedSound = self.sounds[i]
         if queuedSound then
             if i == 1 and not self:CanBePaused() then

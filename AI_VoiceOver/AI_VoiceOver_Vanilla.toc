@@ -1,0 +1,9 @@
+## Interface: 11403
+## Title: VoiceOver
+## Notes: Adds voiceovers to npcs.
+## Version: 1.3.0
+## SavedVariables: VoiceOverDB
+## X-Part-Of: VoiceOver
+
+embeds.xml
+addon.xml
