@@ -346,7 +346,8 @@ function SoundQueueUI:InitPortrait()
     -- Create a book icon replacement when the 3D portrait is unavailable
     self.frame.portrait.book = self.frame.portrait:CreateTexture(nil, "ARTWORK")
     self.frame.portrait.book:SetAllPoints()
-    self.frame.portrait.book:SetTexture([[Interface\Icons\INV_Misc_Book_09]])
+    self.frame.portrait.book:SetTexture([[Interface\AddOns\AI_VoiceOver\Textures\Book]])
+    self.frame.portrait.book:SetTexCoord(8 / 256, 248 / 256, 8 / 256, 248 / 256)
     self.frame.portrait.book:Hide()
 
     -- Create a play/pause button with a semi-transparent background (mimicing the portrait frame's background to create an illusion of the 3D model becoming semi-transparent)
