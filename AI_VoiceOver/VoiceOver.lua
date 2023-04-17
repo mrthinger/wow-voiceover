@@ -14,7 +14,7 @@ local defaults = {
         Audio = {
             GossipFrequency = Enums.GossipFrequency.OncePerQuestNPC,
             SoundChannel = Enums.SoundChannel.Master,
-            AutoToggleDialog = true,
+            AutoToggleDialog = Version:IsRetailOrAboveLegacyVersion(60100),
             StopAudioOnDisengage = false,
         },
         MinimapButton = {
@@ -25,6 +25,14 @@ local defaults = {
                 MiddleButton = "PlayPause",
                 RightButton = "Clear",
             }
+        },
+        LegacyWrath = Version.IsLegacyWrath and {
+            PlayOnMusicChannel = {
+                Enabled = true,
+                Volume = 1,
+                FadeOutMusic = 0.5,
+            },
+            HDModels = false,
         },
         DebugEnabled = false,
     },
@@ -42,6 +50,7 @@ local currentGossipSoundData
 function Addon:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("VoiceOverDB", defaults)
     self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
+    self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
 
     self.soundQueue = SoundQueue:new()
     self.questOverlayUI = QuestOverlayUI:new(self.soundQueue)

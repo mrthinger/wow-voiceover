@@ -52,17 +52,17 @@ function SoundQueue:AddSoundToQueue(soundData)
     soundData.id = self.soundIdCounter
 
     table.insert(self.sounds, soundData)
-    self.ui:UpdateSoundQueueDisplay()
 
     -- If the sound queue only contains one sound, play it immediately
     if #self.sounds == 1 and not Addon.db.char.IsPaused then
         self:PlaySound(soundData)
     end
+
+    self.ui:UpdateSoundQueueDisplay()
 end
 
 function SoundQueue:PlaySound(soundData)
-    local channel = Enums.SoundChannel:GetName(Addon.db.profile.Audio.SoundChannel)
-    local willPlay, handle = PlaySoundFile(soundData.filePath, channel)
+    Utils:PlaySound(soundData)
 
     if Addon.db.profile.Audio.AutoToggleDialog then
         SetCVar("Sound_EnableDialog", 0)
@@ -72,11 +72,19 @@ function SoundQueue:PlaySound(soundData)
         soundData.startCallback()
     end
     local nextSoundTimer = Addon:ScheduleTimer(function()
-        self:RemoveSoundFromQueue(soundData)
-    end, soundData.length + 0.55)
+        self:RemoveSoundFromQueue(soundData, true)
+    end, (soundData.delay or 0) + soundData.length + 0.55)
 
     soundData.nextSoundTimer = nextSoundTimer
-    soundData.handle = handle
+end
+
+function SoundQueue:IsPlaying()
+    local currentSound = self.sounds[1]
+    return currentSound and currentSound.nextSoundTimer
+end
+
+function SoundQueue:CanBePaused()
+    return not self:IsPlaying() or self.sounds[1].handle
 end
 
 function SoundQueue:PauseQueue()
@@ -86,10 +94,11 @@ function SoundQueue:PauseQueue()
 
     Addon.db.char.IsPaused = true
 
-    if #self.sounds > 0 then
-        local currentSound = self.sounds[1]
-        StopSound(currentSound.handle)
+    local currentSound = self.sounds[1]
+    if currentSound and self:CanBePaused() then
+        Utils:StopSound(currentSound)
         Addon:CancelTimer(currentSound.nextSoundTimer)
+        currentSound.nextSoundTimer = nil
     end
 
     self.ui:UpdatePauseDisplay()
@@ -101,12 +110,13 @@ function SoundQueue:ResumeQueue()
     end
 
     Addon.db.char.IsPaused = false
-    if #self.sounds > 0 then
-        local currentSound = self.sounds[1]
+
+    local currentSound = self.sounds[1]
+    if currentSound and self:CanBePaused() then
         self:PlaySound(currentSound)
     end
 
-    self.ui:UpdatePauseDisplay()
+    self.ui:UpdateSoundQueueDisplay()
 end
 
 function SoundQueue:TogglePauseQueue()
@@ -117,10 +127,14 @@ function SoundQueue:TogglePauseQueue()
     end
 end
 
-function SoundQueue:RemoveSoundFromQueue(soundData)
+function SoundQueue:RemoveSoundFromQueue(soundData, finishedPlaying)
     local removedIndex = nil
     for index, queuedSound in ipairs(self.sounds) do
         if queuedSound.id == soundData.id then
+            if index == 1 and not self:CanBePaused() and not finishedPlaying then
+                return
+            end
+
             removedIndex = index
             table.remove(self.sounds, index)
             break
@@ -136,11 +150,11 @@ function SoundQueue:RemoveSoundFromQueue(soundData)
     end
 
     if removedIndex == 1 and not Addon.db.char.IsPaused then
-        StopSound(soundData.handle)
+        Utils:StopSound(soundData)
         Addon:CancelTimer(soundData.nextSoundTimer)
 
-        if #self.sounds > 0 then
-            local nextSoundData = self.sounds[1]
+        local nextSoundData = self.sounds[1]
+        if nextSoundData then
             self:PlaySound(nextSoundData)
         end
     end
@@ -154,8 +168,13 @@ end
 
 function SoundQueue:RemoveAllSoundsFromQueue()
     for i = #self.sounds, 1, -1 do
-        if (self.sounds[i]) then
-            self:RemoveSoundFromQueue(self.sounds[i])
+        local queuedSound = self.sounds[i]
+        if queuedSound then
+            if i == 1 and not self:CanBePaused() then
+                return
+            end
+
+            self:RemoveSoundFromQueue(queuedSound)
         end
     end
 end

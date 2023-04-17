@@ -8,6 +8,10 @@ local AceDBOptions = LibStub("AceDBOptions-3.0")
 ------------------------------------------------------------
 -- Construction of the options table for AceConfigDialog --
 
+local function SortAceConfigOptions(a, b)
+    return (a.order or 100) < (b.order or 100)
+end
+
 -- Needed to preserve order (modern AceGUI has support for custom sorting of dropdown items, but old versions don't)
 local FRAME_STRATAS =
 {
@@ -24,7 +28,7 @@ function slashCommandsHandler:values(info)
         self.indexToName = { "Nothing" }
         self.indexToCommand = { "" }
         self.commandToIndex = { [""] = 1 }
-        for command, handler in Utils:Ordered(Options.table.args.SlashCommands.args, function(a, b) return (a.order or 100) < (b.order or 100) end) do
+        for command, handler in Utils:Ordered(Options.table.args.SlashCommands.args, SortAceConfigOptions) do
             if not handler.dropdownHidden then
                 table.insert(self.indexToName, handler.name)
                 table.insert(self.indexToCommand, command)
@@ -214,7 +218,7 @@ local GeneralTab =
             inline = true,
             name = "Audio",
             args = {
-                SoundChannel = {
+                SoundChannel = Version:IsRetailOrAboveLegacyVersion(40000) and {
                     type = "select",
                     width = 0.75,
                     order = 1,
@@ -246,22 +250,10 @@ local GeneralTab =
                         Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
-                LineBreak2 = { type = "description", name = "", order = 4 },
-                ToggleSyncToWindowState = {
-                    type = "toggle",
-                    order = 5,
-                    width = 2,
-                    name = "Sync Dialog to Window State",
-                    desc = "VoiceOver dialog will automatically stop when the gossip/quest window is closed.",
-                    get = function(info) return Addon.db.profile.Audio.StopAudioOnDisengage end,
-                    set = function(info, value)
-                        Addon.db.profile.Audio.StopAudioOnDisengage = value
-                    end,
-                },
-                AutoToggleDialog = {
+                AutoToggleDialog = Version:IsRetailOrAboveLegacyVersion(60100) and {
                     type = "toggle",
                     width = 2.25,
-                    order = 6,
+                    order = 4,
                     name = "Mute Vocal NPCs Greetings While VoiceOver is Playing",
                     desc = "While VoiceOver is playing, the Dialog channel will be muted.",
                     get = function(info) return Addon.db.profile.Audio.AutoToggleDialog end,
@@ -271,6 +263,18 @@ local GeneralTab =
                         if Addon.db.profile.Audio.AutoToggleDialog then
                             SetCVar("Sound_EnableDialog", 1)
                         end
+                    end,
+                },
+                LineBreak2 = { type = "description", name = "", order = 5 },
+                ToggleSyncToWindowState = {
+                    type = "toggle",
+                    order = 6,
+                    width = 2,
+                    name = "Sync Dialog to Window State",
+                    desc = "VoiceOver dialog will automatically stop when the gossip/quest window is closed.",
+                    get = function(info) return Addon.db.profile.Audio.StopAudioOnDisengage end,
+                    set = function(info, value)
+                        Addon.db.profile.Audio.StopAudioOnDisengage = value
                     end,
                 },
             }
@@ -292,6 +296,88 @@ local GeneralTab =
                 },
             }
         }
+    }
+}
+
+local LegacyWrathTab = Version.IsLegacyWrath and {
+    type = "group",
+    name = "3.3.5 Backport",
+    order = 19,
+    args = {
+        PlayOnMusicChannel = {
+            type = "group",
+            order = 100,
+            name = "Play Voiceovers on Music Channel",
+            inline = true,
+            args = {
+                Description = {
+                    type = "description",
+                    order = 100,
+                    name = "3.3.5 client lacks the ability to stop addon sounds at will. As a workaround, you can play the voiceovers on the music channel instead, which, unlike sounds, can be stopped. Regular background music will not be playing throughout the duration of voiceovers.|n|nIf you normally play with music disabled - it will be temporarily enabled during voiceovers, but no actual background music will be played.",
+                },
+                Enabled = {
+                    type = "toggle",
+                    order = 200,
+                    name = "Enable",
+                    get = function(info) return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled end,
+                    set = function(info, value) Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled = value end,
+                },
+                Disabled = {
+                    type = "description",
+                    order = 300,
+                    name = format("With this option disabled you %swill not be able to pause|r voiceovers after they start playing. Attempting to pause will instead %1$spause the voiceover queue|r once the current sound has finished playing.", RED_FONT_COLOR_CODE),
+                    hidden = function(info) return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled end,
+                },
+                Settings = {
+                    type = "group",
+                    order = 400,
+                    name = "",
+                    inline = true,
+                    hidden = function(info) return not Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled end,
+                    args = {
+                        FadeOutMusic = {
+                            type = "range",
+                            order = 100,
+                            name = "Music Fade Out (secs)",
+                            desc = "Background music will fade out over this number of seconds before playing voiceovers. Has no effect if in-game music is disabled or muted.",
+                            min = 0,
+                            softMax = 2,
+                            bigStep = 0.05,
+                            get = function(info) return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.FadeOutMusic end,
+                            set = function(info, value) Addon.db.profile.LegacyWrath.PlayOnMusicChannel.FadeOutMusic = value end,
+                        },
+                        Volume = {
+                            type = "range",
+                            order = 200,
+                            name = "Voiceover Volume",
+                            desc = "Music channel volume will be temporarily adjusted to this value while the voiceovers are playing.",
+                            min = 0,
+                            max = 1,
+                            bigStep = 0.01,
+                            isPercent = true,
+                            get = function(info) return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Volume end,
+                            set = function(info, value) Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Volume = value end,
+                        },
+                    }
+                },
+            }
+        },
+        Portraits = {
+            type = "group",
+            order = 200,
+            name = "Animated Portraits",
+            inline = true,
+            args = {
+                HDModels = {
+                    type = "toggle",
+                    order = 100,
+                    name = "I Have HD Models",
+                    desc = "Turn this on if you're using patches with HD character models. This will correct the animation timings for HD models of Undead and Goblin NPCs.",
+                    get = function(info) return Addon.db.profile.LegacyWrath.HDModels end,
+                    set = function(info, value) Addon.db.profile.LegacyWrath.HDModels = value end,
+                },
+            }
+        },
     }
 }
 
@@ -378,6 +464,7 @@ Options.table = {
     childGroups = "tab",
     args = {
         General = GeneralTab,
+        LegacyWrath = LegacyWrathTab,
         DataModules = DataModulesTab,
         Profiles = nil, -- Filled in Options:OnInitialize, order is implicity 100
 
@@ -445,7 +532,12 @@ function Options:Initialize()
     -- Create options table
     Debug:Print("Registering options table...", "Options")
     LibStub("AceConfig-3.0"):RegisterOptionsTable("VoiceOver", self.table, "vo")
-    AceConfigDialog:AddToBlizOptions("VoiceOver", "VoiceOver")
+    AceConfigDialog:AddToBlizOptions("VoiceOver")
+    for key, tab in Utils:Ordered(Options.table.args, SortAceConfigOptions) do
+        if not tab.hidden and not tab.dialogHidden then
+            AceConfigDialog:AddToBlizOptions("VoiceOver", tab.name, "VoiceOver", key)
+        end
+    end
     Debug:Print("Done!", "Options")
 
     -- Create the option frame

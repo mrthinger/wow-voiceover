@@ -45,6 +45,17 @@ function Utils:WillSoundPlay(soundData)
     return willPlay
 end
 
+function Utils:PlaySound(soundData)
+    local channel = Enums.SoundChannel:GetName(Addon.db.profile.Audio.SoundChannel)
+    local willPlay, handle = PlaySoundFile(soundData.filePath, channel)
+    soundData.handle = handle
+end
+
+function Utils:StopSound(soundData)
+    StopSound(soundData.handle)
+    soundData.handle = nil
+end
+
 function Utils:GetQuestLogScrollOffset()
     return FauxScrollFrame_GetOffset(QuestLogListScrollFrame)
 end
