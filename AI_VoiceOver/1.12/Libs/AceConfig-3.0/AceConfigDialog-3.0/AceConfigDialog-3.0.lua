@@ -4,7 +4,7 @@
 -- @release $Id: AceConfigDialog-3.0.lua 1139 2016-07-03 07:43:51Z nevcairiel $
 
 local LibStub = LibStub
-local MAJOR, MINOR = "AceConfigDialog-3.0", 65
+local MAJOR, MINOR = "AceConfigDialog-3.0", 66
 local AceConfigDialog, oldminor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not AceConfigDialog then return end
@@ -1205,6 +1205,8 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 								radio:SetWidth(width_multiplier * 2)
 							elseif width == "half" then
 								radio:SetWidth(width_multiplier / 2)
+							elseif (type(width) == "number") then
+								radio:SetWidth(width_multiplier * width)
 							elseif width == "full" then
 								radio.width = "fill"
 							else
@@ -1269,6 +1271,8 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 							control:SetWidth(width_multiplier * 2)
 						elseif width == "half" then
 							control:SetWidth(width_multiplier / 2)
+						elseif (type(width) == "number") then
+							control:SetWidth(width_multiplier * width)
 						elseif width == "full" then
 							control.width = "fill"
 						else
@@ -1305,6 +1309,8 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 								check:SetWidth(width_multiplier * 2)
 							elseif width == "half" then
 								check:SetWidth(width_multiplier / 2)
+							elseif (type(width) == "number") then
+								check:SetWidth(width_multiplier * width)
 							elseif width == "full" then
 								check.width = "fill"
 							else
@@ -1386,6 +1392,8 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 							control:SetWidth(width_multiplier * 2)
 						elseif width == "half" then
 							control:SetWidth(width_multiplier / 2)
+						elseif (type(width) == "number") then
+							control:SetWidth(width_multiplier * width)
 						elseif width == "full" then
 							control.width = "fill"
 						else

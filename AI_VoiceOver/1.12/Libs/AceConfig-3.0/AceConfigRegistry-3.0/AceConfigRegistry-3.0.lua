@@ -9,7 +9,7 @@
 -- @class file
 -- @name AceConfigRegistry-3.0
 -- @release $Id: AceConfigRegistry-3.0.lua 1139 2016-07-03 07:43:51Z nevcairiel $
-local MAJOR, MINOR = "AceConfigRegistry-3.0", 16
+local MAJOR, MINOR = "AceConfigRegistry-3.0", 17
 local AceConfigRegistry = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not AceConfigRegistry then return end
@@ -67,6 +67,7 @@ local optmethodbool={["nil"]=true,["string"]=true,["function"]=true,["boolean"]=
 local opttable={["nil"]=true,["table"]=true,  _="table"}
 local optbool={["nil"]=true,["boolean"]=true,  _="boolean"}
 local optboolnumber={["nil"]=true,["boolean"]=true,["number"]=true,  _="boolean or number"}
+local optstringnumber={["nil"]=true,["string"]=true,["number"]=true, _="string or number"}
 
 local basekeys={
 	type=isstring,
@@ -90,7 +91,7 @@ local basekeys={
 	set=optmethodfalse,
 	func=optmethodfalse,
 	arg={["*"]=true},
-	width=optstring,
+	width=optstringnumber,
 }
 
 local typedkeys={

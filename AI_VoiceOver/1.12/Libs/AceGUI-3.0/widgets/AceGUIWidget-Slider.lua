@@ -2,7 +2,7 @@
 Slider Widget
 Graphical Slider, like, for Range values.
 -------------------------------------------------------------------------------]]
-local Type, Version = "Slider", 22
+local Type, Version = "Slider", 23
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -101,7 +101,7 @@ local function EditBox_OnEnterPressed()
 	local self = this.obj
 	local value = this:GetText()
 	if self.ispercent then
-		value = value:gsub('%%', '')
+		value = string.gsub(value, '%%', '')
 		value = tonumber(value) / 100
 	else
 		value = tonumber(value)

@@ -93,11 +93,14 @@ local function getAnchors(frame)
 end
 
 local function onEnter(self)
+	self = this
 	if isDraggingButton then return end
 
 	for _, button in next, lib.objects do
 		if button.showOnMouseover then
-			button.fadeOut:Stop()
+			if button.fadeOut then
+				button.fadeOut:Stop()
+			end
 			button:SetAlpha(1)
 		end
 	end
@@ -114,12 +117,17 @@ local function onEnter(self)
 end
 
 local function onLeave(self)
+	self = this
 	lib.tooltip:Hide()
 
 	if not isDraggingButton then
 		for _, button in next, lib.objects do
 			if button.showOnMouseover then
-				button.fadeOut:Play()
+				if button.fadeOut then
+					button.fadeOut:Play()
+				else
+					button:SetAlpha(0)
+				end
 			end
 		end
 	end
@@ -175,40 +183,45 @@ do
 end
 
 local function onClick(self, b)
+	self, b = this, arg1
 	if self.dataObject.OnClick then
 		self.dataObject.OnClick(self, b)
 	end
 end
 
 local function onMouseDown(self)
+	self = this
 	self.isMouseDown = true
 	self.icon:UpdateCoord()
 end
 
 local function onMouseUp(self)
+	self = this
 	self.isMouseDown = false
 	self.icon:UpdateCoord()
 end
 
 do
-	local deg, atan2 = math.deg, math.atan2
+	local deg, atan2, mod = math.deg, math.atan2, math.mod
 	local function onUpdate(self)
+		self = this
 		local mx, my = Minimap:GetCenter()
 		local px, py = GetCursorPosition()
 		local scale = Minimap:GetEffectiveScale()
 		px, py = px / scale, py / scale
 		local pos = 225
 		if self.db then
-			pos = deg(atan2(py - my, px - mx)) % 360
+			pos = mod(deg(atan2(py - my, px - mx)), 360)
 			self.db.minimapPos = pos
 		else
-			pos = deg(atan2(py - my, px - mx)) % 360
+			pos = mod(deg(atan2(py - my, px - mx)), 360)
 			self.minimapPos = pos
 		end
 		updatePosition(self, pos)
 	end
 
 	function onDragStart(self)
+		self = this
 		self:LockHighlight()
 		self.isMouseDown = true
 		self.icon:UpdateCoord()
@@ -217,7 +230,9 @@ do
 		lib.tooltip:Hide()
 		for _, button in next, lib.objects do
 			if button.showOnMouseover then
-				button.fadeOut:Stop()
+				if button.fadeOut then
+					button.fadeOut:Stop()
+				end
 				button:SetAlpha(1)
 			end
 		end
@@ -225,6 +240,7 @@ do
 end
 
 local function onDragStop(self)
+	self = this
 	self:SetScript("OnUpdate", nil)
 	self.isMouseDown = false
 	self.icon:UpdateCoord()
@@ -232,7 +248,11 @@ local function onDragStop(self)
 	isDraggingButton = false
 	for _, button in next, lib.objects do
 		if button.showOnMouseover then
-			button.fadeOut:Play()
+			if button.fadeOut then
+				button.fadeOut:Play()
+			else
+				button:SetAlpha(0)
+			end
 		end
 	end
 end
@@ -254,20 +274,24 @@ local function createButton(name, object, db)
 	button.db = db
 	button:SetFrameStrata("MEDIUM")
 	button:SetFrameLevel(8)
-	button:SetSize(31, 31)
-	button:RegisterForClicks("anyUp")
+	button:SetWidth(31)
+	button:SetHeight(31)
+	button:RegisterForClicks("LeftButtonUp", "MiddleButtonUp", "RightButtonUp")
 	button:RegisterForDrag("LeftButton")
 	button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 	local overlay = button:CreateTexture(nil, "OVERLAY")
-	overlay:SetSize(53, 53)
+	overlay:SetWidth(53)
+	overlay:SetHeight(53)
 	overlay:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
-	overlay:SetPoint("TOPLEFT")
+	overlay:SetPoint("TOPLEFT", 0, 0)
 	local background = button:CreateTexture(nil, "BACKGROUND")
-	background:SetSize(20, 20)
-	background:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+	background:SetWidth(20)
+	background:SetHeight(20)
+	background:SetTexture("Interface\\AddOns\\AI_VoiceOver_112_Libs\\Libs\\LibDBIcon-1.0\\UI-Minimap-Background")
 	background:SetPoint("TOPLEFT", 7, -5)
 	local icon = button:CreateTexture(nil, "ARTWORK")
-	icon:SetSize(17, 17)
+	icon:SetWidth(17)
+	icon:SetHeight(17)
 	icon:SetTexture(object.icon)
 	icon:SetPoint("TOPLEFT", 7, -6)
 	button.icon = icon
@@ -289,16 +313,18 @@ local function createButton(name, object, db)
 	button:SetScript("OnMouseDown", onMouseDown)
 	button:SetScript("OnMouseUp", onMouseUp)
 
-	button.fadeOut = button:CreateAnimationGroup()
-	local animOut = button.fadeOut:CreateAnimation("Alpha")
-	animOut:SetOrder(1)
-	animOut:SetDuration(0.2)
-	animOut:SetChange(-1)
-	animOut:SetStartDelay(1)
-	animOut:SetScript("OnFinished", function()
-		animOut:Stop()
-		button:SetAlpha(0)
-	end)
+	if button.CreateAnimationGroup then
+		button.fadeOut = button:CreateAnimationGroup()
+		local animOut = button.fadeOut:CreateAnimation("Alpha")
+		animOut:SetOrder(1)
+		animOut:SetDuration(0.2)
+		animOut:SetChange(-1)
+		animOut:SetStartDelay(1)
+		animOut:SetScript("OnFinished", function()
+			animOut:Stop()
+			button:SetAlpha(0)
+		end)
+	end
 
 	lib.objects[name] = button
 
@@ -327,6 +353,7 @@ end
 if not lib.loggedIn then
 	local f = CreateFrame("Frame")
 	f:SetScript("OnEvent", function(f)
+		f = this
 		for _, button in next, lib.objects do
 			updatePosition(button, button.db and button.db.minimapPos)
 			if not button.db or not button.db.hide then
@@ -430,7 +457,9 @@ do
 		if isDraggingButton then return end
 		for _, button in next, lib.objects do
 			if button.showOnMouseover then
-				button.fadeOut:Stop()
+				if button.fadeOut then
+					button.fadeOut:Stop()
+				end
 				button:SetAlpha(1)
 			end
 		end
@@ -439,23 +468,33 @@ do
 		if isDraggingButton then return end
 		for _, button in next, lib.objects do
 			if button.showOnMouseover then
-				button.fadeOut:Play()
+				if button.fadeOut then
+					button.fadeOut:Play()
+				else
+					button:SetAlpha(0)
+				end
 			end
 		end
 	end
-	Minimap:HookScript("OnEnter", OnMinimapEnter)
-	Minimap:HookScript("OnLeave", OnMinimapLeave)
+	local oldOnMinimapEnter = Minimap:GetScript("OnEnter")
+	local oldOnMinimapLeave = Minimap:GetScript("OnLeave")
+	Minimap:SetScript("OnEnter", function() if oldOnMinimapEnter then oldOnMinimapEnter() end OnMinimapEnter() end)
+	Minimap:SetScript("OnLeave", function() if oldOnMinimapLeave then oldOnMinimapLeave() end OnMinimapLeave() end)
 
 	function lib:ShowOnEnter(name, value)
 		local button = lib.objects[name]
 		if button then
 			if value then
 				button.showOnMouseover = true
-				button.fadeOut:Stop()
+				if button.fadeOut then
+					button.fadeOut:Stop()
+				end
 				button:SetAlpha(0)
 			else
 				button.showOnMouseover = false
-				button.fadeOut:Stop()
+				if button.fadeOut then
+					button.fadeOut:Stop()
+				end
 				button:SetAlpha(1)
 			end
 		end
@@ -465,7 +504,7 @@ end
 function lib:GetButtonList()
 	local t = {}
 	for name in next, lib.objects do
-		t[#t+1] = name
+		t[getn(t)+1] = name
 	end
 	return t
 end
@@ -497,7 +536,7 @@ for name, button in next, lib.objects do
 	button:SetScript("OnMouseDown", onMouseDown)
 	button:SetScript("OnMouseUp", onMouseUp)
 
-	if not button.fadeOut then -- Upgrade to 39
+	if not button.fadeOut and button.CreateAnimationGroup then -- Upgrade to 39
 		button.fadeOut = button:CreateAnimationGroup()
 		local animOut = button.fadeOut:CreateAnimation("Alpha")
 		animOut:SetOrder(1)
