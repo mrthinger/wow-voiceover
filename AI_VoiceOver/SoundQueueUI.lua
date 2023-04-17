@@ -328,7 +328,7 @@ function SoundQueueUI:InitPortrait()
                 self.model.animtimer = nil
 
                 self.model.oldCreatureID = creatureID
-            elseif self.model.wasPaused then
+            elseif self.model.wasPaused and soundQueueUI.soundQueue:IsPlaying() then
                 self.model.animation = 60
                 self.model.animDelay = soundData.delay
             end
