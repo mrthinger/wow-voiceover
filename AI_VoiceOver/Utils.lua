@@ -177,7 +177,7 @@ function Utils:GetModelAnimationDuration(model, animation)
     return duration and duration / 1000
 end
 
-function Utils:CreateNPCModelFrame()
+function Utils:CreateNPCModelFrame(soundData)
 end
-function Utils:FreeNPCModelFrame(frame)
+function Utils:FreeNPCModelFrame(soundData)
 end

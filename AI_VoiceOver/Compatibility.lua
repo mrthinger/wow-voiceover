@@ -454,7 +454,11 @@ if Version.IsLegacyVanilla then
     end
 
     local modelFramePool = {}
-    function Utils:CreateNPCModelFrame()
+    function Utils:CreateNPCModelFrame(soundData)
+        if soundData.modelFrame then
+            return
+        end
+
         local frame
         for _, pooled in ipairs(modelFramePool) do
             if not pooled._inUse then
@@ -474,11 +478,18 @@ if Version.IsLegacyVanilla then
         frame:SetSize(1, 1)
         frame:Show()
         frame:SetUnit("npc")
-        return frame
+
+        soundData.modelFrame = frame
     end
-    function Utils:FreeNPCModelFrame(frame)
+    function Utils:FreeNPCModelFrame(soundData)
+        local frame = soundData.modelFrame
         if not frame then
             return
+        end
+        soundData.modelFrame = nil
+
+        if Addon.soundQueue.ui.frame.portrait.model == frame then
+            Addon.soundQueue.ui.frame.portrait.model = Addon.soundQueue.ui.frame.portrait.defaultModel
         end
 
         frame:Hide()

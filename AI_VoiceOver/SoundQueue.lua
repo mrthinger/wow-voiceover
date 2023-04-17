@@ -149,7 +149,7 @@ function SoundQueue:RemoveSoundFromQueue(soundData, finishedPlaying)
         return
     end
 
-    Utils:FreeNPCModelFrame(soundData.modelFrame)
+    Utils:FreeNPCModelFrame(soundData)
 
     if soundData.stopCallback then
         soundData.stopCallback(soundData)

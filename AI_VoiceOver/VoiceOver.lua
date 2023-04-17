@@ -131,14 +131,14 @@ function Addon:RefreshConfig()
 end
 
 local function GossipSoundDataAdded(soundData)
-    soundData.modelFrame = Utils:CreateNPCModelFrame()
+    Utils:CreateNPCModelFrame(soundData)
 
     -- Save current gossip sound data for dialog/frame sync option
     currentGossipSoundData = soundData
 end
 
 local function QuestSoundDataAdded(soundData)
-    soundData.modelFrame = Utils:CreateNPCModelFrame()
+    Utils:CreateNPCModelFrame(soundData)
 
     -- Save current quest sound data for dialog/frame sync option
     currentQuestSoundData = soundData

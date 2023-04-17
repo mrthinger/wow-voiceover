@@ -342,6 +342,7 @@ function SoundQueueUI:InitPortrait()
 
     -- Create a 3D model
     self.frame.portrait.model = CreateFrame("DressUpModel", nil, self.frame.portrait)
+    self.frame.portrait.defaultModel = self.frame.portrait.model
 
     -- Create a book icon replacement when the 3D portrait is unavailable
     self.frame.portrait.book = self.frame.portrait:CreateTexture(nil, "ARTWORK")
