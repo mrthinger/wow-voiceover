@@ -54,6 +54,10 @@ function DataModules:Register(name, module)
     table.sort(self.registeredModulesOrdered, SortModules)
 end
 
+function DataModules:HasRegisteredModules()
+    return next(self.registeredModules) ~= nil
+end
+
 function DataModules:GetModule(name)
     return self.registeredModules[name]
 end
