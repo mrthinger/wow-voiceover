@@ -13,6 +13,15 @@ function SoundQueue:new()
     return soundQueue
 end
 
+function SoundQueue:Contains(soundData)
+    for _, queuedSound in ipairs(self.sounds) do
+        if queuedSound == soundData then
+            return true
+        end
+    end
+    return false
+end
+
 function SoundQueue:AddSoundToQueue(soundData)
     if not DataModules:PrepareSound(soundData) then
         Debug:Print(format("Sound does not exist for: %s", soundData.title or soundData.name or ""))
