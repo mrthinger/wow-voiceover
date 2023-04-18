@@ -16,6 +16,7 @@ local PORTRAIT_LINE_WIDTH = 56 * PORTRAIT_BORDER_SCALE
 local FRAME_WIDTH_WITHOUT_PORTRAIT = 300
 local HIDE_GOSSIP_OPTIONS = true -- Disable to allow gossip options to show up in the button list, like quests
 local WAIT_FOR_ANIMATION_FINISH_BEFORE_IDLE = true
+local CAN_MODEL_LOAD_CACHE = Version:IsRetailOrAboveLegacyVersion(60000)
 
 do
     local font = CreateFont("VoiceOverNameFont")
@@ -265,6 +266,13 @@ function SoundQueueUI:InitPortrait()
                     self.animtimer = nil
                 end)
                 self.model:HookScript("OnUpdate", function(self, elapsed)
+                    -- If the creature wasn't cached - continuously retry setting the model until it succeeds
+                    if CAN_MODEL_LOAD_CACHE and self.oldCreatureID and not self:GetModelFileID() then
+                        self:SetCreature(self.oldCreatureID)
+                        if not self:GetModelFileID() then
+                            return
+                        end
+                    end
                     -- Refresh camera and animation in case the model wasn't loaded instantly
                     self:SetCustomCamera(0)
                     if self.animation and not self.animDuration then
@@ -318,6 +326,9 @@ function SoundQueueUI:InitPortrait()
             end
 
             if creatureID ~= self.model.oldCreatureID then
+                if CAN_MODEL_LOAD_CACHE then
+                    self.model:ClearModel()
+                end
                 self.model:SetCreature(creatureID)
                 self.model:SetCustomCamera(0)
                 self.model:SetModelScale(2)
