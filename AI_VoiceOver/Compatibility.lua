@@ -2,11 +2,15 @@ setfenv(1, VoiceOver)
 
 if not select then
     function _G.select(index, ...)
-        local result = {}
-        for i = index, arg.n do
-            table.insert(result, arg[i])
+        if index == "#" then
+            return arg.n
+        else
+            local result = {}
+            for i = index, arg.n do
+                table.insert(result, arg[i])
+            end
+            return unpack(result)
         end
-        return unpack(result)
     end
 end
 
@@ -37,6 +41,53 @@ end
 
 if not string.gmatch then
     string.gmatch = string.gfind
+end
+
+if not string.match then
+    local function getargs(s, e, ...)
+        return unpack(arg)
+    end
+    function string.match(str, pattern)
+        return getargs(string.find(str, pattern))
+    end
+end
+
+if not string.trim then
+    function string.trim(str)
+        return (string.match(str, "^%s*(.-)%s*$"))
+    end
+end
+
+if not table.wipe then
+    function table.wipe(tbl)
+        for i = getn(tbl), 1, -1 do
+            table.remove(tbl, i)
+        end
+        for key in pairs(tbl) do
+            tbl[key] = nil
+        end
+    end
+end
+if not wipe then
+    wipe = table.wipe
+end
+
+if not hooksecurefunc then
+    function hooksecurefunc(table, name, hook)
+        -- hooksecurefunc([table], name, hook)
+        if not hook then
+            name, hook = table, name
+            table = _G
+        end
+
+        local old = table[name]
+        assert(type(old) == "function")
+        table[name] = function(...)
+            local result = { old(unpack(arg)) }
+            hook(unpack(arg))
+            return unpack(result)
+        end
+    end
 end
 
 if not GetAddOnEnableState then
@@ -97,10 +148,10 @@ end
 -- Patch 2.4.0 (2008-03-25): Added.
 if Version.IsAnyLegacy and not UnitGUID then
     -- 1.0.0 - 2.3.0
-    Enums.GUID = nil
+    table.wipe(Enums.GUID)
     Utils.GetGUIDType = nil
     Utils.GetIDFromGUID = nil
-    Utils.MakeGUID = nil
+    Utils.MakeGUID = function() end
 -- Patch 4.0.1 (2010-10-12): Bits shifted. NPCID is now characters 5-8, not 7-10 (counting from 1).
 elseif Version:IsBelowLegacyVersion(40000) then
     -- 2.4.0 - 3.3.5
@@ -159,15 +210,59 @@ end
 
 -- Patch 6.0.2 (2014-10-14): Removed returns 'questTag' and 'isDaily'. Added returns 'frequency', 'isOnMap', 'hasLocalPOI', 'isTask', and 'isStory'.
 if Version:IsBelowLegacyVersion(60000) then
+    local dummyQuestIDMap = { NEXT = -1 }
     function GetQuestLogTitle(questIndex)
-        local title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID, displayQuestID = _G.GetQuestLogTitle(questIndex)
+        local title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID, displayQuestID
+        -- Patch 2.0.3 (2007-01-09): Added the 'suggestedGroup' return.
+        if Version:IsBelowLegacyVersion(20000) then
+            title, level, questTag, isHeader, isCollapsed, isComplete = _G.GetQuestLogTitle(questIndex)
+        else
+            title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID, displayQuestID = _G.GetQuestLogTitle(questIndex)
+        end
+        -- Patch 3.3.0 (2009-12-08): Added the 'questID' return.
+        if Version:IsBelowLegacyVersion(30300) then
+            questID = DataModules:GetQuestID("accept", title, "", "")
+            if not questID then
+                -- Try assuming that the last quest with the same title that the player has accepted is the quest that's currently in the quest log
+                questID = Addon.db.char.RecentQuestTitleToID[title]
+            end
+            if not questID then
+                -- Return a dummy quest ID unique per quest title, just to support having multiple quest log buttons in their current implementation (i.e. keyed by quest ID instead of button index)
+                questID = dummyQuestIDMap[title]
+                if not questID then
+                    questID = dummyQuestIDMap.NEXT
+                    dummyQuestIDMap.NEXT = dummyQuestIDMap.NEXT - 1
+                    dummyQuestIDMap[title] = questID
+                end
+            end
+        end
         local frequency = isDaily and 2 or 1
         return title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID
     end
 end
 
+local RegionMixins = {}
+local RegionOverrides = {}
 local FrameMixins = {}
+local FrameOverrides = {}
+local FontStringMixins = {}
 local ModelMixins = {}
+local function ApplyMixinsAndOverrides(self, mixins, overrides)
+    if mixins then
+        for k, v in pairs(mixins) do
+            if not self[k] then
+                self[k] = v
+            end
+        end
+    end
+    if overrides then
+        for k, v in pairs(overrides) do
+            if self[k] then
+                self["_" .. k], self[k] = self[k], v
+            end
+        end
+    end
+end
 local hookFrame
 local hookModel
 function CreateFrame(frameType, name, parent, template)
@@ -176,20 +271,13 @@ function CreateFrame(frameType, name, parent, template)
     end
 
     local frame = _G.CreateFrame(frameType, name, parent, template)
-    for k, v in pairs(FrameMixins) do
-        if not frame[k] then
-            frame[k] = v
-        end
-    end
+    ApplyMixinsAndOverrides(frame, RegionMixins, RegionOverrides)
+    ApplyMixinsAndOverrides(frame, FrameMixins, FrameOverrides)
     if hookFrame then
         hookFrame(frame)
     end
     if frameType == "Model" or frameType == "PlayerModel" or frameType == "DressUpModel" then
-        for k, v in pairs(ModelMixins) do
-            if not frame[k] then
-                frame[k] = v
-            end
-        end
+        ApplyMixinsAndOverrides(frame, ModelMixins)
         if hookModel then
             hookModel(frame)
         end
@@ -197,12 +285,16 @@ function CreateFrame(frameType, name, parent, template)
     return frame
 end
 
-function FrameMixins:SetShown(shown)
+function RegionMixins:SetShown(shown)
     if shown then
         self:Show()
     else
         self:Hide()
     end
+end
+function RegionMixins:SetSize(width, height)
+    self:SetWidth(width)
+    self:SetHeight(height)
 end
 function FrameMixins:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
     self:SetMinResize(minWidth, minHeight)
@@ -298,7 +390,11 @@ if Version:IsBelowLegacyVersion(70000) then
         },
     }
     local function CleanupModelName(model)
-        return model:lower():gsub("\\", "/"):gsub("%.m2", ""):gsub("%.mdx", "")
+        model = string.lower(model)
+        model = string.gsub(model, "\\", "/")
+        model = string.gsub(model, "%.m2", "")
+        model = string.gsub(model, "%.mdx", "")
+        return model
     end
     function ModelMixins:GetModelFileID()
         local model = self:GetModel()
@@ -312,6 +408,18 @@ end
 
 if Version.IsLegacyVanilla then
 
+    LibStub("AceConfig-3.0"):Embed(Addon)
+
+    local function getargn(...)
+        return arg.n
+    end
+    function GetNumGossipActiveQuests()
+        return getargn(GetGossipAvailableQuests())
+    end
+    function GetNumGossipAvailableQuests()
+        return getargn(GetGossipAvailableQuests())
+    end
+
     function Utils:GetNPCName()
         return UnitName("npc")
     end
@@ -322,6 +430,180 @@ if Version.IsLegacyVanilla then
 
     function Utils:IsNPCPlayer()
         return UnitIsPlayer("npc")
+    end
+
+    function Utils:WillSoundPlay(soundData)
+        return soundData.filePath ~= nil
+    end
+
+    function Utils:PlaySound(soundData)
+        -- Interrupt NPC greeting voiceline
+        if Addon.db.profile.Audio.AutoToggleDialog then
+            SetCVar("MasterSoundEffects", 0)
+            SetCVar("MasterSoundEffects", 1)
+        end
+
+        PlaySoundFile(soundData.filePath)
+        soundData.handle = 1 -- Just put something here to flag the sound as stoppable
+    end
+
+    function Utils:StopSound(soundData)
+        SetCVar("MasterSoundEffects", 0)
+        SetCVar("MasterSoundEffects", 1)
+        soundData.handle = nil
+    end
+
+    local modelFramePool = {}
+    function Utils:CreateNPCModelFrame(soundData)
+        if soundData.modelFrame then
+            return
+        end
+
+        local frame
+        for _, pooled in ipairs(modelFramePool) do
+            if not pooled._inUse then
+                frame = pooled
+                break
+            end
+        end
+
+        if not frame then
+            frame = CreateFrame("DressUpModel", nil, Addon.soundQueue.ui.frame.portrait)
+            table.insert(modelFramePool, frame)
+        end
+
+        frame._inUse = true
+        frame:ClearAllPoints()
+        frame:SetPoint("BOTTOMLEFT")
+        frame:SetSize(1, 1)
+        frame:Show()
+        frame:SetUnit("npc")
+
+        soundData.modelFrame = frame
+    end
+    function Utils:FreeNPCModelFrame(soundData)
+        local frame = soundData.modelFrame
+        if not frame then
+            return
+        end
+        soundData.modelFrame = nil
+
+        if Addon.soundQueue.ui.frame.portrait.model == frame then
+            Addon.soundQueue.ui.frame.portrait.model = Addon.soundQueue.ui.frame.portrait.defaultModel
+        end
+
+        frame:Hide()
+        frame:ClearModel()
+        frame._inUse = false
+    end
+
+    function hookModel(self)
+        self._sequence = 0
+        hooksecurefunc(self, "ClearModel", function(self)
+            self._sequence = 0
+            self._sequenceStart = nil
+        end)
+        hooksecurefunc(self, "SetSequence", function(self, sequence)
+            self._sequence = sequence
+            self._sequenceStart = GetTime()
+        end)
+        self:HookScript("OnUpdate", function(self, elapsed)
+            if self._sequence ~= 0 then
+                self:SetSequenceTime(self._sequence, (GetTime() - self._sequenceStart) * 1000)
+            end
+        end)
+    end
+
+    function RegionOverrides:SetPoint(point, region, relativeFrame, offsetX, offsetY)
+        if region == nil and relativeFrame == nil and offsetX == nil and offsetY == nil then
+            self:_SetPoint(point, 0, 0)
+        else
+            self:_SetPoint(point, region, relativeFrame, offsetX, offsetY)
+        end
+    end
+    function FrameOverrides:CreateTexture(name, layer)
+        local region = self:_CreateTexture(name, layer)
+        ApplyMixinsAndOverrides(region, RegionMixins, RegionOverrides)
+        return region
+    end
+    function FrameOverrides:CreateFontString(name, layer, template)
+        local region = self:_CreateFontString(name, layer, template)
+        ApplyMixinsAndOverrides(region, RegionMixins, RegionOverrides)
+        ApplyMixinsAndOverrides(region, FontStringMixins)
+        return region
+    end
+    function FrameOverrides:SetScript(script, handler)
+        self:_SetScript(script, script == "OnEvent"
+            and function() handler(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end
+            or  function() handler(this,        arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end)
+    end
+    function FrameMixins:HookScript(script, handler)
+        local old = self:GetScript(script)
+        self:_SetScript(script, script == "OnEvent"
+            and function() if old then old() end handler(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end
+            or  function() if old then old() end handler(this,        arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end)
+    end
+    function FrameOverrides:SetNormalTexture(file)
+        local texture = self:CreateTexture(nil, "ARTWORK")
+        local success = texture:SetTexture(file)
+        texture:SetAllPoints()
+        self._normalTexture = texture
+        self:_SetNormalTexture(texture)
+        return success
+    end
+    function FrameMixins:GetNormalTexture()
+        return self._normalTexture
+    end
+    function FrameOverrides:SetPushedTexture(file)
+        local texture = self:CreateTexture(nil, "ARTWORK")
+        local success = texture:SetTexture(file)
+        texture:SetAllPoints()
+        self._pushedTexture = texture
+        self:_SetPushedTexture(texture)
+        return success
+    end
+    function FrameMixins:GetPushedTexture()
+        return self._pushedTexture
+    end
+    function FrameOverrides:SetDisabledTexture(file)
+        local texture = self:CreateTexture(nil, "ARTWORK")
+        local success = texture:SetTexture(file)
+        texture:SetAllPoints()
+        self._disabledTexture = texture
+        self:_SetDisabledTexture(texture)
+        return success
+    end
+    function FrameMixins:GetDisabledTexture()
+        return self._disabledTexture
+    end
+    function FrameOverrides:SetHighlightTexture(file)
+        local texture = self:CreateTexture(nil, "HIGHLIGHT")
+        local success = texture:SetTexture(file)
+        texture:SetAllPoints()
+        self._highlightTexture = texture
+        self:_SetHighlightTexture(texture)
+        return success
+    end
+    function FrameMixins:GetHighlightTexture()
+        return self._highlightTexture
+    end
+    function FontStringMixins:SetWordWrap(wrap)
+        if not wrap then
+            self:SetHeight((select(2, self:GetFont())))
+        end
+    end
+    function ModelMixins:SetCreature()
+    end
+
+    hooksecurefunc(GameTooltip, "SetOwner", function(self, owner, anchor)
+        self._owner = owner
+    end)
+    function GameTooltip:GetOwner()
+        return self._owner
+    end
+    function GameTooltip_Hide()
+        -- Used for XML OnLeave handlers
+        GameTooltip:Hide()
     end
 
 elseif Version.IsLegacyWrath then
@@ -368,7 +650,7 @@ elseif Version.IsLegacyWrath then
     end)
 
     function Utils:WillSoundPlay(soundData)
-        return soundData.fileName and soundData.fileName ~= "missingSound" and soundData.length ~= nil
+        return soundData.filePath ~= nil
     end
 
     function Utils:GetCurrentModelSet()

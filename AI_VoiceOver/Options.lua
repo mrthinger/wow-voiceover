@@ -32,7 +32,7 @@ function slashCommandsHandler:values(info)
             if not handler.dropdownHidden then
                 table.insert(self.indexToName, handler.name)
                 table.insert(self.indexToCommand, command)
-                self.commandToIndex[command] = #self.indexToCommand
+                self.commandToIndex[command] = getn(self.indexToCommand)
             end
         end
     end
@@ -179,8 +179,15 @@ local GeneralTab =
                     isPercent = true,
                     get = function(info) return Addon.db.profile.SoundQueueUI.FrameScale end,
                     set = function(info, value)
+                        local wasShown = Version.IsLegacyVanilla and Addon.soundQueue.ui.frame:IsShown() -- 1.12 quirk
+                        if wasShown then
+                            Addon.soundQueue.ui.frame:Hide()
+                        end
                         Addon.db.profile.SoundQueueUI.FrameScale = value
                         Addon.soundQueue.ui:RefreshConfig()
+                        if wasShown then
+                            Addon.soundQueue.ui.frame:Show()
+                        end
                     end,
                 },
                 LineBreak2 = { type = "description", name = "", order = 6 },
@@ -250,17 +257,17 @@ local GeneralTab =
                         Addon.soundQueue.ui:RefreshConfig()
                     end,
                 },
-                AutoToggleDialog = Version:IsRetailOrAboveLegacyVersion(60100) and {
+                AutoToggleDialog = (Version.IsLegacyVanilla or Version:IsRetailOrAboveLegacyVersion(60100) or nil) and {
                     type = "toggle",
                     width = 2.25,
                     order = 4,
                     name = "Mute Vocal NPCs Greetings While VoiceOver is Playing",
-                    desc = "While VoiceOver is playing, the Dialog channel will be muted.",
+                    desc = Version.IsLegacyVanilla and "Interrupts generic NPC greeting voicelines upon interacting with them if a voiceover will start playing." or "While VoiceOver is playing, the Dialog channel will be muted.",
                     get = function(info) return Addon.db.profile.Audio.AutoToggleDialog end,
                     set = function(info, value)
                         Addon.db.profile.Audio.AutoToggleDialog = value
                         Addon.soundQueue.ui:RefreshConfig()
-                        if Addon.db.profile.Audio.AutoToggleDialog then
+                        if Addon.db.profile.Audio.AutoToggleDialog and Version:IsRetailOrAboveLegacyVersion(60100) then
                             SetCVar("Sound_EnableDialog", 1)
                         end
                     end,
@@ -493,7 +500,7 @@ function Options:AddDataModule(module, order)
             return format("%d. %s%s%s|r",
                 order,
                 reason and RED_FONT_COLOR_CODE or isLoaded and HIGHLIGHT_FONT_COLOR_CODE or GRAY_FONT_COLOR_CODE,
-                module.Title:gsub("VoiceOver Data %- ", ""),
+                string.gsub(module.Title, "VoiceOver Data %- ", ""),
                 isLoaded and "" or " (not loaded)")
         end,
         type = "group",
@@ -531,7 +538,12 @@ function Options:Initialize()
 
     -- Create options table
     Debug:Print("Registering options table...", "Options")
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("VoiceOver", self.table, "vo")
+    local AceConfig = LibStub("AceConfig-3.0")
+    if Addon.RegisterOptionsTable then
+        -- Embedded version for 1.12
+        AceConfig = Addon
+    end
+    AceConfig:RegisterOptionsTable("VoiceOver", self.table, "vo")
     AceConfigDialog:AddToBlizOptions("VoiceOver")
     for key, tab in Utils:Ordered(Options.table.args, SortAceConfigOptions) do
         if not tab.hidden and not tab.dialogHidden then
