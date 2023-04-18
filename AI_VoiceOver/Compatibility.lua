@@ -544,7 +544,7 @@ if Version.IsLegacyVanilla then
             or  function() if old then old() end handler(this,        arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end)
     end
     function FrameOverrides:SetNormalTexture(file)
-        local texture = self:CreateTexture()
+        local texture = self:CreateTexture(nil, "ARTWORK")
         local success = texture:SetTexture(file)
         texture:SetAllPoints()
         self._normalTexture = texture
@@ -555,7 +555,7 @@ if Version.IsLegacyVanilla then
         return self._normalTexture
     end
     function FrameOverrides:SetPushedTexture(file)
-        local texture = self:CreateTexture()
+        local texture = self:CreateTexture(nil, "ARTWORK")
         local success = texture:SetTexture(file)
         texture:SetAllPoints()
         self._pushedTexture = texture
@@ -565,8 +565,19 @@ if Version.IsLegacyVanilla then
     function FrameMixins:GetPushedTexture()
         return self._pushedTexture
     end
+    function FrameOverrides:SetDisabledTexture(file)
+        local texture = self:CreateTexture(nil, "ARTWORK")
+        local success = texture:SetTexture(file)
+        texture:SetAllPoints()
+        self._disabledTexture = texture
+        self:_SetDisabledTexture(texture)
+        return success
+    end
+    function FrameMixins:GetDisabledTexture()
+        return self._disabledTexture
+    end
     function FrameOverrides:SetHighlightTexture(file)
-        local texture = self:CreateTexture()
+        local texture = self:CreateTexture(nil, "HIGHLIGHT")
         local success = texture:SetTexture(file)
         texture:SetAllPoints()
         self._highlightTexture = texture
