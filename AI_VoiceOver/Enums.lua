@@ -47,7 +47,7 @@ Enums.GossipFrequency =
 Enums.SoundChannel =
 {
     Master = 1,
-    Sound = 2,
+    SFX = 2,
     Music = 3,
     Ambience = 4,
     Dialog = 5,

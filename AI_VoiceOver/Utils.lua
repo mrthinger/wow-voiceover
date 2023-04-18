@@ -33,11 +33,21 @@ function Utils:IsNPCPlayer()
     return UnitIsPlayer("questnpc") or UnitIsPlayer("npc")
 end
 
-function Utils:WillSoundPlay(soundData)
-    if not soundData.filePath then
+function Utils:IsSoundEnabled()
+    if tonumber(GetCVar("Sound_EnableAllSound")) ~= 1 then
         return false
     end
 
+    -- This shouldn't be like this, but this is how the API currently works: SFX channel must be enabled for the sound to play on ANY channel
+    if tonumber(GetCVar("Sound_EnableSFX")) ~= 1 then
+        return false
+    end
+
+    local channel = Enums.SoundChannel:GetName(Addon.db.profile.Audio.SoundChannel)
+    return channel == "Master" or tonumber(GetCVar(format("Sound_Enable%s", channel))) == 1
+end
+
+function Utils:TestSound(soundData)
     local willPlay, handle = PlaySoundFile(soundData.filePath)
     if willPlay then
         StopSound(handle)

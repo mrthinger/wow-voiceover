@@ -433,8 +433,12 @@ if Version.IsLegacyVanilla then
         return UnitIsPlayer("npc")
     end
 
-    function Utils:WillSoundPlay(soundData)
-        return soundData.filePath ~= nil
+    function Utils:IsSoundEnabled()
+        return tonumber(GetCVar("MasterSoundEffects")) == 1
+    end
+
+    function Utils:TestSound(soundData)
+        return true
     end
 
     function Utils:PlaySound(soundData)
@@ -674,8 +678,15 @@ elseif Version.IsLegacyWrath then
         QuestLogScrollFrame.update = QuestLog_Update
     end)
 
-    function Utils:WillSoundPlay(soundData)
-        return soundData.filePath ~= nil
+    function Utils:IsSoundEnabled()
+        if tonumber(GetCVar("Sound_EnableAllSound")) ~= 1 then
+            return false
+        end
+        return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled or tonumber(GetCVar("Sound_EnableSFX")) == 1
+    end
+
+    function Utils:TestSound(soundData)
+        return true
     end
 
     function Utils:GetCurrentModelSet()
