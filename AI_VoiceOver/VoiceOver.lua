@@ -202,6 +202,11 @@ function Addon:QUEST_DETAIL()
         return
     end
 
+    -- Can happen if the player interacted with an NPC while having main menu or options opened
+    if not guid and not targetName then
+        return
+    end
+
     if Addon.db.char.RecentQuestTitleToID and questID ~= 0 then
         Addon.db.char.RecentQuestTitleToID[questTitle] = questID
     end
@@ -242,6 +247,11 @@ function Addon:QUEST_COMPLETE()
     local targetName = Utils:GetNPCName()
 
     if not questID or questID == 0 then
+        return
+    end
+
+    -- Can happen if the player interacted with an NPC while having main menu or options opened
+    if not guid and not targetName then
         return
     end
 
@@ -290,6 +300,11 @@ function Addon:QUEST_GREETING()
     local targetName = Utils:GetNPCName()
     local greetingText = GetGreetingText()
 
+    -- Can happen if the player interacted with an NPC while having main menu or options opened
+    if not guid and not targetName then
+        return
+    end
+
     local play, npcKey = self:ShouldPlayGossip(guid, greetingText)
     if not play then
         return
@@ -313,6 +328,11 @@ function Addon:GOSSIP_SHOW()
     local guid = Utils:GetNPCGUID()
     local targetName = Utils:GetNPCName()
     local gossipText = GetGossipText()
+
+    -- Can happen if the player interacted with an NPC while having main menu or options opened
+    if not guid and not targetName then
+        return
+    end
 
     local play, npcKey = self:ShouldPlayGossip(guid, gossipText)
     if not play then
