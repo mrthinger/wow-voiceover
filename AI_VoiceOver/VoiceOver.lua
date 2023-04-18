@@ -151,6 +151,10 @@ function Addon:QUEST_DETAIL()
     local guid = Utils:GetNPCGUID()
     local targetName = Utils:GetNPCName()
 
+    if not questID or questID == 0 then
+        return
+    end
+
     if Addon.db.char.RecentQuestTitleToID and questID ~= 0 then
         Addon.db.char.RecentQuestTitleToID[questTitle] = questID
     end
@@ -189,6 +193,10 @@ function Addon:QUEST_COMPLETE()
     local questText = GetRewardText()
     local guid = Utils:GetNPCGUID()
     local targetName = Utils:GetNPCName()
+
+    if not questID or questID == 0 then
+        return
+    end
 
     if Addon.db.char.RecentQuestTitleToID and questID ~= 0 then
         Addon.db.char.RecentQuestTitleToID[questTitle] = questID
