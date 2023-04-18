@@ -1,8 +1,9 @@
 ## Interface: 100000
 ## Title: VoiceOver Data - Vanilla
+## Notes: Contains voiceovers for content released during the Vanilla era.|n|nIt's |cFF20FF20OK|r for this addon to appear |cFFFF2020"out of date"|r, it's compatible with any client and VoiceOver will load it no matter whether it's disabled or out of date.
 ## Version: 0.1
 ## LoadOnDemand: 1
-## OptionalDeps: AI_VoiceOver_112, AI_VoiceOver
+## RequiredDeps: AI_VoiceOver
 ## X-Part-Of: VoiceOver
 ## X-Child-Of: VoiceOver
 ## X-VoiceOver-DataModule-Version: 1
