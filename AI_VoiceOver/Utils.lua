@@ -166,6 +166,11 @@ local animationDurations = {
         [119376]  = { [60] = 4667 }, -- character/goblin/male/goblinmale
     },
 }
+if Version.IsLegacyVanilla or Version.IsRetailVanilla then
+    -- Goblin models on vanilla (both 1.12 and 1.14) lack the talk animation, this will make them fall back to idle animation
+    animationDurations["Original"][119369][60] = 0
+    animationDurations["Original"][119376][60] = 0
+end
 function Utils:GetCurrentModelSet()
     return "Original"
 end

@@ -277,6 +277,11 @@ function SoundQueueUI:InitPortrait()
                     self:SetCustomCamera(0)
                     if self.animation and not self.animDuration then
                         self.animDuration = Utils:GetModelAnimationDuration(self:GetModelFileID(), self.animation)
+                        -- Fall back to idle animation for models that were explicitly marked as missing the animation by setting its duration to 0 in Utils.lua
+                        if self.animDuration and self.animDuration == 0 then
+                            self.animation = 0
+                            self:SetAnimation(self.animation)
+                        end
                     end
                     -- Wait out the delay, if any
                     if self.animDelay and not Addon.db.char.IsPaused then
@@ -296,7 +301,7 @@ function SoundQueueUI:InitPortrait()
                     end
                     -- Loop the animation when the timer has reached the animation duration
                     if self.animation and GetTime() - (self.animtimer or 0) >= (self.animDuration or 2) then
-                        if isPaused then
+                        if isPaused or self.animation == 0 then
                             if WAIT_FOR_ANIMATION_FINISH_BEFORE_IDLE and self.animation ~= 0 and not self.animDelay then
                                 -- Switch to idle animation after the current animation is finished
                                 self.animation = 0
@@ -341,6 +346,7 @@ function SoundQueueUI:InitPortrait()
                 self.model.oldCreatureID = creatureID
             elseif self.model.wasPaused and soundQueueUI.soundQueue:IsPlaying() then
                 self.model.animation = 60
+                self.model.animDuration = nil
                 self.model.animDelay = soundData.delay
             end
         end
