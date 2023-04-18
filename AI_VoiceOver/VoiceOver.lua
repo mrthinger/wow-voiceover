@@ -86,23 +86,32 @@ function Addon:OnInitialize()
         end
     end
 
-    hooksecurefunc("AbandonQuest", function()
-        local questName = GetAbandonQuestName()
-        local soundsToRemove = {}
-        for _, soundData in pairs(self.soundQueue.sounds) do
-            if Enums.SoundEvent:IsQuestEvent(soundData.event) and soundData.title == questName then
-                table.insert(soundsToRemove, soundData)
+    local function MakeAbandonQuestHook(field, getFieldData)
+        return function()
+            local data = getFieldData()
+            local soundsToRemove = {}
+            for _, soundData in pairs(self.soundQueue.sounds) do
+                if Enums.SoundEvent:IsQuestEvent(soundData.event) and soundData[field] == data then
+                    table.insert(soundsToRemove, soundData)
+                end
+            end
+
+            for _, soundData in pairs(soundsToRemove) do
+                self.soundQueue:RemoveSoundFromQueue(soundData)
             end
         end
+    end
+    if C_QuestLog and C_QuestLog.AbandonQuest then
+        hooksecurefunc(C_QuestLog, "AbandonQuest", MakeAbandonQuestHook("questID", function() return C_QuestLog.GetAbandonQuest() end))
+    elseif AbandonQuest then
+        hooksecurefunc("AbandonQuest", MakeAbandonQuestHook("questName", function() return GetAbandonQuestName() end))
+    end
 
-        for _, soundData in pairs(soundsToRemove) do
-            self.soundQueue:RemoveSoundFromQueue(soundData)
-        end
-    end)
-
-    hooksecurefunc("QuestLog_Update", function()
-        self.questOverlayUI:UpdateQuestOverlayUI()
-    end)
+    if QuestLog_Update then
+        hooksecurefunc("QuestLog_Update", function()
+            self.questOverlayUI:UpdateQuestOverlayUI()
+        end)
+    end
 
     if C_GossipInfo and C_GossipInfo.SelectOption then
         hooksecurefunc(C_GossipInfo, "SelectOption", function(optionID)

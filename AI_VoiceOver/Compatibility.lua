@@ -952,6 +952,10 @@ elseif Version.IsRetailWrath then
 
 elseif Version.IsRetailMainline then
 
+    GetGossipText = C_GossipInfo.GetText
+    GetNumGossipActiveQuests = C_GossipInfo.GetNumActiveQuests
+    GetNumGossipAvailableQuests = C_GossipInfo.GetNumAvailableQuests
+
     function Utils:GetCurrentModelSet()
         return "HD"
     end
