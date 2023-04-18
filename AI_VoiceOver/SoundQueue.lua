@@ -68,7 +68,7 @@ end
 function SoundQueue:PlaySound(soundData)
     Utils:PlaySound(soundData)
 
-    if Addon.db.profile.Audio.AutoToggleDialog and Version:IsRetailOrAboveLegacyVersion(60100) then
+    if Addon.db.profile.Audio.AutoToggleDialog and Version:IsRetailOrAboveLegacyVersion(60100) and Addon.db.profile.Audio.SoundChannel ~= Enums.SoundChannel.Dialog then
         SetCVar("Sound_EnableDialog", 0)
     end
 

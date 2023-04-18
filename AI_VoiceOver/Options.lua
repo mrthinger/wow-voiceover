@@ -263,6 +263,7 @@ local GeneralTab =
                     order = 4,
                     name = "Mute Vocal NPCs Greetings While VoiceOver is Playing",
                     desc = Version.IsLegacyVanilla and "Interrupts generic NPC greeting voicelines upon interacting with them if a voiceover will start playing." or "While VoiceOver is playing, the Dialog channel will be muted.",
+                    disabled = function() return Version:IsRetailOrAboveLegacyVersion(60100) and Addon.db.profile.Audio.SoundChannel == Enums.SoundChannel.Dialog end,
                     get = function(info) return Addon.db.profile.Audio.AutoToggleDialog end,
                     set = function(info, value)
                         Addon.db.profile.Audio.AutoToggleDialog = value
