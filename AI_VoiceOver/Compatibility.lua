@@ -1,7 +1,7 @@
 setfenv(1, VoiceOver)
 
 if not select then
-    function _G.select(index, ...)
+    function select(index, ...)
         if index == "#" then
             return arg.n
         else
@@ -15,7 +15,7 @@ if not select then
 end
 
 if not print then
-    function _G.print(...)
+    function print(...)
         local text = ""
         for i = 1, arg.n do
             text = text .. (i > 1 and " " or "") .. tostring(arg[i])
