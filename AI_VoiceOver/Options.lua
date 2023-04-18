@@ -390,11 +390,19 @@ local LegacyWrathTab = Version.IsLegacyWrath and {
 
 local DataModulesTab =
 {
-    name = "Data Modules",
+    name = function() return format("Data Modules%s", next(Options.table.args.DataModules.args.Available.args) and "|cFF00CCFF (NEW)|r" or "") end,
     type = "group",
     childGroups = "tree",
     order = 20,
-    args = {}
+    args = {
+        Available = {
+            type = "group",
+            name = "|cFF00CCFFAvailable|r",
+            order = 100000,
+            hidden = function(info) return not next(Options.table.args.DataModules.args.Available.args) end,
+            args = {}
+        }
+    }
 }
 
 local SlashCommands = {
@@ -532,6 +540,36 @@ function Options:AddDataModule(module, order)
     }
 end
 
+function Options:AddAvailableDataModule(module, order, update)
+    local descriptionOrder = 0
+    local function GetNextOrder()
+        descriptionOrder = descriptionOrder + 1
+        return descriptionOrder
+    end
+    local function MakeDescription(header, text)
+        return { type = "description", order = GetNextOrder(), name = function() return format("%s%s: |r%s", NORMAL_FONT_COLOR_CODE, header, type(text) == "function" and text() or text) end }
+    end
+
+    DataModulesTab.args.Available.args[module.AddonName] = {
+        name = Utils:ColorizeText(format(update and "%s (Update)" or "%s", string.gsub(module.Title, "VoiceOver Data %- ", "")), "|cFF00CCFF"),
+        type = "group",
+        order = order,
+        args = {
+            AddonName = MakeDescription("Addon Name", module.AddonName),
+            Title = MakeDescription("Title", module.Title),
+            ContentVersion = MakeDescription("Content Version", format(update and "%2$s -> |cFF00CCFF%1$s|r" or "%s", module.ContentVersion, update and DataModules:GetPresentModule(module.AddonName).ContentVersion)),
+            URL = {
+                type = "input",
+                order = GetNextOrder(),
+                width = "full",
+                name = "Download URL",
+                get = function(info) return module.URL end,
+                set = function(info) end,
+            },
+        }
+    }
+end
+
 ---Initialization of opens panel
 function Options:Initialize()
     self.table.args.Profiles = AceDBOptions:GetOptionsTable(Addon.db)
@@ -547,7 +585,7 @@ function Options:Initialize()
     AceConfigDialog:AddToBlizOptions("VoiceOver")
     for key, tab in Utils:Ordered(Options.table.args, SortAceConfigOptions) do
         if not tab.hidden and not tab.dialogHidden then
-            AceConfigDialog:AddToBlizOptions("VoiceOver", tab.name, "VoiceOver", key)
+            AceConfigDialog:AddToBlizOptions("VoiceOver", type(tab.name) == "function" and tab.name() or tab.name, "VoiceOver", key)
         end
     end
     Debug:Print("Done!", "Options")
