@@ -928,6 +928,15 @@ elseif Version.IsLegacyWrath then
 
 elseif Version.IsRetailVanilla then
 
+    function Addon.OnAddonLoad.Leatrix_Plus()
+        C_Timer.After(0, function() -- Let it run its ADDON_LOADED code
+            hooksecurefunc("QuestLog_Update", function()
+                -- Update QuestOverlayUI again after Leatrix_Plus replaces the titles with prepended quest levels
+                Addon.questOverlayUI:UpdateQuestOverlayUI()
+            end)
+        end)
+    end
+
 elseif Version.IsRetailWrath then
 
     GetGossipText = C_GossipInfo.GetText
