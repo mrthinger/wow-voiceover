@@ -2,6 +2,8 @@ setfenv(1, VoiceOver)
 
 Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0", "AceTimer-3.0")
 
+Addon.OnAddonLoad = {}
+
 local defaults = {
     profile = {
         SoundQueueUI = {
@@ -59,6 +61,7 @@ function Addon:OnInitialize()
     DataModules:EnumerateAddons()
     Options:Initialize()
 
+    self:RegisterEvent("ADDON_LOADED")
     self:RegisterEvent("QUEST_DETAIL")
     -- self:RegisterEvent("QUEST_PROGRESS")
     self:RegisterEvent("QUEST_COMPLETE")
@@ -137,6 +140,14 @@ end
 
 function Addon:RefreshConfig()
     self.soundQueue.ui:RefreshConfig()
+end
+
+function Addon:ADDON_LOADED(event, addon)
+    addon = addon or arg1 -- Thanks, Ace3v...
+    local hook = self.OnAddonLoad[addon]
+    if hook then
+        hook()
+    end
 end
 
 local function GossipSoundDataAdded(soundData)
