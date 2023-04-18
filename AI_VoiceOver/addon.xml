@@ -1,15 +1,15 @@
 <Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
     <Include file="Environment.lua"/>
-    <Include file="Common\Version.lua"/>
-    <Include file="Common\Enums.lua"/>
+    <Include file="Version.lua"/>
+    <Include file="Enums.lua"/>
     <Include file="Utils.lua"/>
     <Include file="Debug.lua"/>
     <Include file="Options.lua"/>
-    <Include file="Common\FuzzySearch.lua"/>
+    <Include file="FuzzySearch.lua"/>
     <Include file="SoundQueue.lua"/>
     <Include file="SoundQueueUI.lua"/>
     <Include file="QuestOverlayUI.lua"/>
-    <Include file="Common\DataModules.lua"/>
+    <Include file="DataModules.lua"/>
     <Include file="VoiceOver.lua"/>
 
     <Include file="Compatibility.lua"/>
