@@ -164,6 +164,7 @@ local function QuestSoundDataAdded(soundData)
     currentQuestSoundData = soundData
 end
 
+local GetTitleText = GetTitleText -- Store original function before EQL3 (Extended Quest Log 3) overrides it and starts prepending quest level
 function Addon:QUEST_DETAIL()
     local questID = GetQuestID()
     local questTitle = GetTitleText()

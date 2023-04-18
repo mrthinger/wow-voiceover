@@ -111,6 +111,7 @@ if not GetQuestID then
     local old_QUEST_DETAIL = Addon.QUEST_DETAIL
     local old_QUEST_PROGRESS = Addon.QUEST_PROGRESS
     local old_QUEST_COMPLETE = Addon.QUEST_COMPLETE
+    local GetTitleText = GetTitleText -- Store original function before EQL3 (Extended Quest Log 3) overrides it and starts prepending quest level
     function Addon:QUEST_DETAIL()   source = "accept"   text = GetQuestText()    old_QUEST_DETAIL(self) end
     function Addon:QUEST_PROGRESS() source = "progress" text = GetProgressText() old_QUEST_PROGRESS(self) end
     function Addon:QUEST_COMPLETE() source = "complete" text = GetRewardText()   old_QUEST_COMPLETE(self) end
@@ -604,6 +605,30 @@ if Version.IsLegacyVanilla then
     function GameTooltip_Hide()
         -- Used for XML OnLeave handlers
         GameTooltip:Hide()
+    end
+
+    function Addon.OnAddonLoad.EQL3() -- Extended Quest Log 3
+        QUESTS_DISPLAYED = EQL3_QUESTS_DISPLAYED
+
+        QuestLogFrame = EQL3_QuestLogFrame
+        QuestLogListScrollFrame = EQL3_QuestLogListScrollFrame
+
+        function Utils:GetQuestLogTitleFrame(index)
+            return _G["EQL3_QuestLogTitle" .. index]
+        end
+
+        function Utils:GetQuestLogTitleNormalText(index)
+            return _G["EQL3_QuestLogTitle" .. index .. "NormalText"]
+        end
+
+        function Utils:GetQuestLogTitleCheck(index)
+            return _G["EQL3_QuestLogTitle" .. index .. "Check"]
+        end
+
+        -- Hook the new function created by EQL3
+        hooksecurefunc("QuestLog_Update", function()
+            Addon.questOverlayUI:UpdateQuestOverlayUI()
+        end)
     end
 
 elseif Version.IsLegacyWrath then
