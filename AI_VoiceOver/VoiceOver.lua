@@ -107,7 +107,7 @@ function Addon:OnInitialize()
     if not DataModules:HasRegisteredModules() then
         StaticPopupDialogs["VOICEOVER_NO_REGISTERED_DATA_MODULES"] =
         {
-            text = [[VoiceOver|n|nNo data modules containing voiceovers were loaded.|n|nPlease verify that any modules you installed were correctly unpacked into your "Interface\AddOns" folder and that the download wasn't corrupted.|n|nLook into the "Data Modules" tab of VoiceOver options (accessible via the minimap button, "/vo options" command, or Interface Options in newer clients) for information on where to download more modules.]],
+            text = [[VoiceOver|n|nNo sound packs were found.|n|nUse the "/vo options" command, (or Interface Options in newer clients) and go to the DataModules tab for information on where to download sound packs.]],
             button1 = OKAY,
             timeout = 0,
             whileDead = 1,
