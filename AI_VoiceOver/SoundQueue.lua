@@ -13,18 +13,28 @@ function SoundQueue:new()
     return soundQueue
 end
 
+function SoundQueue:Contains(soundData)
+    for _, queuedSound in ipairs(self.sounds) do
+        if queuedSound == soundData then
+            return true
+        end
+    end
+    return false
+end
+
 function SoundQueue:AddSoundToQueue(soundData)
-    DataModules:PrepareSound(soundData)
+    if not DataModules:PrepareSound(soundData) then
+        Debug:Print(format("Sound does not exist for: %s", soundData.title or soundData.name or ""))
+        return
+    end
 
-    if soundData.fileName == nil or not Utils:WillSoundPlay(soundData) then
+    if not Utils:IsSoundEnabled() then
+        Debug:Print("Your sound is turned off")
+        return
+    end
 
-        if Addon.db.profile.DebugEnabled then
-            print("Sound does not exist for: ", soundData.title or soundData.name)
-        end
-        
-        if soundData.stopCallback then
-            soundData.stopCallback(soundData)
-        end
+    if not Utils:TestSound(soundData) then
+        Debug:Print(Utils:ColorizeText(format([[Sound should exist for %s, but it failed to play: this might signify that the installation of data module "%s" was incomplete. Verify that the file "%s" exists and can be played.]], soundData.title or soundData.name or "", soundData.module.METADATA.AddonName, soundData.filePath), RED_FONT_COLOR_CODE))
         return
     end
 
@@ -68,7 +78,7 @@ end
 function SoundQueue:PlaySound(soundData)
     Utils:PlaySound(soundData)
 
-    if Addon.db.profile.Audio.AutoToggleDialog and Version:IsRetailOrAboveLegacyVersion(60100) then
+    if Addon.db.profile.Audio.AutoToggleDialog and Version:IsRetailOrAboveLegacyVersion(60100) and Addon.db.profile.Audio.SoundChannel ~= Enums.SoundChannel.Dialog then
         SetCVar("Sound_EnableDialog", 0)
     end
 

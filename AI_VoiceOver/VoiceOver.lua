@@ -2,6 +2,8 @@ setfenv(1, VoiceOver)
 
 Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0", "AceTimer-3.0")
 
+Addon.OnAddonLoad = {}
+
 local defaults = {
     profile = {
         SoundQueueUI = {
@@ -59,6 +61,7 @@ function Addon:OnInitialize()
     DataModules:EnumerateAddons()
     Options:Initialize()
 
+    self:RegisterEvent("ADDON_LOADED")
     self:RegisterEvent("QUEST_DETAIL")
     -- self:RegisterEvent("QUEST_PROGRESS")
     self:RegisterEvent("QUEST_COMPLETE")
@@ -67,42 +70,77 @@ function Addon:OnInitialize()
     self:RegisterEvent("GOSSIP_SHOW")
     self:RegisterEvent("GOSSIP_CLOSED")
 
-    StaticPopupDialogs["VOICEOVER_DUPLICATE_ADDON"] =
-    {
-        text =
-        "VoiceOver\n\nTo fix the quest autoaccept bugs we had to rename the addon folder. If you're seeing this popup, it means the old one wasn't automatically removed.\n\nYou can safely delete \"VoiceOver\" from your Addons folder. \"AI_VoiceOver\" is the new folder.",
-        button1 = OKAY,
-        timeout = 0,
-        whileDead = 1,
-        OnAccept = function()
-            self.db.profile.main.SeenDuplicateDialog = true
-        end,
-    };
-
     if select(5, GetAddOnInfo("VoiceOver")) ~= "MISSING" then
         DisableAddOn("VoiceOver")
-        if not self.db.profile.main.SeenDuplicateDialog then
+        if not self.db.profile.SeenDuplicateDialog then
+            StaticPopupDialogs["VOICEOVER_DUPLICATE_ADDON"] =
+            {
+                text = [[VoiceOver|n|nTo fix the quest autoaccept bugs we had to rename the addon folder. If you're seeing this popup, it means the old one wasn't automatically removed.|n|nYou can safely delete "VoiceOver" from your Addons folder. "AI_VoiceOver" is the new folder.]],
+                button1 = OKAY,
+                timeout = 0,
+                whileDead = 1,
+                OnAccept = function()
+                    self.db.profile.SeenDuplicateDialog = true
+                end,
+            }
             StaticPopup_Show("VOICEOVER_DUPLICATE_ADDON")
         end
     end
 
-    hooksecurefunc("AbandonQuest", function()
-        local questName = GetAbandonQuestName()
-        local soundsToRemove = {}
-        for _, soundData in pairs(self.soundQueue.sounds) do
-            if Enums.SoundEvent:IsQuestEvent(soundData.event) and soundData.title == questName then
-                table.insert(soundsToRemove, soundData)
+    if select(5, GetAddOnInfo("AI_VoiceOver_112")) ~= "MISSING" then
+        DisableAddOn("AI_VoiceOver_112")
+        if not self.db.profile.SeenDuplicateDialog112 then
+            StaticPopupDialogs["VOICEOVER_DUPLICATE_ADDON_112"] =
+            {
+                text = [[VoiceOver|n|nVoiceOver port for 1.12 has been merged together with other versions and is no longer distributed as a separate addon.|n|nYou can safely delete "AI_VoiceOver_112" from your Addons folder. "AI_VoiceOver" is the new folder.]],
+                button1 = OKAY,
+                timeout = 0,
+                whileDead = 1,
+                OnAccept = function()
+                    self.db.profile.SeenDuplicateDialog112 = true
+                end,
+            }
+            StaticPopup_Show("VOICEOVER_DUPLICATE_ADDON_112")
+        end
+    end
+
+    if not DataModules:HasRegisteredModules() then
+        StaticPopupDialogs["VOICEOVER_NO_REGISTERED_DATA_MODULES"] =
+        {
+            text = [[VoiceOver|n|nNo data modules containing voiceovers were loaded.|n|nPlease verify that any modules you installed were correctly unpacked into your "Interface\AddOns" folder and that the download wasn't corrupted.|n|nLook into the "Data Modules" tab of VoiceOver options (accessible via the minimap button, "/vo options" command, or Interface Options in newer clients) for information on where to download more modules.]],
+            button1 = OKAY,
+            timeout = 0,
+            whileDead = 1,
+        }
+        StaticPopup_Show("VOICEOVER_NO_REGISTERED_DATA_MODULES")
+    end
+
+    local function MakeAbandonQuestHook(field, getFieldData)
+        return function()
+            local data = getFieldData()
+            local soundsToRemove = {}
+            for _, soundData in pairs(self.soundQueue.sounds) do
+                if Enums.SoundEvent:IsQuestEvent(soundData.event) and soundData[field] == data then
+                    table.insert(soundsToRemove, soundData)
+                end
+            end
+
+            for _, soundData in pairs(soundsToRemove) do
+                self.soundQueue:RemoveSoundFromQueue(soundData)
             end
         end
+    end
+    if C_QuestLog and C_QuestLog.AbandonQuest then
+        hooksecurefunc(C_QuestLog, "AbandonQuest", MakeAbandonQuestHook("questID", function() return C_QuestLog.GetAbandonQuest() end))
+    elseif AbandonQuest then
+        hooksecurefunc("AbandonQuest", MakeAbandonQuestHook("questName", function() return GetAbandonQuestName() end))
+    end
 
-        for _, soundData in pairs(soundsToRemove) do
-            self.soundQueue:RemoveSoundFromQueue(soundData)
-        end
-    end)
-
-    hooksecurefunc("QuestLog_Update", function()
-        self.questOverlayUI:UpdateQuestOverlayUI()
-    end)
+    if QuestLog_Update then
+        hooksecurefunc("QuestLog_Update", function()
+            self.questOverlayUI:UpdateQuestOverlayUI()
+        end)
+    end
 
     if C_GossipInfo and C_GossipInfo.SelectOption then
         hooksecurefunc(C_GossipInfo, "SelectOption", function(optionID)
@@ -130,6 +168,14 @@ function Addon:RefreshConfig()
     self.soundQueue.ui:RefreshConfig()
 end
 
+function Addon:ADDON_LOADED(event, addon)
+    addon = addon or arg1 -- Thanks, Ace3v...
+    local hook = self.OnAddonLoad[addon]
+    if hook then
+        hook()
+    end
+end
+
 local function GossipSoundDataAdded(soundData)
     Utils:CreateNPCModelFrame(soundData)
 
@@ -144,6 +190,7 @@ local function QuestSoundDataAdded(soundData)
     currentQuestSoundData = soundData
 end
 
+local GetTitleText = GetTitleText -- Store original function before EQL3 (Extended Quest Log 3) overrides it and starts prepending quest level
 function Addon:QUEST_DETAIL()
     local questID = GetQuestID()
     local questTitle = GetTitleText()
@@ -152,6 +199,11 @@ function Addon:QUEST_DETAIL()
     local targetName = Utils:GetNPCName()
 
     if not questID or questID == 0 then
+        return
+    end
+
+    -- Can happen if the player interacted with an NPC while having main menu or options opened
+    if not guid and not targetName then
         return
     end
 
@@ -195,6 +247,11 @@ function Addon:QUEST_COMPLETE()
     local targetName = Utils:GetNPCName()
 
     if not questID or questID == 0 then
+        return
+    end
+
+    -- Can happen if the player interacted with an NPC while having main menu or options opened
+    if not guid and not targetName then
         return
     end
 
@@ -243,6 +300,11 @@ function Addon:QUEST_GREETING()
     local targetName = Utils:GetNPCName()
     local greetingText = GetGreetingText()
 
+    -- Can happen if the player interacted with an NPC while having main menu or options opened
+    if not guid and not targetName then
+        return
+    end
+
     local play, npcKey = self:ShouldPlayGossip(guid, greetingText)
     if not play then
         return
@@ -266,6 +328,11 @@ function Addon:GOSSIP_SHOW()
     local guid = Utils:GetNPCGUID()
     local targetName = Utils:GetNPCName()
     local gossipText = GetGossipText()
+
+    -- Can happen if the player interacted with an NPC while having main menu or options opened
+    if not guid and not targetName then
+        return
+    end
 
     local play, npcKey = self:ShouldPlayGossip(guid, gossipText)
     if not play then

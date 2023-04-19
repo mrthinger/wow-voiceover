@@ -1,7 +1,7 @@
 setfenv(1, VoiceOver)
 
 if not select then
-    function _G.select(index, ...)
+    function select(index, ...)
         if index == "#" then
             return arg.n
         else
@@ -15,7 +15,7 @@ if not select then
 end
 
 if not print then
-    function _G.print(...)
+    function print(...)
         local text = ""
         for i = 1, arg.n do
             text = text .. (i > 1 and " " or "") .. tostring(arg[i])
@@ -111,6 +111,7 @@ if not GetQuestID then
     local old_QUEST_DETAIL = Addon.QUEST_DETAIL
     local old_QUEST_PROGRESS = Addon.QUEST_PROGRESS
     local old_QUEST_COMPLETE = Addon.QUEST_COMPLETE
+    local GetTitleText = GetTitleText -- Store original function before EQL3 (Extended Quest Log 3) overrides it and starts prepending quest level
     function Addon:QUEST_DETAIL()   source = "accept"   text = GetQuestText()    old_QUEST_DETAIL(self) end
     function Addon:QUEST_PROGRESS() source = "progress" text = GetProgressText() old_QUEST_PROGRESS(self) end
     function Addon:QUEST_COMPLETE() source = "complete" text = GetRewardText()   old_QUEST_COMPLETE(self) end
@@ -432,8 +433,12 @@ if Version.IsLegacyVanilla then
         return UnitIsPlayer("npc")
     end
 
-    function Utils:WillSoundPlay(soundData)
-        return soundData.filePath ~= nil
+    function Utils:IsSoundEnabled()
+        return tonumber(GetCVar("MasterSoundEffects")) == 1
+    end
+
+    function Utils:TestSound(soundData)
+        return true
     end
 
     function Utils:PlaySound(soundData)
@@ -606,6 +611,30 @@ if Version.IsLegacyVanilla then
         GameTooltip:Hide()
     end
 
+    function Addon.OnAddonLoad.EQL3() -- Extended Quest Log 3
+        QUESTS_DISPLAYED = EQL3_QUESTS_DISPLAYED
+
+        QuestLogFrame = EQL3_QuestLogFrame
+        QuestLogListScrollFrame = EQL3_QuestLogListScrollFrame
+
+        function Utils:GetQuestLogTitleFrame(index)
+            return _G["EQL3_QuestLogTitle" .. index]
+        end
+
+        function Utils:GetQuestLogTitleNormalText(index)
+            return _G["EQL3_QuestLogTitle" .. index .. "NormalText"]
+        end
+
+        function Utils:GetQuestLogTitleCheck(index)
+            return _G["EQL3_QuestLogTitle" .. index .. "Check"]
+        end
+
+        -- Hook the new function created by EQL3
+        hooksecurefunc("QuestLog_Update", function()
+            Addon.questOverlayUI:UpdateQuestOverlayUI()
+        end)
+    end
+
 elseif Version.IsLegacyWrath then
 
     function Utils:GetQuestLogScrollOffset()
@@ -649,8 +678,15 @@ elseif Version.IsLegacyWrath then
         QuestLogScrollFrame.update = QuestLog_Update
     end)
 
-    function Utils:WillSoundPlay(soundData)
-        return soundData.filePath ~= nil
+    function Utils:IsSoundEnabled()
+        if tonumber(GetCVar("Sound_EnableAllSound")) ~= 1 then
+            return false
+        end
+        return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.Enabled or tonumber(GetCVar("Sound_EnableSFX")) == 1
+    end
+
+    function Utils:TestSound(soundData)
+        return true
     end
 
     function Utils:GetCurrentModelSet()
@@ -903,6 +939,15 @@ elseif Version.IsLegacyWrath then
 
 elseif Version.IsRetailVanilla then
 
+    function Addon.OnAddonLoad.Leatrix_Plus()
+        C_Timer.After(0, function() -- Let it run its ADDON_LOADED code
+            hooksecurefunc("QuestLog_Update", function()
+                -- Update QuestOverlayUI again after Leatrix_Plus replaces the titles with prepended quest levels
+                Addon.questOverlayUI:UpdateQuestOverlayUI()
+            end)
+        end)
+    end
+
 elseif Version.IsRetailWrath then
 
     GetGossipText = C_GossipInfo.GetText
@@ -951,6 +996,10 @@ elseif Version.IsRetailWrath then
     end)
 
 elseif Version.IsRetailMainline then
+
+    GetGossipText = C_GossipInfo.GetText
+    GetNumGossipActiveQuests = C_GossipInfo.GetNumActiveQuests
+    GetNumGossipAvailableQuests = C_GossipInfo.GetNumAvailableQuests
 
     function Utils:GetCurrentModelSet()
         return "HD"

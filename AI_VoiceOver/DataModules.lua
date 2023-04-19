@@ -6,10 +6,20 @@ local LOAD_ALL_MODULES = true
 
 DataModules =
 {
-    availableModules = {},         -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
-    availableModulesOrdered = {},  -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
+    presentModules = {},           -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
+    presentModulesOrdered = {},    -- To have a consistent ordering of modules (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
     registeredModules = {},        -- To keep track of which module names were already registered
     registeredModulesOrdered = {}, -- To have a consistent ordering of modules (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
+
+    availableModules = {
+        {
+            AddonName = "AI_VoiceOverData_Vanilla",
+            Title = "VoiceOver Data - Vanilla",
+            ContentVersion = "0.1",
+            RelevantAboveVersion = 0,
+            URL = "https://www.curseforge.com/wow/addons/voiceover-sounds-vanilla",
+        },
+    },
 }
 
 local function SortModules(a, b)
@@ -24,7 +34,7 @@ end
 function DataModules:Register(name, module)
     assert(not self.registeredModules[name], format([[Module "%s" already registered]], name))
 
-    local metadata = assert(self.availableModules[name],
+    local metadata = assert(self.presentModules[name],
         format([[Module "%s" attempted to register but wasn't detected during addon enumeration]], name))
     local moduleVersion = assert(tonumber(GetAddOnMetadata(name, "X-VoiceOver-DataModule-Version")),
         format([[Module "%s" is missing data format version]], name))
@@ -44,6 +54,10 @@ function DataModules:Register(name, module)
     table.sort(self.registeredModulesOrdered, SortModules)
 end
 
+function DataModules:HasRegisteredModules()
+    return next(self.registeredModules) ~= nil
+end
+
 function DataModules:GetModule(name)
     return self.registeredModules[name]
 end
@@ -52,8 +66,16 @@ function DataModules:GetModules()
     return ipairs(self.registeredModulesOrdered)
 end
 
+function DataModules:GetPresentModule(name)
+    return self.presentModules[name]
+end
+
+function DataModules:GetPresentModules()
+    return ipairs(self.presentModulesOrdered)
+end
+
 function DataModules:GetAvailableModules()
-    return ipairs(self.availableModulesOrdered)
+    return ipairs(self.availableModules)
 end
 
 function DataModules:EnumerateAddons()
@@ -82,8 +104,8 @@ function DataModules:EnumerateAddons()
                 Title = GetAddOnMetadata(name, "Title") or name,
                 Maps = maps,
             }
-            self.availableModules[name] = module
-            table.insert(self.availableModulesOrdered, module)
+            self.presentModules[name] = module
+            table.insert(self.presentModulesOrdered, module)
 
             -- Maybe in the future we can load modules based on the map the player is in (select(8, GetInstanceInfo())), but for now - just load everything
             if LOAD_ALL_MODULES and IsAddOnLoadOnDemand(name) then
@@ -92,9 +114,21 @@ function DataModules:EnumerateAddons()
         end
     end
 
-    table.sort(self.availableModulesOrdered, SortModules)
-    for order, module in self:GetAvailableModules() do
+    table.sort(self.presentModulesOrdered, SortModules)
+    for order, module in self:GetPresentModules() do
         Options:AddDataModule(module, order)
+    end
+
+    for order, module in self:GetAvailableModules() do
+        local min = module.RelevantAboveVersion
+        local max = module.RelevantBelowVersion
+        if (not min or Version.Interface >= min) and (not max or Version.Interface < max) then
+            local present = self.presentModules[module.AddonName]
+            local update = present and present.ContentVersion ~= module.ContentVersion
+            if not present or update then
+                Options:AddAvailableDataModule(module, order, update)
+            end
+        end
     end
 end
 
