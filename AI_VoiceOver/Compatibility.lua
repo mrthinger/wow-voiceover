@@ -132,7 +132,8 @@ if not QUESTS_DISPLAYED then
     end
 end
 
-if not SOUNDKIT then
+-- Patch 7.3.0: New global table: SOUNDKIT - Keys are named similar to the old string names, and they hold the soundkit ID for the sound
+if not SOUNDKIT or Version:IsBelowLegacyVersion(70300) then
     SOUNDKIT =
     {
         U_CHAT_SCROLL_BUTTON = "uChatScrollButton",
