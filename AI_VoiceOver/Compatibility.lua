@@ -73,8 +73,8 @@ if not wipe then
 end
 
 if not hooksecurefunc then
+    ---@overload fun(name, hook)
     function hooksecurefunc(table, name, hook)
-        -- hooksecurefunc([table], name, hook)
         if not hook then
             name, hook = table, name
             table = _G
@@ -91,8 +91,9 @@ if not hooksecurefunc then
 end
 
 if not GetAddOnEnableState then
+    ---@overload fun(addon)
     function GetAddOnEnableState(character, addon)
-        addon = addon or character -- GetAddOnEnableState([character], addon)
+        addon = addon or character
         local name, _, _, _, loadable, reason = _G.GetAddOnInfo(addon)
         if not name or not loadable and reason == "DISABLED" then
             return 0

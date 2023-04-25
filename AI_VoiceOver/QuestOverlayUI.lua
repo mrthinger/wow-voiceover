@@ -1,7 +1,12 @@
 setfenv(1, VoiceOver)
 
+---@class QuestPlayButton : Button
+---@field soundData SoundData
+
 QuestOverlayUI = {
+    ---@type table<number, QuestPlayButton>
     questPlayButtons = {},
+    ---@type QuestPlayButton[]
     displayedButtons = {},
 }
 
@@ -15,6 +20,7 @@ function QuestOverlayUI:CreatePlayButton(questID)
     playButton:GetDisabledTexture():SetDesaturated(true)
     playButton:GetDisabledTexture():SetAlpha(0.33)
     playButton:SetHighlightTexture("Interface\\BUTTONS\\UI-Panel-MinimizeButton-Highlight")
+    ---@cast playButton QuestPlayButton
     self.questPlayButtons[questID] = playButton
 end
 

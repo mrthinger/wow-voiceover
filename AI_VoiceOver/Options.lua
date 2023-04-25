@@ -48,6 +48,7 @@ function slashCommandsHandler:set(info, value)
 end
 
 -- General Tab
+---@type AceConfigOptionsTable
 local GeneralTab =
 {
     name = "General",
@@ -307,6 +308,7 @@ local GeneralTab =
     }
 }
 
+---@type AceConfigOptionsTable
 local LegacyWrathTab = Version.IsLegacyWrath and {
     type = "group",
     name = "3.3.5 Backport",
@@ -389,6 +391,7 @@ local LegacyWrathTab = Version.IsLegacyWrath and {
     }
 }
 
+---@type AceConfigOptionsTable
 local DataModulesTab =
 {
     name = function() return format("Data Modules%s", next(Options.table.args.DataModules.args.Available.args) and "|cFF00CCFF (NEW)|r" or "") end,
@@ -406,6 +409,7 @@ local DataModulesTab =
     }
 }
 
+---@type AceConfigOptionsTable
 local SlashCommands = {
     type = "group",
     name = "Commands",
@@ -474,6 +478,7 @@ local SlashCommands = {
     }
 }
 
+---@type AceConfigOptionsTable
 Options.table = {
     name = "Voice Over",
     type = "group",
@@ -489,6 +494,8 @@ Options.table = {
 }
 ------------------------------------------------------------
 
+---@param module DataModuleMetadata
+---@param order number
 function Options:AddDataModule(module, order)
     local descriptionOrder = 0
     local function GetNextOrder()
@@ -541,6 +548,9 @@ function Options:AddDataModule(module, order)
     }
 end
 
+---@param module AvailableDataModule
+---@param order number
+---@param update boolean Data module has update
 function Options:AddAvailableDataModule(module, order, update)
     local descriptionOrder = 0
     local function GetNextOrder()
@@ -592,7 +602,7 @@ function Options:Initialize()
     Debug:Print("Done!", "Options")
 
     -- Create the option frame
-    ---@type AceGUIFrame
+    ---@type AceGUIFrame|AceGUIWidget
     self.frame = AceGUI:Create("Frame")
     --AceConfigDialog:SetDefaultSize("VoiceOver", 640, 780) -- Let it be auto-sized
     AceConfigDialog:Open("VoiceOver", self.frame)

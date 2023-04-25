@@ -1,9 +1,12 @@
 setfenv(1, VoiceOver)
 
+---@class Addon : AceAddon, AceAddon-3.0, AceEvent-3.0, AceTimer-3.0
+---@field db VoiceOverConfig|AceDBObject-3.0
 Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0", "AceTimer-3.0")
 
 Addon.OnAddonLoad = {}
 
+---@class VoiceOverConfig
 local defaults = {
     profile = {
         SoundQueueUI = {
@@ -221,6 +224,7 @@ function Addon:QUEST_DETAIL()
     end
 
     -- print("QUEST_DETAIL", questID, questTitle);
+    ---@type SoundData
     local soundData = {
         event = Enums.SoundEvent.QuestAccept,
         questID = questID,
@@ -255,6 +259,7 @@ function Addon:QUEST_COMPLETE()
     end
 
     -- print("QUEST_COMPLETE", questID, questTitle);
+    ---@type SoundData
     local soundData = {
         event = Enums.SoundEvent.QuestComplete,
         questID = questID,
@@ -307,6 +312,7 @@ function Addon:QUEST_GREETING()
     end
 
     -- Play the gossip sound
+    ---@type SoundData
     local soundData = {
         event = Enums.SoundEvent.QuestGreeting,
         name = targetName,
@@ -337,6 +343,7 @@ function Addon:GOSSIP_SHOW()
     end
 
     -- Play the gossip sound
+    ---@type SoundData
     local soundData = {
         event = Enums.SoundEvent.Gossip,
         name = targetName,
