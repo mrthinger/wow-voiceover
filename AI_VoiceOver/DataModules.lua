@@ -336,10 +336,12 @@ function DataModules:PrepareSound(soundData)
         local data = module.SoundLengthLookupByFileName
         if data then
             local playerGenderedFileName = DataModules:AddPlayerGenderToFilename(soundData.fileName)
-            if data[playerGenderedFileName] then
+            local length = data[playerGenderedFileName]
+            if length then
                 soundData.fileName = playerGenderedFileName
+            else
+                length = data[soundData.fileName]
             end
-            local length = data[soundData.fileName]
             if length then
                 soundData.filePath = format([[Interface\AddOns\%s\%s]], module.METADATA.AddonName,
                     module.GetSoundPath and module:GetSoundPath(soundData.fileName, soundData.event) or
