@@ -6,9 +6,6 @@ function Utils:GetGUIDType(guid)
 end
 
 function Utils:GetIDFromGUID(guid)
-    if not guid then
-        return
-    end
     local type, rest = strsplit("-", guid, 2)
     type = assert(Enums.GUID[type], format("Unknown GUID type %s", type))
     assert(Enums.GUID:CanHaveID(type), format([[GUID "%s" does not contain ID]], guid))
@@ -27,6 +24,10 @@ end
 
 function Utils:GetNPCGUID()
     return UnitGUID("questnpc") or UnitGUID("npc")
+end
+
+function Utils:IsNPCObjectOrItem()
+    return not (UnitExists("questnpc") or UnitExists("npc"))
 end
 
 function Utils:IsNPCPlayer()

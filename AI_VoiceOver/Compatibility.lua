@@ -149,7 +149,6 @@ end
 -- Patch 2.4.0 (2008-03-25): Added.
 if Version.IsAnyLegacy and not UnitGUID then
     -- 1.0.0 - 2.3.0
-    table.wipe(Enums.GUID)
     Utils.GetGUIDType = nil
     Utils.GetIDFromGUID = nil
     Utils.MakeGUID = function() end
@@ -167,9 +166,6 @@ elseif Version:IsBelowLegacyVersion(40000) then
     end
 
     function Utils:GetIDFromGUID(guid)
-        if not guid then
-            return
-        end
         local type = assert(self:GetGUIDType(guid), format([[Failed to determine the type of GUID "%s"]], guid))
         assert(Enums.GUID:GetName(type), format([[Unknown GUID type %d]], type))
         assert(Enums.GUID:CanHaveID(type), format([[GUID "%s" does not contain ID]], guid))
@@ -427,6 +423,10 @@ if Version.IsLegacyVanilla then
 
     function Utils:GetNPCGUID()
         return nil
+    end
+
+    function Utils:IsNPCObjectOrItem()
+        return not UnitExists("npc")
     end
 
     function Utils:IsNPCPlayer()

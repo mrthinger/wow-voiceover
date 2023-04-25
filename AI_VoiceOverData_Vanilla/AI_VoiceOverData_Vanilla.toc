@@ -11,9 +11,15 @@
 ## X-VoiceOver-DataModule-Maps: 0, 1, 30, 33, 43, 47, 48, 70, 90, 109, 129, 189, 209, 229, 230, 289, 309, 329, 349, 369, 389, 429, 469, 509, 531, 533
 
 Module.lua
-generated\gossip_file_lookups.lua
+generated\item_name_lookups.lua
+generated\npc_gossip_file_lookups.lua
 generated\npc_name_gossip_file_lookups.lua
 generated\npc_name_lookups.lua
+generated\object_gossip_file_lookups.lua
+generated\object_name_gossip_file_lookups.lua
+generated\object_name_lookups.lua
 generated\quest_id_lookups.lua
+generated\questlog_item_lookups.lua
 generated\questlog_npc_lookups.lua
+generated\questlog_object_lookups.lua
 generated\sound_length_table.lua

@@ -156,8 +156,21 @@ local function replaceDoubleQuotes(text)
 end
 
 function DataModules:GetNPCGossipTextHash(soundData)
-    local table = soundData.unitGUID and "GossipLookupByNPCID" or "GossipLookupByNPCName"
-    local npc = soundData.unitGUID and Utils:GetIDFromGUID(soundData.unitGUID) or replaceDoubleQuotes(soundData.name)
+    local table, npc
+    if soundData.unitGUID then
+        local type = Utils:GetGUIDType(soundData.unitGUID)
+        if Enums.GUID:IsCreature(type) then
+            table = "GossipLookupByNPCID"
+        elseif type == Enums.GUID.GameObject then
+            table = "GossipLookupByObjectID"
+        else
+            return
+        end
+        npc = Utils:GetIDFromGUID(soundData.unitGUID)
+    else
+        table = soundData.unitIsObjectOrItem and "GossipLookupByObjectName" or "GossipLookupByNPCName"
+        npc = replaceDoubleQuotes(soundData.name)
+    end
     local text = soundData.text
 
     local text_entries = {}
@@ -245,23 +258,50 @@ function DataModules:GetQuestID(source, title, npcName, text)
     return best_result and best_result.value
 end
 
-function DataModules:GetQuestLogNPCID(questID)
+function DataModules:GetQuestLogQuestGiverTypeAndID(questID)
     for _, module in self:GetModules() do
         local data = module.NPCIDLookupByQuestID
         if data then
             local npcID = data[questID]
             if npcID then
-                return npcID
+                return Enums.GUID.Creature, npcID
+            end
+        end
+
+        data = module.ObjectIDLookupByQuestID
+        if data then
+            local objectID = data[questID]
+            if objectID then
+                return Enums.GUID.GameObject, objectID
+            end
+        end
+
+        data = module.ItemIDLookupByQuestID
+        if data then
+            local itemID = data[questID]
+            if itemID then
+                return Enums.GUID.Item, itemID
             end
         end
     end
 end
 
-function DataModules:GetNPCName(npcID)
+function DataModules:GetObjectName(type, id)
+    local table
+    if Enums.GUID:IsCreature(type) then
+        table = "NPCNameLookupByNPCID"
+    elseif type == Enums.GUID.GameObject then
+        table = "ObjectNameLookupByObjectID"
+    elseif type == Enums.GUID.Item then
+        table = "ItemNameLookupByItemID"
+    else
+        return
+    end
+
     for _, module in self:GetModules() do
-        local data = module.NPCNameLookupByNPCID
+        local data = module[table]
         if data then
-            local npcName = data[npcID]
+            local npcName = data[id]
             if npcName then
                 return npcName
             end

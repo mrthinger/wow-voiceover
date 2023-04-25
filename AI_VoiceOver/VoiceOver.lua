@@ -216,14 +216,10 @@ function Addon:QUEST_DETAIL()
         -- Allow quests started from items to have VO, book icon will be displayed for them
     elseif not type or not Enums.GUID:CanHaveID(type) then
         -- If the quest is started by something that we cannot extract the ID of (e.g. Player, when sharing a quest) - try to fallback to a questgiver from a module's database
-        local npcID = DataModules:GetQuestLogNPCID(questID) -- TODO: Add fallbacks to item and object questgivers once VO for them is made
-        if npcID then
-            type = Enums.GUID.Creature
-            guid = Utils:MakeGUID(type, npcID)
-            targetName = DataModules:GetNPCName(npcID) or "Unknown Name"
-        else
-            return
-        end
+        local id
+        type, id = DataModules:GetQuestLogQuestGiverTypeAndID(questID)
+        guid = id and Enums.GUID:CanHaveID(type) and Utils:MakeGUID(type, id) or guid
+        targetName = id and DataModules:GetObjectName(type, id) or targetName or "Unknown Name"
     end
 
     -- print("QUEST_DETAIL", questID, questTitle);
@@ -234,6 +230,7 @@ function Addon:QUEST_DETAIL()
         title = questTitle,
         text = questText,
         unitGUID = guid,
+        unitIsObjectOrItem = Utils:IsNPCObjectOrItem(),
         addedCallback = QuestSoundDataAdded,
     }
     self.soundQueue:AddSoundToQueue(soundData)
@@ -267,6 +264,7 @@ function Addon:QUEST_COMPLETE()
         title = questTitle,
         text = questText,
         unitGUID = guid,
+        unitIsObjectOrItem = Utils:IsNPCObjectOrItem(),
         addedCallback = QuestSoundDataAdded,
     }
     self.soundQueue:AddSoundToQueue(soundData)
@@ -316,6 +314,7 @@ function Addon:QUEST_GREETING()
         name = targetName,
         text = greetingText,
         unitGUID = guid,
+        unitIsObjectOrItem = Utils:IsNPCObjectOrItem(),
         addedCallback = GossipSoundDataAdded,
         startCallback = function()
             self.db.char.hasSeenGossipForNPC[npcKey] = true
@@ -346,6 +345,7 @@ function Addon:GOSSIP_SHOW()
         title = selectedGossipOption and format([["%s"]], selectedGossipOption),
         text = gossipText,
         unitGUID = guid,
+        unitIsObjectOrItem = Utils:IsNPCObjectOrItem(),
         addedCallback = GossipSoundDataAdded,
         startCallback = function()
             self.db.char.hasSeenGossipForNPC[npcKey] = true
