@@ -2,7 +2,7 @@ setfenv(1, VoiceOver)
 Utils = {}
 
 --- Returns `Enum.GUID` type of the provided GUID.
---- - Removed in clients before 2.3 as those don't provide UnitGUID(unitID) function.
+--- - Removed in clients before 2.3 as those don't provide `UnitGUID(unitID)` function.
 --- - Overriden for clients before 6.0 that use an older GUID format.
 ---@param guid string GUID returned by the API
 ---@return GUID guid
@@ -13,7 +13,7 @@ end
 --- Returns WorldObject ID of the provided GUID.
 ---
 --- Only supported for GUID types that can contain the ID, checkable via `Enums.GUID:CanHaveID(type)`.
---- - Removed in clients before 2.3 as those don't provide UnitGUID(unitID) function.
+--- - Removed in clients before 2.3 as those don't provide `UnitGUID(unitID)` function.
 --- - Overriden for clients before 6.0 that use an older GUID format.
 ---@param guid string GUID returned by the API
 ---@return number id
@@ -25,7 +25,7 @@ function Utils:GetIDFromGUID(guid)
 end
 
 --- Returns a dummy WorldObject GUID using the provided `Enums.GUID` type and ID.
---- - Returns nil in clients before 2.3 as those don't provide UnitGUID(unitID) function.
+--- - Returns nil in clients before 2.3 as those don't provide `UnitGUID(unitID)` function.
 --- - Overriden for clients before 6.0 that use an older GUID format.
 ---@param type GUID
 ---@param id number
@@ -48,7 +48,7 @@ end
 --- Returns the GUID of the NPC that's being interacted with while a GossipFrame or QuestFrame is visible.
 ---
 --- Uses "questnpc" unitID when available, falls back to "npc" unitID.
---- - Returns nil in 1.12 due to the lack of UnitGUID(unitID) function.
+--- - Returns nil in 1.12 due to the lack of `UnitGUID(unitID)` function.
 ---@return string|nil guid
 function Utils:GetNPCGUID()
     return UnitGUID("questnpc") or UnitGUID("npc")
