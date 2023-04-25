@@ -18,22 +18,6 @@ function Enums.SoundEvent:IsGossipEvent(event)
     return event == self.Gossip or event == self.QuestGreeting
 end
 
-function Enums.SoundEvent:ToString(event)
-    if event == self.QuestAccept then
-        return "accept"
-    elseif event == self.QuestProgress then
-        return "progress"
-    elseif event == self.QuestComplete then
-        return "complete"
-    elseif event == self.QuestGreeting then
-        return "greeting"
-    elseif event == self.Gossip then
-        return "gossip"
-    else
-        return nil
-    end
-end
-
 ---@enum GossipFrequency
 Enums.GossipFrequency =
 {

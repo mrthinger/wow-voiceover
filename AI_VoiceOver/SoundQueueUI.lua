@@ -30,6 +30,8 @@ do
     font:SetFont(GameFontNormal:GetFont(), 16, "")
     font:SetShadowColor(0, 0, 0)
     font:SetShadowOffset(1, -1)
+    font:SetJustifyH("LEFT")
+    font:SetJustifyV("MIDDLE")
 end
 
 function SoundQueueUI:Initialize()
@@ -442,7 +444,7 @@ function SoundQueueUI:InitMover()
     end)
     self.frame.mover:HookScript("OnLeave", function(self)
         SetCursor(nil)
-        GameTooltip_Hide(self)
+        GameTooltip_Hide()
     end)
     self.frame.mover:HookScript("OnMouseDown", function()
         if Addon.db.profile.SoundQueueUI.LockFrame then return end
@@ -546,7 +548,6 @@ function SoundQueueUI:CreateButton(i)
     button:SetHeight(20)
 
     button.textWidget = button:CreateFontString(nil, "OVERLAY", "VoiceOverButtonFont")
-    button.textWidget:SetJustifyH("LEFT")
     button.textWidget:SetWordWrap(false)
 
     button.iconWidget = button:CreateTexture(nil, "ARTWORK")
