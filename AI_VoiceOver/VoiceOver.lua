@@ -55,9 +55,7 @@ function Addon:OnInitialize()
     self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
     self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
 
-    self.soundQueue = SoundQueue:new()
-    self.questOverlayUI = QuestOverlayUI:new(self.soundQueue)
-
+    SoundQueueUI:Initialize()
     DataModules:EnumerateAddons()
     Options:Initialize()
 
@@ -119,14 +117,14 @@ function Addon:OnInitialize()
         return function()
             local data = getFieldData()
             local soundsToRemove = {}
-            for _, soundData in pairs(self.soundQueue.sounds) do
+            for _, soundData in pairs(SoundQueue.sounds) do
                 if Enums.SoundEvent:IsQuestEvent(soundData.event) and soundData[field] == data then
                     table.insert(soundsToRemove, soundData)
                 end
             end
 
             for _, soundData in pairs(soundsToRemove) do
-                self.soundQueue:RemoveSoundFromQueue(soundData)
+                SoundQueue:RemoveSoundFromQueue(soundData)
             end
         end
     end
@@ -138,7 +136,7 @@ function Addon:OnInitialize()
 
     if QuestLog_Update then
         hooksecurefunc("QuestLog_Update", function()
-            self.questOverlayUI:UpdateQuestOverlayUI()
+            QuestOverlayUI:Update()
         end)
     end
 
@@ -165,7 +163,7 @@ function Addon:OnInitialize()
 end
 
 function Addon:RefreshConfig()
-    self.soundQueue.ui:RefreshConfig()
+    SoundQueueUI:RefreshConfig()
 end
 
 function Addon:ADDON_LOADED(event, addon)
@@ -233,7 +231,7 @@ function Addon:QUEST_DETAIL()
         unitIsObjectOrItem = Utils:IsNPCObjectOrItem(),
         addedCallback = QuestSoundDataAdded,
     }
-    self.soundQueue:AddSoundToQueue(soundData)
+    SoundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:QUEST_COMPLETE()
@@ -267,7 +265,7 @@ function Addon:QUEST_COMPLETE()
         unitIsObjectOrItem = Utils:IsNPCObjectOrItem(),
         addedCallback = QuestSoundDataAdded,
     }
-    self.soundQueue:AddSoundToQueue(soundData)
+    SoundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:ShouldPlayGossip(guid, text)
@@ -320,7 +318,7 @@ function Addon:QUEST_GREETING()
             self.db.char.hasSeenGossipForNPC[npcKey] = true
         end
     }
-    self.soundQueue:AddSoundToQueue(soundData)
+    SoundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:GOSSIP_SHOW()
@@ -351,7 +349,7 @@ function Addon:GOSSIP_SHOW()
             self.db.char.hasSeenGossipForNPC[npcKey] = true
         end
     }
-    self.soundQueue:AddSoundToQueue(soundData)
+    SoundQueue:AddSoundToQueue(soundData)
 
     selectedGossipOption = nil
     lastGossipOptions = nil
@@ -364,14 +362,14 @@ end
 
 function Addon:QUEST_FINISHED()
     if Addon.db.profile.Audio.StopAudioOnDisengage and currentQuestSoundData then
-        self.soundQueue:RemoveSoundFromQueue(currentQuestSoundData)
+        SoundQueue:RemoveSoundFromQueue(currentQuestSoundData)
     end
     currentQuestSoundData = nil
 end
 
 function Addon:GOSSIP_CLOSED()
     if Addon.db.profile.Audio.StopAudioOnDisengage and currentGossipSoundData then
-        self.soundQueue:RemoveSoundFromQueue(currentGossipSoundData)
+        SoundQueue:RemoveSoundFromQueue(currentGossipSoundData)
     end
     currentGossipSoundData = nil
 

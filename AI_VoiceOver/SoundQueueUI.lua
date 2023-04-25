@@ -1,6 +1,5 @@
 setfenv(1, VoiceOver)
 SoundQueueUI = {}
-SoundQueueUI.__index = SoundQueueUI
 
 local LibDataBroker = LibStub("LibDataBroker-1.1")
 local LibDBIcon = LibStub("LibDBIcon-1.0")
@@ -33,12 +32,7 @@ do
     font:SetShadowOffset(1, -1)
 end
 
-function SoundQueueUI:new(soundQueue)
-    local self = {}
-    setmetatable(self, SoundQueueUI)
-
-    self.soundQueue = soundQueue
-
+function SoundQueueUI:Initialize()
     self:InitDisplay()
     self:InitPortraitLine()
     self:InitPortrait()
@@ -46,13 +40,9 @@ function SoundQueueUI:new(soundQueue)
     self:InitMinimapButton()
 
     self:RefreshConfig()
-
-    return self
 end
 
 function SoundQueueUI:InitDisplay()
-    local soundQueueUI = self
-
     self.frame = CreateFrame("Frame", "VoiceOverFrame", UIParent, "BackdropTemplate")
     function self.frame:Reset()
         self:SetWidth(PORTRAIT_SIZE + FRAME_WIDTH_WITHOUT_PORTRAIT)
@@ -110,7 +100,7 @@ function SoundQueueUI:InitDisplay()
         local containerWidth = Version.IsLegacyVanilla and ((self:GetParent():GetRight() or 0) - (self:GetParent():GetLeft() or 0)) or self:GetParent():GetWidth() -- 1.12 quirk
         self:SetWidth(0)
         self:SetText(self:GetText())
-        self:SetWidth(math.min(containerWidth - (soundQueueUI.frame.container.stopGossip:IsShown() and 32 + SKIP_GOSSIP_BUTTON_OFFSET or 0), self:GetStringWidth() + 1))
+        self:SetWidth(math.min(containerWidth - (SoundQueueUI.frame.container.stopGossip:IsShown() and 32 + SKIP_GOSSIP_BUTTON_OFFSET or 0), self:GetStringWidth() + 1))
     end
 
     -- Create Stop Gossip button
@@ -120,12 +110,12 @@ function SoundQueueUI:InitDisplay()
     function self.frame.container.stopGossip:SetGossipCount(gossipCount)
         local texture = gossipCount > 1 and [[Interface\AddOns\AI_VoiceOver\Textures\StopGossipMore]] or [[Interface\AddOns\AI_VoiceOver\Textures\StopGossip]]
         self:SetShown(gossipCount > 0)
-        self:EnableMouse(soundQueueUI.soundQueue:CanBePaused() or gossipCount > 1)
+        self:EnableMouse(SoundQueue:CanBePaused() or gossipCount > 1)
         self:SetHighlightTexture(texture, "ADD")
         self:SetNormalTexture(texture)
         self:SetPushedTexture(texture)
 
-        self.tooltip = soundQueueUI.soundQueue:CanBePaused() and (gossipCount > 1 and "Next Gossip" or "Stop Gossip") or "Skip Remaining Gossips"
+        self.tooltip = SoundQueue:CanBePaused() and (gossipCount > 1 and "Next Gossip" or "Stop Gossip") or "Skip Remaining Gossips"
         if GameTooltip:GetOwner() == self then
             GameTooltip:SetText(self.tooltip)
             GameTooltip:Show()
@@ -143,18 +133,18 @@ function SoundQueueUI:InitDisplay()
     self.frame.container.stopGossip:HookScript("OnLeave", GameTooltip_Hide)
     self.frame.container.stopGossip:HookScript("OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-        if soundQueueUI.soundQueue:CanBePaused() then
+        if SoundQueue:CanBePaused() then
             -- Skip current
-            local soundData = self.soundQueue.sounds[1]
+            local soundData = SoundQueue:GetCurrentSound()
             if soundData and Enums.SoundEvent:IsGossipEvent(soundData.event) then
-                self.soundQueue:RemoveSoundFromQueue(soundData)
+                SoundQueue:RemoveSoundFromQueue(soundData)
             end
         else
             -- Skip all remaining
-            local soundData = self.soundQueue.sounds[2]
+            local soundData = SoundQueue:GetNextSound()
             while soundData and Enums.SoundEvent:IsGossipEvent(soundData.event) do
-                self.soundQueue:RemoveSoundFromQueue(soundData)
-                soundData = self.soundQueue.sounds[2]
+                SoundQueue:RemoveSoundFromQueue(soundData)
+                soundData = SoundQueue:GetNextSound()
             end
         end
     end)
@@ -210,7 +200,7 @@ function SoundQueueUI:InitPortraitLine()
     end)
     self.frame.miniPause:HookScript("OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-        self.soundQueue:TogglePauseQueue()
+        SoundQueue:TogglePauseQueue()
     end)
 end
 
@@ -235,8 +225,6 @@ local function ShouldShowBookFor(soundData)
 end
 
 function SoundQueueUI:InitPortrait()
-    local soundQueueUI = self
-
     -- Create a container frame for the portrait
     self.frame.portrait = CreateFrame("Frame", nil, self.frame)
     self.frame.portrait:SetPoint("TOPLEFT")
@@ -292,7 +280,7 @@ function SoundQueueUI:InitPortrait()
                             return
                         end
                     end
-                    local isPaused = not soundQueueUI.soundQueue:IsPlaying()
+                    local isPaused = not SoundQueue:IsPlaying()
                     if not WAIT_FOR_ANIMATION_FINISH_BEFORE_IDLE and self.animation and self.animation ~= 0 and not self.animDelay and isPaused then
                         -- Switch to idle animation as soon as the VO is paused
                         self.animation = 0
@@ -344,7 +332,7 @@ function SoundQueueUI:InitPortrait()
                 self.model.animtimer = nil
 
                 self.model.oldCreatureID = creatureID
-            elseif self.model.wasPaused and soundQueueUI.soundQueue:IsPlaying() then
+            elseif self.model.wasPaused and SoundQueue:IsPlaying() then
                 self.model.animation = 60
                 self.model.animDuration = nil
                 self.model.animDelay = soundData.delay
@@ -386,7 +374,7 @@ function SoundQueueUI:InitPortrait()
     self.frame.portrait.pause:GetPushedTexture():SetSize(28, 28)
     function self.frame.portrait.pause:Update()
         if Addon.db.char.IsPaused then
-            if soundQueueUI.soundQueue:IsPlaying() then
+            if SoundQueue:IsPlaying() then
                 self.background:Hide()
             else
                 self.background:Show()
@@ -410,7 +398,7 @@ function SoundQueueUI:InitPortrait()
     end)
     self.frame.portrait.pause:HookScript("OnClick", function()
         PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-        self.soundQueue:TogglePauseQueue()
+        SoundQueue:TogglePauseQueue()
     end)
 
     -- Create an overlay frame above the 3D model to contain the border and any other button that might be placed on the border (like the mover)
@@ -551,8 +539,6 @@ function SoundQueueUI:RefreshConfig()
 end
 
 function SoundQueueUI:CreateButton(i)
-    local soundQueueUI = self
-
     local button = CreateFrame("Button", nil, self.frame.container)
     self.frame.container.buttons[i] = button
 
@@ -580,22 +566,22 @@ function SoundQueueUI:CreateButton(i)
             return
         end
         self:Show()
-        local soundDataBeingPlayed = soundQueueUI.soundQueue.sounds[1]
+        local soundDataBeingPlayed = SoundQueue:GetCurrentSound()
         local isBeingPlayed = soundData == soundDataBeingPlayed
         local buttonIndex = self:GetID()
 
         if isBeingPlayed then
             self:SetAlpha(1)
             self.textWidget:SetShadowColor(0, 0, 0, 1)
-            self:SetPoint("TOPLEFT", soundQueueUI.frame.container.name, "BOTTOMLEFT", 0, -2)
-            self:EnableMouse(soundQueueUI.soundQueue:CanBePaused())
+            self:SetPoint("TOPLEFT", SoundQueueUI.frame.container.name, "BOTTOMLEFT", 0, -2)
+            self:EnableMouse(SoundQueue:CanBePaused())
         else
             local isCollapsedGossipBeingPlayed = soundDataBeingPlayed and Enums.SoundEvent:IsGossipEvent(soundDataBeingPlayed.event) and (HIDE_GOSSIP_OPTIONS or not soundDataBeingPlayed.title)
             local queuePosition = buttonIndex - (isCollapsedGossipBeingPlayed and 0 or 1)
             local alpha = math.max(0.1, math.min(1, 1 - (queuePosition - 1) / 3))
             self:SetAlpha(alpha)
             self.textWidget:SetShadowColor(0, 0, 0, 0.5 + 0.5 * alpha) -- Technically isn't necessary, but it looks better this way
-            self:SetPoint("TOPLEFT", soundQueueUI.frame.container.buttons[buttonIndex - 1] or soundQueueUI.frame.container.name, "BOTTOMLEFT", 0, queuePosition == 1 and -8 or -2)
+            self:SetPoint("TOPLEFT", SoundQueueUI.frame.container.buttons[buttonIndex - 1] or SoundQueueUI.frame.container.name, "BOTTOMLEFT", 0, queuePosition == 1 and -8 or -2)
             self:EnableMouse(true)
         end
 
@@ -641,7 +627,7 @@ function SoundQueueUI:CreateButton(i)
         end
     end
 
-    button:HookScript("OnClick", function(self) soundQueueUI.soundQueue:RemoveSoundFromQueue(self.soundData) end)
+    button:HookScript("OnClick", function(self) SoundQueue:RemoveSoundFromQueue(self.soundData) end)
     button:HookScript("OnMouseDown", function(self) self:Update(true) end)
     button:HookScript("OnMouseUp", function(self) self:Update(false) end)
     button:HookScript("OnEnter", function(self) self:Update(nil, true) end)
@@ -652,11 +638,11 @@ function SoundQueueUI:CreateButton(i)
 end
 
 function SoundQueueUI:UpdateSoundQueueDisplay()
-    self.frame:SetShown(not Addon.db.profile.SoundQueueUI.HideFrame and getn(self.soundQueue.sounds) > 0)
+    self.frame:SetShown(not Addon.db.profile.SoundQueueUI.HideFrame and not SoundQueue:IsEmpty())
 
     self:UpdatePauseDisplay()
 
-    self.frame.portrait:Configure(self.soundQueue.sounds[1])
+    self.frame.portrait:Configure(SoundQueue:GetCurrentSound())
 
     self.frame.container:SetHeight(self.frame:GetHeight())
     self.frame.container:Hide() -- 1.12 quirk
@@ -665,7 +651,7 @@ function SoundQueueUI:UpdateSoundQueueDisplay()
     local lastButtonIndex = 0
     local lastContent
     local nameSet
-    for i, soundData in ipairs(self.soundQueue.sounds) do
+    for i, soundData in ipairs(SoundQueue.sounds) do
         if not nameSet then
             nameSet = true
             self.frame.container.name:SetText(soundData.name)
@@ -688,7 +674,7 @@ function SoundQueueUI:UpdateSoundQueueDisplay()
         self.frame.container.buttons[i]:Configure(nil)
     end
 
-    self.frame.container.stopGossip:SetGossipCount(gossipCount or getn(self.soundQueue.sounds))
+    self.frame.container.stopGossip:SetGossipCount(gossipCount or SoundQueue:GetQueueSize())
     self.frame.container.name:Update()
 
     -- Align the container vertically to the middle

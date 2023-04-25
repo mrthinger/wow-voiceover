@@ -473,7 +473,7 @@ if Version.IsLegacyVanilla then
         end
 
         if not frame then
-            frame = CreateFrame("DressUpModel", nil, Addon.soundQueue.ui.frame.portrait)
+            frame = CreateFrame("DressUpModel", nil, SoundQueueUI.frame.portrait)
             table.insert(modelFramePool, frame)
         end
 
@@ -493,8 +493,8 @@ if Version.IsLegacyVanilla then
         end
         soundData.modelFrame = nil
 
-        if Addon.soundQueue.ui.frame.portrait.model == frame then
-            Addon.soundQueue.ui.frame.portrait.model = Addon.soundQueue.ui.frame.portrait.defaultModel
+        if SoundQueueUI.frame.portrait.model == frame then
+            SoundQueueUI.frame.portrait.model = SoundQueueUI.frame.portrait.defaultModel
         end
 
         frame:Hide()
@@ -631,7 +631,7 @@ if Version.IsLegacyVanilla then
 
         -- Hook the new function created by EQL3
         hooksecurefunc("QuestLog_Update", function()
-            Addon.questOverlayUI:UpdateQuestOverlayUI()
+            QuestOverlayUI:Update()
         end)
     end
 
@@ -928,7 +928,7 @@ elseif Version.IsLegacyWrath then
         animation:SetSmoothing("OUT")
         self.frame:HookScript("OnShow", function()
             fadeIn:Stop()
-            local soundData = self.soundQueue.sounds[1]
+            local soundData = SoundQueue:GetCurrentSound()
             local duration = soundData and soundData.delay or 0
             if duration > 0 then
                 animation:SetDuration(duration)
@@ -943,7 +943,7 @@ elseif Version.IsRetailVanilla then
         C_Timer.After(0, function() -- Let it run its ADDON_LOADED code
             hooksecurefunc("QuestLog_Update", function()
                 -- Update QuestOverlayUI again after Leatrix_Plus replaces the titles with prepended quest levels
-                Addon.questOverlayUI:UpdateQuestOverlayUI()
+                QuestOverlayUI:Update()
             end)
         end)
     end

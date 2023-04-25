@@ -137,7 +137,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.SoundQueueUI.LockFrame end,
                     set = function(info, value)
                         Addon.db.profile.SoundQueueUI.LockFrame = value
-                        Addon.soundQueue.ui:RefreshConfig()
+                        SoundQueueUI:RefreshConfig()
                     end,
                 },
                 ResetFrame = {
@@ -146,7 +146,7 @@ local GeneralTab =
                     name = "Reset Frame",
                     desc = "Resets frame position and size back to default.",
                     func = function(info)
-                        Addon.soundQueue.ui.frame:Reset()
+                        SoundQueueUI.frame:Reset()
                     end,
                 },
                 LineBreak1 = { type = "description", name = "", order = 3 },
@@ -165,7 +165,7 @@ local GeneralTab =
                     end,
                     set = function(info, value)
                         Addon.db.profile.SoundQueueUI.FrameStrata = FRAME_STRATAS[value]
-                        Addon.soundQueue.ui.frame:SetFrameStrata(Addon.db.profile.SoundQueueUI.FrameStrata)
+                        SoundQueueUI.frame:SetFrameStrata(Addon.db.profile.SoundQueueUI.FrameStrata)
                     end,
                 },
                 FrameScale = {
@@ -179,14 +179,14 @@ local GeneralTab =
                     isPercent = true,
                     get = function(info) return Addon.db.profile.SoundQueueUI.FrameScale end,
                     set = function(info, value)
-                        local wasShown = Version.IsLegacyVanilla and Addon.soundQueue.ui.frame:IsShown() -- 1.12 quirk
+                        local wasShown = Version.IsLegacyVanilla and SoundQueueUI.frame:IsShown() -- 1.12 quirk
                         if wasShown then
-                            Addon.soundQueue.ui.frame:Hide()
+                            SoundQueueUI.frame:Hide()
                         end
                         Addon.db.profile.SoundQueueUI.FrameScale = value
-                        Addon.soundQueue.ui:RefreshConfig()
+                        SoundQueueUI:RefreshConfig()
                         if wasShown then
-                            Addon.soundQueue.ui.frame:Show()
+                            SoundQueueUI.frame:Show()
                         end
                     end,
                 },
@@ -202,7 +202,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.SoundQueueUI.HidePortrait end,
                     set = function(info, value)
                         Addon.db.profile.SoundQueueUI.HidePortrait = value
-                        Addon.soundQueue.ui:RefreshConfig()
+                        SoundQueueUI:RefreshConfig()
                     end,
                 },
                 HideFrame = {
@@ -214,7 +214,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.SoundQueueUI.HideFrame end,
                     set = function(info, value)
                         Addon.db.profile.SoundQueueUI.HideFrame = value
-                        Addon.soundQueue.ui:RefreshConfig()
+                        SoundQueueUI:RefreshConfig()
                     end,
                 },
             },
@@ -235,7 +235,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.Audio.SoundChannel end,
                     set = function(info, value)
                         Addon.db.profile.Audio.SoundChannel = value
-                        Addon.soundQueue.ui:RefreshConfig()
+                        SoundQueueUI:RefreshConfig()
                     end,
                 },
                 LineBreak = { type = "description", name = "", order = 2 },
@@ -254,7 +254,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.Audio.GossipFrequency end,
                     set = function(info, value)
                         Addon.db.profile.Audio.GossipFrequency = value
-                        Addon.soundQueue.ui:RefreshConfig()
+                        SoundQueueUI:RefreshConfig()
                     end,
                 },
                 AutoToggleDialog = (Version.IsLegacyVanilla or Version:IsRetailOrAboveLegacyVersion(60100) or nil) and {
@@ -267,7 +267,7 @@ local GeneralTab =
                     get = function(info) return Addon.db.profile.Audio.AutoToggleDialog end,
                     set = function(info, value)
                         Addon.db.profile.Audio.AutoToggleDialog = value
-                        Addon.soundQueue.ui:RefreshConfig()
+                        SoundQueueUI:RefreshConfig()
                         if Addon.db.profile.Audio.AutoToggleDialog and Version:IsRetailOrAboveLegacyVersion(60100) then
                             SetCVar("Sound_EnableDialog", 1)
                         end
@@ -420,7 +420,7 @@ local SlashCommands = {
             desc = "Play/Pause voiceovers",
             hidden = true,
             func = function(info)
-                Addon.soundQueue:TogglePauseQueue()
+                SoundQueue:TogglePauseQueue()
             end
         },
         Play = {
@@ -429,7 +429,7 @@ local SlashCommands = {
             name = "Play Audio",
             desc = "Resume the playback of voiceovers",
             func = function(info)
-                Addon.soundQueue:ResumeQueue()
+                SoundQueue:ResumeQueue()
             end
         },
         Pause = {
@@ -438,7 +438,7 @@ local SlashCommands = {
             name = "Pause Audio",
             desc = "Pause the playback of voiceovers",
             func = function(info)
-                Addon.soundQueue:PauseQueue()
+                SoundQueue:PauseQueue()
             end
         },
         Skip = {
@@ -447,9 +447,9 @@ local SlashCommands = {
             name = "Skip Line",
             desc = "Skip the currently played voiceover",
             func = function(info)
-                local soundData = Addon.soundQueue.sounds[1]
+                local soundData = SoundQueue:GetCurrentSound()
                 if soundData then
-                    Addon.soundQueue:RemoveSoundFromQueue(soundData)
+                    SoundQueue:RemoveSoundFromQueue(soundData)
                 end
             end
         },
@@ -459,7 +459,7 @@ local SlashCommands = {
             name = "Clear Queue",
             desc = "Stop the playback and clears the voiceovers queue",
             func = function(info)
-                Addon.soundQueue:RemoveAllSoundsFromQueue()
+                SoundQueue:RemoveAllSoundsFromQueue()
             end
         },
         Options = {
