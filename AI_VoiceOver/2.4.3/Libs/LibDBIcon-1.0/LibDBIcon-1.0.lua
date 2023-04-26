@@ -97,7 +97,9 @@ local function onEnter(self)
 
 	for _, button in next, lib.objects do
 		if button.showOnMouseover then
-			button.fadeOut:Stop()
+			if button.fadeOut then
+				button.fadeOut:Stop()
+			end
 			button:SetAlpha(1)
 		end
 	end
@@ -119,7 +121,11 @@ local function onLeave(self)
 	if not isDraggingButton then
 		for _, button in next, lib.objects do
 			if button.showOnMouseover then
-				button.fadeOut:Play()
+				if button.fadeOut then
+					button.fadeOut:Play()
+				else
+					button:SetAlpha(0)
+				end
 			end
 		end
 	end
@@ -217,7 +223,9 @@ do
 		lib.tooltip:Hide()
 		for _, button in next, lib.objects do
 			if button.showOnMouseover then
-				button.fadeOut:Stop()
+				if button.fadeOut then
+					button.fadeOut:Stop()
+				end
 				button:SetAlpha(1)
 			end
 		end
@@ -232,7 +240,11 @@ local function onDragStop(self)
 	isDraggingButton = false
 	for _, button in next, lib.objects do
 		if button.showOnMouseover then
-			button.fadeOut:Play()
+			if button.fadeOut then
+				button.fadeOut:Play()
+			else
+				button:SetAlpha(0)
+			end
 		end
 	end
 end
@@ -254,20 +266,24 @@ local function createButton(name, object, db)
 	button.db = db
 	button:SetFrameStrata("MEDIUM")
 	button:SetFrameLevel(8)
-	button:SetSize(31, 31)
+	button:SetWidth(31)
+	button:SetHeight(31)
 	button:RegisterForClicks("anyUp")
 	button:RegisterForDrag("LeftButton")
 	button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 	local overlay = button:CreateTexture(nil, "OVERLAY")
-	overlay:SetSize(53, 53)
+	overlay:SetWidth(53)
+	overlay:SetHeight(53)
 	overlay:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 	overlay:SetPoint("TOPLEFT")
 	local background = button:CreateTexture(nil, "BACKGROUND")
-	background:SetSize(20, 20)
+	background:SetWidth(20)
+	background:SetHeight(20)
 	background:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
 	background:SetPoint("TOPLEFT", 7, -5)
 	local icon = button:CreateTexture(nil, "ARTWORK")
-	icon:SetSize(17, 17)
+	icon:SetWidth(17)
+	icon:SetHeight(17)
 	icon:SetTexture(object.icon)
 	icon:SetPoint("TOPLEFT", 7, -6)
 	button.icon = icon
@@ -289,16 +305,18 @@ local function createButton(name, object, db)
 	button:SetScript("OnMouseDown", onMouseDown)
 	button:SetScript("OnMouseUp", onMouseUp)
 
-	button.fadeOut = button:CreateAnimationGroup()
-	local animOut = button.fadeOut:CreateAnimation("Alpha")
-	animOut:SetOrder(1)
-	animOut:SetDuration(0.2)
-	animOut:SetChange(-1)
-	animOut:SetStartDelay(1)
-	animOut:SetScript("OnFinished", function()
-		animOut:Stop()
-		button:SetAlpha(0)
-	end)
+	if button.CreateAnimationGroup then
+		button.fadeOut = button:CreateAnimationGroup()
+		local animOut = button.fadeOut:CreateAnimation("Alpha")
+		animOut:SetOrder(1)
+		animOut:SetDuration(0.2)
+		animOut:SetChange(-1)
+		animOut:SetStartDelay(1)
+		animOut:SetScript("OnFinished", function()
+			animOut:Stop()
+			button:SetAlpha(0)
+		end)
+	end
 
 	lib.objects[name] = button
 
@@ -430,7 +448,9 @@ do
 		if isDraggingButton then return end
 		for _, button in next, lib.objects do
 			if button.showOnMouseover then
-				button.fadeOut:Stop()
+				if button.fadeOut then
+					button.fadeOut:Stop()
+				end
 				button:SetAlpha(1)
 			end
 		end
@@ -439,7 +459,11 @@ do
 		if isDraggingButton then return end
 		for _, button in next, lib.objects do
 			if button.showOnMouseover then
-				button.fadeOut:Play()
+				if button.fadeOut then
+					button.fadeOut:Play()
+				else
+					button:SetAlpha(0)
+				end
 			end
 		end
 	end
@@ -451,11 +475,15 @@ do
 		if button then
 			if value then
 				button.showOnMouseover = true
-				button.fadeOut:Stop()
+				if button.fadeOut then
+					button.fadeOut:Stop()
+				end
 				button:SetAlpha(0)
 			else
 				button.showOnMouseover = false
-				button.fadeOut:Stop()
+				if button.fadeOut then
+					button.fadeOut:Stop()
+				end
 				button:SetAlpha(1)
 			end
 		end
@@ -497,7 +525,7 @@ for name, button in next, lib.objects do
 	button:SetScript("OnMouseDown", onMouseDown)
 	button:SetScript("OnMouseUp", onMouseUp)
 
-	if not button.fadeOut then -- Upgrade to 39
+	if not button.fadeOut and button.CreateAnimationGroup then -- Upgrade to 39
 		button.fadeOut = button:CreateAnimationGroup()
 		local animOut = button.fadeOut:CreateAnimation("Alpha")
 		animOut:SetOrder(1)

@@ -7,7 +7,11 @@ if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
 local pairs, assert, type = pairs, assert, type
-local wipe = table.wipe
+local function wipe(tbl)
+	for key in next, tbl do
+		tbl[key] = nil
+	end
+end
 
 -- WoW APIs
 local PlaySound = PlaySound
