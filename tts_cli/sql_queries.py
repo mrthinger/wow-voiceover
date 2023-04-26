@@ -219,8 +219,9 @@ gameobject_data AS (
     FROM gameobject_template gt
         LEFT JOIN collected_gossip_menus cgm ON cgm.base_menu_id =
             CASE gt.type
-                WHEN 2 THEN data3
-                WHEN 10 THEN data19
+                WHEN 2  THEN data3  -- GAMEOBJECT_TYPE_QUESTGIVER (type 2) has property "gossipID" in data3 field
+                WHEN 8  THEN data10 -- GAMEOBJECT_TYPE_SPELL_FOCUS (type 8) has property "gossipID" in data10 field
+                WHEN 10 THEN data19 -- GAMEOBJECT_TYPE_GOOBER (type 10) has property "gossipID" in data19 field
             END
     WHERE gt.type IN (2, 10)
 ),
