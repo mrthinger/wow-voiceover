@@ -220,6 +220,8 @@ local function ShouldShowBookFor(soundData)
             return true -- Show book for missing and unloaded models
         end
         return false
+    elseif Version.IsLegacyBurningCrusade then
+        return true -- No support for Model:SetCreature in 2.4.3
     end
 
     local guid = soundData.unitGUID
