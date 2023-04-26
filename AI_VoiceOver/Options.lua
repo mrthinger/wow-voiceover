@@ -309,9 +309,9 @@ local GeneralTab =
 }
 
 ---@type AceConfigOptionsTable
-local LegacyWrathTab = Version.IsLegacyWrath and {
+local LegacyWrathTab = (Version.IsLegacyWrath or Version.IsLegacyBurningCrusade or nil) and {
     type = "group",
-    name = "3.3.5 Backport",
+    name = Version.IsLegacyBurningCrusade and "2.4.3 Backport" or "3.3.5 Backport",
     order = 19,
     args = {
         PlayOnMusicChannel = {
@@ -323,7 +323,7 @@ local LegacyWrathTab = Version.IsLegacyWrath and {
                 Description = {
                     type = "description",
                     order = 100,
-                    name = "3.3.5 client lacks the ability to stop addon sounds at will. As a workaround, you can play the voiceovers on the music channel instead, which, unlike sounds, can be stopped. Regular background music will not be playing throughout the duration of voiceovers.|n|nIf you normally play with music disabled - it will be temporarily enabled during voiceovers, but no actual background music will be played.",
+                    name = format("%s client lacks the ability to stop addon sounds at will. As a workaround, you can play the voiceovers on the music channel instead, which, unlike sounds, can be stopped. Regular background music will not be playing throughout the duration of voiceovers.|n|nIf you normally play with music disabled - it will be temporarily enabled during voiceovers, but no actual background music will be played.", Version.IsLegacyBurningCrusade and "2.4.3" or "3.3.5"),
                 },
                 Enabled = {
                     type = "toggle",
@@ -353,6 +353,7 @@ local LegacyWrathTab = Version.IsLegacyWrath and {
                             min = 0,
                             softMax = 2,
                             bigStep = 0.05,
+                            disabled = Version.IsLegacyBurningCrusade,
                             get = function(info) return Addon.db.profile.LegacyWrath.PlayOnMusicChannel.FadeOutMusic end,
                             set = function(info, value) Addon.db.profile.LegacyWrath.PlayOnMusicChannel.FadeOutMusic = value end,
                         },

@@ -31,7 +31,7 @@ local defaults = {
                 RightButton = "Clear",
             }
         },
-        LegacyWrath = Version.IsLegacyWrath and {
+        LegacyWrath = (Version.IsLegacyWrath or Version.IsLegacyBurningCrusade or nil) and {
             PlayOnMusicChannel = {
                 Enabled = true,
                 Volume = 1,
