@@ -14,14 +14,20 @@ if not select then
     end
 end
 
-if not print then
-    function print(...)
+if not print or Version.IsLegacyVanilla or Version.IsLegacyBurningCrusade then
+    local argn, argi
+    if Version.IsLegacyVanilla then
+        argn, argi = "arg.n", "arg[i]"
+    else
+        argn, argi = [[select("#", ...)]], [[(select(i, ...))]]
+    end
+    print = loadstring(format([[return function(...)
         local text = ""
-        for i = 1, arg.n do
-            text = text .. (i > 1 and " " or "") .. tostring(arg[i])
+        for i = 1, %s do
+            text = text .. (i > 1 and " " or "") .. tostring(%s)
         end
         DEFAULT_CHAT_FRAME:AddMessage(text)
-    end
+    end]], argn, argi))()
 end
 
 if not strsplit then
@@ -60,10 +66,7 @@ end
 
 if not table.wipe then
     function table.wipe(tbl)
-        for i = getn(tbl), 1, -1 do
-            table.remove(tbl, i)
-        end
-        for key in pairs(tbl) do
+        for key in next, tbl do
             tbl[key] = nil
         end
     end
@@ -212,13 +215,14 @@ end
 -- Patch 6.0.2 (2014-10-14): Removed returns 'questTag' and 'isDaily'. Added returns 'frequency', 'isOnMap', 'hasLocalPOI', 'isTask', and 'isStory'.
 if Version:IsBelowLegacyVersion(60000) then
     local dummyQuestIDMap = { NEXT = -1 }
+    local oldGetQuestLogTitle = GetQuestLogTitle -- Store original function before BEQL (Bayi's Extended Questlog) overrides it and starts prepending quest level
     function GetQuestLogTitle(questIndex)
         local title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID, displayQuestID
         -- Patch 2.0.3 (2007-01-09): Added the 'suggestedGroup' return.
         if Version:IsBelowLegacyVersion(20000) then
-            title, level, questTag, isHeader, isCollapsed, isComplete = _G.GetQuestLogTitle(questIndex)
+            title, level, questTag, isHeader, isCollapsed, isComplete = oldGetQuestLogTitle(questIndex)
         else
-            title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID, displayQuestID = _G.GetQuestLogTitle(questIndex)
+            title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID, displayQuestID = oldGetQuestLogTitle(questIndex)
         end
         -- Patch 3.3.0 (2009-12-08): Added the 'questID' return.
         if Version:IsBelowLegacyVersion(30300) then
@@ -458,6 +462,59 @@ if Version.IsLegacyVanilla then
         soundData.handle = nil
     end
 
+    function RegionOverrides:SetPoint(point, region, relativeFrame, offsetX, offsetY)
+        if region == nil and relativeFrame == nil and offsetX == nil and offsetY == nil then
+            self:_SetPoint(point, 0, 0)
+        else
+            self:_SetPoint(point, region, relativeFrame, offsetX, offsetY)
+        end
+    end
+    function FrameOverrides:SetScript(script, handler)
+        self:_SetScript(script, script == "OnEvent"
+            and function() handler(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end
+            or  function() handler(this,        arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end)
+    end
+    function FrameMixins:HookScript(script, handler)
+        local old = self:GetScript(script)
+        self:_SetScript(script, script == "OnEvent"
+            and function() if old then old() end handler(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end
+            or  function() if old then old() end handler(this,        arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end)
+    end
+
+    hooksecurefunc(GameTooltip, "SetOwner", function(self, owner, anchor)
+        self._owner = owner
+    end)
+    function GameTooltip:GetOwner()
+        return self._owner
+    end
+
+    function Addon.OnAddonLoad.EQL3() -- Extended Quest Log 3
+        QUESTS_DISPLAYED = EQL3_QUESTS_DISPLAYED
+
+        QuestLogFrame = EQL3_QuestLogFrame
+        QuestLogListScrollFrame = EQL3_QuestLogListScrollFrame
+
+        function Utils:GetQuestLogTitleFrame(index)
+            return _G["EQL3_QuestLogTitle" .. index]
+        end
+
+        function Utils:GetQuestLogTitleNormalText(index)
+            return _G["EQL3_QuestLogTitle" .. index .. "NormalText"]
+        end
+
+        function Utils:GetQuestLogTitleCheck(index)
+            return _G["EQL3_QuestLogTitle" .. index .. "Check"]
+        end
+
+        -- Hook the new function created by EQL3
+        hooksecurefunc("QuestLog_Update", function()
+            Addon.questOverlayUI:UpdateQuestOverlayUI()
+        end)
+    end
+
+end
+if Version.IsLegacyVanilla or Version.IsLegacyBurningCrusade then
+
     local modelFramePool = {}
     function Utils:CreateNPCModelFrame(soundData)
         if soundData.modelFrame then
@@ -473,7 +530,7 @@ if Version.IsLegacyVanilla then
         end
 
         if not frame then
-            frame = CreateFrame("DressUpModel", nil, Addon.soundQueue.ui.frame.portrait)
+            frame = CreateFrame("PlayerModel", nil, Addon.soundQueue.ui.frame.portrait)
             table.insert(modelFramePool, frame)
         end
 
@@ -519,11 +576,11 @@ if Version.IsLegacyVanilla then
         end)
     end
 
-    function RegionOverrides:SetPoint(point, region, relativeFrame, offsetX, offsetY)
-        if region == nil and relativeFrame == nil and offsetX == nil and offsetY == nil then
-            self:_SetPoint(point, 0, 0)
+    function FrameOverrides:HookScript(script, handler)
+        if self:GetScript(script) then
+            self:_HookScript(script, handler)
         else
-            self:_SetPoint(point, region, relativeFrame, offsetX, offsetY)
+            self:SetScript(script, handler)
         end
     end
     function FrameOverrides:CreateTexture(name, layer)
@@ -536,17 +593,6 @@ if Version.IsLegacyVanilla then
         ApplyMixinsAndOverrides(region, RegionMixins, RegionOverrides)
         ApplyMixinsAndOverrides(region, FontStringMixins)
         return region
-    end
-    function FrameOverrides:SetScript(script, handler)
-        self:_SetScript(script, script == "OnEvent"
-            and function() handler(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end
-            or  function() handler(this,        arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end)
-    end
-    function FrameMixins:HookScript(script, handler)
-        local old = self:GetScript(script)
-        self:_SetScript(script, script == "OnEvent"
-            and function() if old then old() end handler(this, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end
-            or  function() if old then old() end handler(this,        arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) end)
     end
     function FrameOverrides:SetNormalTexture(file)
         local texture = self:CreateTexture(nil, "ARTWORK")
@@ -600,83 +646,15 @@ if Version.IsLegacyVanilla then
     function ModelMixins:SetCreature()
     end
 
-    hooksecurefunc(GameTooltip, "SetOwner", function(self, owner, anchor)
-        self._owner = owner
-    end)
-    function GameTooltip:GetOwner()
-        return self._owner
-    end
     function GameTooltip_Hide()
         -- Used for XML OnLeave handlers
         GameTooltip:Hide()
     end
 
-    function Addon.OnAddonLoad.EQL3() -- Extended Quest Log 3
-        QUESTS_DISPLAYED = EQL3_QUESTS_DISPLAYED
-
-        QuestLogFrame = EQL3_QuestLogFrame
-        QuestLogListScrollFrame = EQL3_QuestLogListScrollFrame
-
-        function Utils:GetQuestLogTitleFrame(index)
-            return _G["EQL3_QuestLogTitle" .. index]
-        end
-
-        function Utils:GetQuestLogTitleNormalText(index)
-            return _G["EQL3_QuestLogTitle" .. index .. "NormalText"]
-        end
-
-        function Utils:GetQuestLogTitleCheck(index)
-            return _G["EQL3_QuestLogTitle" .. index .. "Check"]
-        end
-
-        -- Hook the new function created by EQL3
-        hooksecurefunc("QuestLog_Update", function()
-            Addon.questOverlayUI:UpdateQuestOverlayUI()
-        end)
-    end
-
-elseif Version.IsLegacyWrath then
-
-    function Utils:GetQuestLogScrollOffset()
-        return HybridScrollFrame_GetOffset(QuestLogScrollFrame)
-    end
-
-    function Utils:GetQuestLogTitleFrame(index)
-        return _G["QuestLogScrollFrameButton" .. index]
-    end
-
-    function Utils:GetQuestLogTitleNormalText(index)
-        return _G["QuestLogScrollFrameButton" .. index .. "NormalText"]
-    end
-
-    function Utils:GetQuestLogTitleCheck(index)
-        return _G["QuestLogScrollFrameButton" .. index .. "Check"]
-    end
-
-    local prefix
-    local QuestLogTitleButton_Resize = QuestLogTitleButton_Resize
-    function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
-        if not prefix then
-            local text = normalText:GetText()
-            for i = 1, 20 do
-                normalText:SetText(string.rep(" ", i))
-                if normalText:GetStringWidth() >= 24 then
-                    prefix = normalText:GetText()
-                    break
-                end
-            end
-            prefix = prefix or "  "
-            normalText:SetText(text)
-        end
-
-        playButton:SetPoint("LEFT", normalText, "LEFT", 4, 0)
-        normalText:SetText(prefix .. (normalText:GetText() or ""):trim())
-        QuestLogTitleButton_Resize(questLogTitleFrame)
-    end
-
-    hooksecurefunc(Addon, "OnInitialize", function()
-        QuestLogScrollFrame.update = QuestLog_Update
-    end)
+end
+if Version.IsLegacyBurningCrusade then
+end
+if Version.IsLegacyBurningCrusade or Version.IsLegacyWrath then
 
     function Utils:IsSoundEnabled()
         if tonumber(GetCVar("Sound_EnableAllSound")) ~= 1 then
@@ -693,75 +671,9 @@ elseif Version.IsLegacyWrath then
         return Addon.db.profile.LegacyWrath.HDModels and "HD" or "Original"
     end
 
-    function hookModel(self)
-        local function HasModelLoaded(self)
-            local model = self:GetModel()
-            return model and type(model) == "string" and self:GetModelFileID() ~= 130737
-        end
-        self._sequence = 0
-        hooksecurefunc(self, "ClearModel", function(self)
-            self._awaitingModel = nil
-            self._camera = nil
-            self._sequence = 0
-            self._sequenceStart = nil
-        end)
-        local oldSetSequence = self.SetSequence
-        function self:SetSequence(sequence)
-            self._sequence = sequence
-            self._sequenceStart = GetTime()
-            if not self._awaitingModel then
-                oldSetSequence(self, sequence)
-            end
-        end
-        local oldSetCreature = self.SetCreature
-        function self:SetCreature(id)
-            self:ClearModel()
-            self:SetModel([[Interface\Buttons\TalkToMeQuestion_White.mdx]])
-            oldSetCreature(self, id)
-            self._awaitingModel = not HasModelLoaded(self)
-        end
-        local oldSetCamera = self.SetCamera
-        function self:SetCamera(id)
-            self._camera = id
-            if not self._awaitingModel then
-                oldSetCamera(self, id)
-            end
-        end
-        self:HookScript("OnUpdate", function(self, elapsed)
-            if self._awaitingModel and HasModelLoaded(self) then
-                self._awaitingModel = nil
-                self:SetModelScale(2)
-                self:SetPosition(0, 0, 0)
-
-                if self._sequence ~= 0 then
-                    self:SetSequence(self._sequence)
-                end
-            elseif self._awaitingModel then
-                self:SetModelScale(0.71 / self:GetEffectiveScale())
-                self:SetPosition(5 * self:GetModelScale(), 0, 2 * self:GetModelScale())
-            end
-            if self._sequence ~= 0 and not self._awaitingModel then
-                self:SetSequenceTime(self._sequence, (GetTime() - self._sequenceStart) * 1000)
-            end
-        end)
-    end
-
-    hooksecurefunc(SoundQueueUI, "InitPortrait", function(self)
-        self.frame.portrait.pause:HookScript("OnEnter", function()
-            if self.frame.portrait.model._awaitingModel then
-                GameTooltip:SetOwner(self.frame.portrait.pause, "ANCHOR_NONE")
-                GameTooltip:SetPoint("BOTTOMLEFT", self.frame.portrait.pause, "BOTTOMRIGHT", 4, -4)
-                GameTooltip:SetText("Uncached NPC", HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b)
-                GameTooltip:AddLine("Encounter this NPC in the world again to be able to see their model.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1)
-                GameTooltip:Show()
-            end
-        end)
-        self.frame.portrait.pause:HookScript("OnLeave", GameTooltip_Hide)
-    end)
-
     --[[
         Here begins the code the plays the VO over music channel in order to support the ability to pause/stop the VO.
-        3.3.5's PlaySound/PlaySoundFile cannot be stopped by any means short of restarting the whole sound system (freezes the client for a couple of seconds).
+        2.4.3's and 3.3.5's PlaySound/PlaySoundFile cannot be stopped by any means short of restarting the whole sound system (freezes the client for a couple of seconds).
         But PlayMusic can be stopped with StopMusic. This, however, causes the currently played script music to fade out instead of cutting,
             which is a problem, because by letting this happen we'll hear the VO looping until it fully fades out. This can be worked around
             by PlayMusic'ing another file (even one that doesn't exist), as that causes the script music to be instantly interrupted.
@@ -777,9 +689,16 @@ elseif Version.IsLegacyWrath then
         8. Music volume is instantly changed to 0
         9. Music volume is smoothly raised to back to the pre-VO level over the config.FadeOutMusic duration
         10. In-game background music is removed by calling StopMusic()
+
+        On 2.4.3 steps 2 and 3 are swapped, because 3.3.5's trick to instantly stop music by toggling cvars causes it to instead
+            fade out over a short time on 2.4.3 (around 0.4-0.5 secs). So we lock config.FadeOutMusic to 0.5 secs let the client
+            fade music out naturally during these 0.5 seconds, after which we bump the volume up and proceed as normal.
     ]]
     local function GetCurrentVolume()
         return tonumber(GetCVar("Sound_MusicVolume")) or 1
+    end
+    local function PlaySilence()
+        PlayMusic([[Interface\AddOns\AI_VoiceOver\Sounds\silence.wav]])
     end
 
     -- Functions that deal with temporarily changing player's sound settings to utilize the music channel for VO playback
@@ -883,11 +802,18 @@ elseif Version.IsLegacyWrath then
             PlayMusic(soundData.filePath)
 
             soundData.stopSoundTimer = Addon:ScheduleTimer(function()
-                PlayMusic([[Interface\AddOns\AI_VoiceOver\Sounds\silence.wav]]) -- Instantly interrupt the VO sound
+                PlaySilence() -- Instantly interrupt the VO sound
             end, soundData.length)
         end
         if SlideVolume(0, Play) then
             soundData.delay = GetMusicFadeOutDuration()
+
+            if Version.IsLegacyBurningCrusade then
+                -- On 2.4.3 we ask the client to interrupt the music here and give it time to fade out naturally
+                SetCVar("Sound_EnableMusic", 0)
+                SetCVar("Sound_EnableMusic", 1)
+                PlaySilence()
+            end
         else
             Play()
         end
@@ -899,10 +825,10 @@ elseif Version.IsLegacyWrath then
             return
         end
 
-        Addon:CancelTimer(soundData.stopSoundTimer)
+        Addon:CancelTimer(soundData.stopSoundTimer, true)
         soundData.stopSoundTimer = nil
 
-        PlayMusic([[Interface\AddOns\AI_VoiceOver\Sounds\silence.wav]]) -- Instantly interrupt the VO sound
+        PlaySilence() -- Instantly interrupt the VO sound
         SetCVar("Sound_MusicVolume", 0)
 
         local function ResumeMusic()
@@ -916,16 +842,42 @@ elseif Version.IsLegacyWrath then
 
     -- Frame fade-in animation to help alleviate the UX damage caused by delaying the VO
     hooksecurefunc(SoundQueueUI, "InitDisplay", function(self)
-        local fadeIn = self.frame:CreateAnimationGroup()
-        local animation = fadeIn:CreateAnimation("Alpha")
-        animation:SetOrder(1)
-        animation:SetDuration(0)
-        animation:SetChange(-1)
-        animation = fadeIn:CreateAnimation("Alpha")
-        animation:SetOrder(2)
-        animation:SetDuration(0.75)
-        animation:SetChange(1)
-        animation:SetSmoothing("OUT")
+        local fadeIn, animation
+        if self.frame.CreateAnimationGroup then
+            fadeIn = self.frame:CreateAnimationGroup()
+            animation = fadeIn:CreateAnimation("Alpha")
+            animation:SetOrder(1)
+            animation:SetDuration(0)
+            animation:SetChange(-1)
+            animation = fadeIn:CreateAnimation("Alpha")
+            animation:SetOrder(2)
+            animation:SetDuration(1)
+            animation:SetChange(1)
+            animation:SetSmoothing("OUT")
+        else
+            fadeIn, animation = { frame = self.frame }, {}
+            function fadeIn:Stop()
+                self.frame:SetAlpha(1)
+                self.enabled = nil
+            end
+            function fadeIn:Play()
+                self.frame:SetAlpha(0)
+                self.enabled = true
+            end
+            function animation:SetDuration(duration)
+                self.duration = duration
+            end
+            self.frame:HookScript("OnUpdate", function(self, elapsed)
+                if fadeIn.enabled then
+                    local alpha = math.min(1, self:GetAlpha() + elapsed / animation.duration)
+                    if alpha >= 1 then
+                        fadeIn:Stop()
+                    else
+                        self:SetAlpha(alpha)
+                    end
+                end
+            end)
+        end
         self.frame:HookScript("OnShow", function()
             fadeIn:Stop()
             local soundData = self.soundQueue.sounds[1]
@@ -937,7 +889,118 @@ elseif Version.IsLegacyWrath then
         end)
     end)
 
-elseif Version.IsRetailVanilla then
+end
+if Version.IsLegacyWrath then
+
+    function Utils:GetQuestLogScrollOffset()
+        return HybridScrollFrame_GetOffset(QuestLogScrollFrame)
+    end
+
+    function Utils:GetQuestLogTitleFrame(index)
+        return _G["QuestLogScrollFrameButton" .. index]
+    end
+
+    function Utils:GetQuestLogTitleNormalText(index)
+        return _G["QuestLogScrollFrameButton" .. index .. "NormalText"]
+    end
+
+    function Utils:GetQuestLogTitleCheck(index)
+        return _G["QuestLogScrollFrameButton" .. index .. "Check"]
+    end
+
+    local prefix
+    local QuestLogTitleButton_Resize = QuestLogTitleButton_Resize
+    function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalText, questCheck)
+        if not prefix then
+            local text = normalText:GetText()
+            for i = 1, 20 do
+                normalText:SetText(string.rep(" ", i))
+                if normalText:GetStringWidth() >= 24 then
+                    prefix = normalText:GetText()
+                    break
+                end
+            end
+            prefix = prefix or "  "
+            normalText:SetText(text)
+        end
+
+        playButton:SetPoint("LEFT", normalText, "LEFT", 4, 0)
+        normalText:SetText(prefix .. (normalText:GetText() or ""):trim())
+        QuestLogTitleButton_Resize(questLogTitleFrame)
+    end
+
+    hooksecurefunc(Addon, "OnInitialize", function()
+        QuestLogScrollFrame.update = QuestLog_Update
+    end)
+
+    function hookModel(self)
+        local function HasModelLoaded(self)
+            local model = self:GetModel()
+            return model and type(model) == "string" and self:GetModelFileID() ~= 130737
+        end
+        self._sequence = 0
+        hooksecurefunc(self, "ClearModel", function(self)
+            self._awaitingModel = nil
+            self._camera = nil
+            self._sequence = 0
+            self._sequenceStart = nil
+        end)
+        local oldSetSequence = self.SetSequence
+        function self:SetSequence(sequence)
+            self._sequence = sequence
+            self._sequenceStart = GetTime()
+            if not self._awaitingModel then
+                oldSetSequence(self, sequence)
+            end
+        end
+        local oldSetCreature = self.SetCreature
+        function self:SetCreature(id)
+            self:ClearModel()
+            self:SetModel([[Interface\Buttons\TalkToMeQuestion_White.mdx]])
+            oldSetCreature(self, id)
+            self._awaitingModel = not HasModelLoaded(self)
+        end
+        local oldSetCamera = self.SetCamera
+        function self:SetCamera(id)
+            self._camera = id
+            if not self._awaitingModel then
+                oldSetCamera(self, id)
+            end
+        end
+        self:HookScript("OnUpdate", function(self, elapsed)
+            if self._awaitingModel and HasModelLoaded(self) then
+                self._awaitingModel = nil
+                self:SetModelScale(2)
+                self:SetPosition(0, 0, 0)
+
+                if self._sequence ~= 0 then
+                    self:SetSequence(self._sequence)
+                end
+            elseif self._awaitingModel then
+                self:SetModelScale(0.71 / self:GetEffectiveScale())
+                self:SetPosition(5 * self:GetModelScale(), 0, 2 * self:GetModelScale())
+            end
+            if self._sequence ~= 0 and not self._awaitingModel then
+                self:SetSequenceTime(self._sequence, (GetTime() - self._sequenceStart) * 1000)
+            end
+        end)
+    end
+
+    hooksecurefunc(SoundQueueUI, "InitPortrait", function(self)
+        self.frame.portrait.pause:HookScript("OnEnter", function()
+            if self.frame.portrait.model._awaitingModel then
+                GameTooltip:SetOwner(self.frame.portrait.pause, "ANCHOR_NONE")
+                GameTooltip:SetPoint("BOTTOMLEFT", self.frame.portrait.pause, "BOTTOMRIGHT", 4, -4)
+                GameTooltip:SetText("Uncached NPC", HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b)
+                GameTooltip:AddLine("Encounter this NPC in the world again to be able to see their model.", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1)
+                GameTooltip:Show()
+            end
+        end)
+        self.frame.portrait.pause:HookScript("OnLeave", GameTooltip_Hide)
+    end)
+
+end
+if Version.IsRetailVanilla then
 
     function Addon.OnAddonLoad.Leatrix_Plus()
         C_Timer.After(0, function() -- Let it run its ADDON_LOADED code
@@ -948,7 +1011,8 @@ elseif Version.IsRetailVanilla then
         end)
     end
 
-elseif Version.IsRetailWrath then
+end
+if Version.IsRetailWrath then
 
     GetGossipText = C_GossipInfo.GetText
     GetNumGossipActiveQuests = C_GossipInfo.GetNumActiveQuests
@@ -995,7 +1059,8 @@ elseif Version.IsRetailWrath then
         QuestLogListScrollFrame.update = QuestLog_Update
     end)
 
-elseif Version.IsRetailMainline then
+end
+if Version.IsRetailMainline then
 
     GetGossipText = C_GossipInfo.GetText
     GetNumGossipActiveQuests = C_GossipInfo.GetNumActiveQuests

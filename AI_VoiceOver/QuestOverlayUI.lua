@@ -97,7 +97,6 @@ function QuestOverlayUI:UpdatePlayButton(soundTitle, questID, questLogTitleFrame
     end)
 end
 
-
 function QuestOverlayUI:UpdateQuestOverlayUI()
     if not QuestLogFrame:IsShown() then
         return
