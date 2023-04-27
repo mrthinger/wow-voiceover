@@ -507,7 +507,7 @@ function Options:AddDataModule(module, order)
         return { type = "description", order = GetNextOrder(), name = function() return format("%s%s: |r%s", NORMAL_FONT_COLOR_CODE, header, type(text) == "function" and text() or text) end }
     end
 
-    local name, title, notes, loadable, reason  = GetAddOnInfo(module.AddonName)
+    local name, title, notes, loadable, reason = DataModules:GetModuleAddOnInfo(module)
     if reason == "DEMAND_LOADED" or reason == "INTERFACE_VERSION" then
         reason = nil
     end

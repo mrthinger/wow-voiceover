@@ -196,11 +196,19 @@ function DataModules:LoadModule(module)
     -- We deliberately use a high ##Interface version in TOC to ensure that all clients will load it.
     -- Otherwise pre-classic-rerelease clients will refuse to load addons with version < 20000.
     -- Here we temporarily enable "Load out of date AddOns" to load the module, and restore the user's setting afterwards.
-    local oldLoadOutOfDateAddons = GetCVar("checkAddonVersion")
+    local old = GetCVar("checkAddonVersion")
     SetCVar("checkAddonVersion", 0)
-    local loaded = LoadAddOn(module.AddonName)
-    SetCVar("checkAddonVersion", oldLoadOutOfDateAddons)
-    return loaded
+    local loaded, reason = LoadAddOn(module.AddonName)
+    SetCVar("checkAddonVersion", old)
+    return loaded, reason
+end
+
+function DataModules:GetModuleAddOnInfo(module)
+    local old = GetCVar("checkAddonVersion")
+    SetCVar("checkAddonVersion", 0)
+    local name, title, notes, loadable, reason = GetAddOnInfo(module.AddonName)
+    SetCVar("checkAddonVersion", old)
+    return name, title, notes, loadable, reason
 end
 
 local function replaceDoubleQuotes(text)
