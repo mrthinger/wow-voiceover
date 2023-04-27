@@ -1,9 +1,12 @@
 setfenv(1, VoiceOver)
 
+---@class Addon : AceAddon, AceAddon-3.0, AceEvent-3.0, AceTimer-3.0
+---@field db VoiceOverConfig|AceDBObject-3.0
 Addon = LibStub("AceAddon-3.0"):NewAddon("VoiceOver", "AceEvent-3.0", "AceTimer-3.0")
 
 Addon.OnAddonLoad = {}
 
+---@class VoiceOverConfig
 local defaults = {
     profile = {
         SoundQueueUI = {
@@ -55,9 +58,15 @@ function Addon:OnInitialize()
     self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
     self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
 
-    self.soundQueue = SoundQueue:new()
-    self.questOverlayUI = QuestOverlayUI:new(self.soundQueue)
+    StaticPopupDialogs["VOICEOVER_ERROR"] =
+    {
+        text = "VoiceOver|n|n%s",
+        button1 = OKAY,
+        timeout = 0,
+        whileDead = 1,
+    }
 
+    SoundQueueUI:Initialize()
     DataModules:EnumerateAddons()
     Options:Initialize()
 
@@ -119,14 +128,14 @@ function Addon:OnInitialize()
         return function()
             local data = getFieldData()
             local soundsToRemove = {}
-            for _, soundData in pairs(self.soundQueue.sounds) do
+            for _, soundData in pairs(SoundQueue.sounds) do
                 if Enums.SoundEvent:IsQuestEvent(soundData.event) and soundData[field] == data then
                     table.insert(soundsToRemove, soundData)
                 end
             end
 
             for _, soundData in pairs(soundsToRemove) do
-                self.soundQueue:RemoveSoundFromQueue(soundData)
+                SoundQueue:RemoveSoundFromQueue(soundData)
             end
         end
     end
@@ -138,7 +147,7 @@ function Addon:OnInitialize()
 
     if QuestLog_Update then
         hooksecurefunc("QuestLog_Update", function()
-            self.questOverlayUI:UpdateQuestOverlayUI()
+            QuestOverlayUI:Update()
         end)
     end
 
@@ -165,7 +174,7 @@ function Addon:OnInitialize()
 end
 
 function Addon:RefreshConfig()
-    self.soundQueue.ui:RefreshConfig()
+    SoundQueueUI:RefreshConfig()
 end
 
 function Addon:ADDON_LOADED(event, addon)
@@ -216,17 +225,14 @@ function Addon:QUEST_DETAIL()
         -- Allow quests started from items to have VO, book icon will be displayed for them
     elseif not type or not Enums.GUID:CanHaveID(type) then
         -- If the quest is started by something that we cannot extract the ID of (e.g. Player, when sharing a quest) - try to fallback to a questgiver from a module's database
-        local npcID = DataModules:GetQuestLogNPCID(questID) -- TODO: Add fallbacks to item and object questgivers once VO for them is made
-        if npcID then
-            type = Enums.GUID.Creature
-            guid = Utils:MakeGUID(type, npcID)
-            targetName = DataModules:GetNPCName(npcID) or "Unknown Name"
-        else
-            return
-        end
+        local id
+        type, id = DataModules:GetQuestLogQuestGiverTypeAndID(questID)
+        guid = id and Enums.GUID:CanHaveID(type) and Utils:MakeGUID(type, id) or guid
+        targetName = id and DataModules:GetObjectName(type, id) or targetName or "Unknown Name"
     end
 
     -- print("QUEST_DETAIL", questID, questTitle);
+    ---@type SoundData
     local soundData = {
         event = Enums.SoundEvent.QuestAccept,
         questID = questID,
@@ -234,9 +240,10 @@ function Addon:QUEST_DETAIL()
         title = questTitle,
         text = questText,
         unitGUID = guid,
+        unitIsObjectOrItem = Utils:IsNPCObjectOrItem(),
         addedCallback = QuestSoundDataAdded,
     }
-    self.soundQueue:AddSoundToQueue(soundData)
+    SoundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:QUEST_COMPLETE()
@@ -260,6 +267,7 @@ function Addon:QUEST_COMPLETE()
     end
 
     -- print("QUEST_COMPLETE", questID, questTitle);
+    ---@type SoundData
     local soundData = {
         event = Enums.SoundEvent.QuestComplete,
         questID = questID,
@@ -267,9 +275,10 @@ function Addon:QUEST_COMPLETE()
         title = questTitle,
         text = questText,
         unitGUID = guid,
+        unitIsObjectOrItem = Utils:IsNPCObjectOrItem(),
         addedCallback = QuestSoundDataAdded,
     }
-    self.soundQueue:AddSoundToQueue(soundData)
+    SoundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:ShouldPlayGossip(guid, text)
@@ -311,17 +320,19 @@ function Addon:QUEST_GREETING()
     end
 
     -- Play the gossip sound
+    ---@type SoundData
     local soundData = {
         event = Enums.SoundEvent.QuestGreeting,
         name = targetName,
         text = greetingText,
         unitGUID = guid,
+        unitIsObjectOrItem = Utils:IsNPCObjectOrItem(),
         addedCallback = GossipSoundDataAdded,
         startCallback = function()
             self.db.char.hasSeenGossipForNPC[npcKey] = true
         end
     }
-    self.soundQueue:AddSoundToQueue(soundData)
+    SoundQueue:AddSoundToQueue(soundData)
 end
 
 function Addon:GOSSIP_SHOW()
@@ -340,18 +351,20 @@ function Addon:GOSSIP_SHOW()
     end
 
     -- Play the gossip sound
+    ---@type SoundData
     local soundData = {
         event = Enums.SoundEvent.Gossip,
         name = targetName,
         title = selectedGossipOption and format([["%s"]], selectedGossipOption),
         text = gossipText,
         unitGUID = guid,
+        unitIsObjectOrItem = Utils:IsNPCObjectOrItem(),
         addedCallback = GossipSoundDataAdded,
         startCallback = function()
             self.db.char.hasSeenGossipForNPC[npcKey] = true
         end
     }
-    self.soundQueue:AddSoundToQueue(soundData)
+    SoundQueue:AddSoundToQueue(soundData)
 
     selectedGossipOption = nil
     lastGossipOptions = nil
@@ -364,14 +377,14 @@ end
 
 function Addon:QUEST_FINISHED()
     if Addon.db.profile.Audio.StopAudioOnDisengage and currentQuestSoundData then
-        self.soundQueue:RemoveSoundFromQueue(currentQuestSoundData)
+        SoundQueue:RemoveSoundFromQueue(currentQuestSoundData)
     end
     currentQuestSoundData = nil
 end
 
 function Addon:GOSSIP_CLOSED()
     if Addon.db.profile.Audio.StopAudioOnDisengage and currentGossipSoundData then
-        self.soundQueue:RemoveSoundFromQueue(currentGossipSoundData)
+        SoundQueue:RemoveSoundFromQueue(currentGossipSoundData)
     end
     currentGossipSoundData = nil
 

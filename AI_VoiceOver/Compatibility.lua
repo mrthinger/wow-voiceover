@@ -76,8 +76,8 @@ if not wipe then
 end
 
 if not hooksecurefunc then
+    ---@overload fun(name, hook)
     function hooksecurefunc(table, name, hook)
-        -- hooksecurefunc([table], name, hook)
         if not hook then
             name, hook = table, name
             table = _G
@@ -94,8 +94,9 @@ if not hooksecurefunc then
 end
 
 if not GetAddOnEnableState then
+    ---@overload fun(addon)
     function GetAddOnEnableState(character, addon)
-        addon = addon or character -- GetAddOnEnableState([character], addon)
+        addon = addon or character
         local name, _, _, _, loadable, reason = _G.GetAddOnInfo(addon)
         if not name or not loadable and reason == "DISABLED" then
             return 0
@@ -135,7 +136,8 @@ if not QUESTS_DISPLAYED then
     end
 end
 
-if not SOUNDKIT then
+-- Patch 7.3.0: New global table: SOUNDKIT - Keys are named similar to the old string names, and they hold the soundkit ID for the sound
+if not SOUNDKIT or Version:IsBelowLegacyVersion(70300) then
     SOUNDKIT =
     {
         U_CHAT_SCROLL_BUTTON = "uChatScrollButton",
@@ -152,7 +154,6 @@ end
 -- Patch 2.4.0 (2008-03-25): Added.
 if Version.IsAnyLegacy and not UnitGUID then
     -- 1.0.0 - 2.3.0
-    table.wipe(Enums.GUID)
     Utils.GetGUIDType = nil
     Utils.GetIDFromGUID = nil
     Utils.MakeGUID = function() end
@@ -170,9 +171,6 @@ elseif Version:IsBelowLegacyVersion(40000) then
     end
 
     function Utils:GetIDFromGUID(guid)
-        if not guid then
-            return
-        end
         local type = assert(self:GetGUIDType(guid), format([[Failed to determine the type of GUID "%s"]], guid))
         assert(Enums.GUID:GetName(type), format([[Unknown GUID type %d]], type))
         assert(Enums.GUID:CanHaveID(type), format([[GUID "%s" does not contain ID]], guid))
@@ -433,6 +431,10 @@ if Version.IsLegacyVanilla then
         return nil
     end
 
+    function Utils:IsNPCObjectOrItem()
+        return not UnitExists("npc")
+    end
+
     function Utils:IsNPCPlayer()
         return UnitIsPlayer("npc")
     end
@@ -508,7 +510,7 @@ if Version.IsLegacyVanilla then
 
         -- Hook the new function created by EQL3
         hooksecurefunc("QuestLog_Update", function()
-            Addon.questOverlayUI:UpdateQuestOverlayUI()
+            QuestOverlayUI:Update()
         end)
     end
 
@@ -530,7 +532,7 @@ if Version.IsLegacyVanilla or Version.IsLegacyBurningCrusade then
         end
 
         if not frame then
-            frame = CreateFrame("PlayerModel", nil, Addon.soundQueue.ui.frame.portrait)
+            frame = CreateFrame("PlayerModel", nil, SoundQueueUI.frame.portrait)
             table.insert(modelFramePool, frame)
         end
 
@@ -550,8 +552,8 @@ if Version.IsLegacyVanilla or Version.IsLegacyBurningCrusade then
         end
         soundData.modelFrame = nil
 
-        if Addon.soundQueue.ui.frame.portrait.model == frame then
-            Addon.soundQueue.ui.frame.portrait.model = Addon.soundQueue.ui.frame.portrait.defaultModel
+        if SoundQueueUI.frame.portrait.model == frame then
+            SoundQueueUI.frame.portrait.model = SoundQueueUI.frame.portrait.defaultModel
         end
 
         frame:Hide()
@@ -880,7 +882,7 @@ if Version.IsLegacyBurningCrusade or Version.IsLegacyWrath then
         end
         self.frame:HookScript("OnShow", function()
             fadeIn:Stop()
-            local soundData = self.soundQueue.sounds[1]
+            local soundData = SoundQueue:GetCurrentSound()
             local duration = soundData and soundData.delay or 0
             if duration > 0 then
                 animation:SetDuration(duration)
@@ -1006,7 +1008,7 @@ if Version.IsRetailVanilla then
         C_Timer.After(0, function() -- Let it run its ADDON_LOADED code
             hooksecurefunc("QuestLog_Update", function()
                 -- Update QuestOverlayUI again after Leatrix_Plus replaces the titles with prepended quest levels
-                Addon.questOverlayUI:UpdateQuestOverlayUI()
+                QuestOverlayUI:Update()
             end)
         end)
     end

@@ -1,5 +1,6 @@
 # https://wowpedia.fandom.com/wiki/RaceId
 RACE_DICT = {
+    -1: 'narrator',
     1: 'human',
     2: 'orc',
     3: 'dwarf',

@@ -1,38 +1,83 @@
 setfenv(1, VoiceOver)
 Utils = {}
 
+--- Returns `Enum.GUID` type of the provided GUID.
+--- - Removed in clients before 2.3 as those don't provide `UnitGUID(unitID)` function.
+--- - Overriden for clients before 6.0 that use an older GUID format.
+---@param guid string GUID returned by the API
+---@return GUID guid
 function Utils:GetGUIDType(guid)
     return guid and Enums.GUID[select(1, strsplit("-", guid, 2))]
 end
 
+--- Returns WorldObject ID of the provided GUID.
+---
+--- Only supported for GUID types that can contain the ID, checkable via `Enums.GUID:CanHaveID(type)`.
+--- - Removed in clients before 2.3 as those don't provide `UnitGUID(unitID)` function.
+--- - Overriden for clients before 6.0 that use an older GUID format.
+---@param guid string GUID returned by the API
+---@return number id
 function Utils:GetIDFromGUID(guid)
-    if not guid then
-        return
-    end
     local type, rest = strsplit("-", guid, 2)
     type = assert(Enums.GUID[type], format("Unknown GUID type %s", type))
     assert(Enums.GUID:CanHaveID(type), format([[GUID "%s" does not contain ID]], guid))
-    return tonumber((select(5, strsplit("-", rest))))
+    return assert(tonumber((select(5, strsplit("-", rest)))), format([[Failed to retrieve ID from GUID "%s"]], guid))
 end
 
+--- Returns a dummy WorldObject GUID using the provided `Enums.GUID` type and ID.
+--- - Returns nil in clients before 2.3 as those don't provide `UnitGUID(unitID)` function.
+--- - Overriden for clients before 6.0 that use an older GUID format.
+---@param type GUID
+---@param id number
+---@return string|nil guid
 function Utils:MakeGUID(type, id)
     assert(Enums.GUID:CanHaveID(type), format("GUID of type %d (%s) cannot contain ID", type, Enums.GUID:GetName(type) or "Unknown"))
-    type = assert(Enums.GUID:GetName(type), format("Unknown GUID type %d", type))
-    return format("%s-%d-%d-%d-%d-%d-%d", type, 0, 0, 0, 0, id, 0)
+    local typeName = assert(Enums.GUID:GetName(type), format("Unknown GUID type %d", type))
+    return format("%s-%d-%d-%d-%d-%d-%d", typeName, 0, 0, 0, 0, id, 0)
 end
 
+--- Returns the name of the NPC that's being interacted with while a GossipFrame or QuestFrame is visible.
+---
+--- Uses "questnpc" unitID when available, falls back to "npc" unitID.
+--- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12.
+---@return string|nil name
 function Utils:GetNPCName()
     return UnitName("questnpc") or UnitName("npc")
 end
 
+--- Returns the GUID of the NPC that's being interacted with while a GossipFrame or QuestFrame is visible.
+---
+--- Uses "questnpc" unitID when available, falls back to "npc" unitID.
+--- - Returns nil in 1.12 due to the lack of `UnitGUID(unitID)` function.
+---@return string|nil guid
 function Utils:GetNPCGUID()
     return UnitGUID("questnpc") or UnitGUID("npc")
 end
 
+--- Returns whether the NPC that's being interacted with while a GossipFrame or QuestFrame is visible is a GameObject or Item.
+---
+--- Uses "questnpc" unitID when available, falls back to "npc" unitID.
+--- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12.
+---@return boolean isObjectOrItem
+function Utils:IsNPCObjectOrItem()
+    return not (UnitExists("questnpc") or UnitExists("npc"))
+end
+
+--- Returns whether the NPC that's being interacted with while a GossipFrame or QuestFrame is visible is a Player.
+---
+--- Uses "questnpc" unitID when available, falls back to "npc" unitID.
+--- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12.
+---@return boolean isPlayer
 function Utils:IsNPCPlayer()
     return UnitIsPlayer("questnpc") or UnitIsPlayer("npc")
 end
 
+--- Returns whether the player's sound options will allow the playback of sound files.
+---
+--- Used to differentiate the output of `Utils:TestSound(soundData)` returning false when the sound channel is disabled from it returning false due to the sound file missing.
+--- - Overriden in 1.12 due to the different sound system that uses different CVars.
+--- - Overriden in 3.3.5 due to the lack of sound channels.
+---@return boolean enabled
 function Utils:IsSoundEnabled()
     if tonumber(GetCVar("Sound_EnableAllSound")) ~= 1 then
         return false
@@ -47,6 +92,12 @@ function Utils:IsSoundEnabled()
     return channel == "Master" or tonumber(GetCVar(format("Sound_Enable%s", channel))) == 1
 end
 
+--- Attempts to play the sound and immediately stops it to check if the sound file exists.
+---
+--- Will also return false if the playback failed because the sound channel was disabled. Use `Utils:IsSoundEnabled()` to handle the latter case.
+--- - Overriden in 1.12 and 3.3.5 to always return true due to the lack of ability of stop the sounds and the unreliability of `willPlay` return (always returns 1 if a filename is provided).
+---@param soundData SoundData
+---@return boolean willPlay
 function Utils:TestSound(soundData)
     local willPlay, handle = PlaySoundFile(soundData.filePath)
     if willPlay then
@@ -55,37 +106,68 @@ function Utils:TestSound(soundData)
     return willPlay
 end
 
+--- Plays the sound from SoundData on the configured sound channel and stores a handle to it in `SoundData.handle` so that it can be later stopped with `Utils:StopSound(soundData)`.
+--- - Overriden in 1.12 due to the lack of the ability to play on custom sound channel, and the different implementation of `AutoToggleDialog` config.
+--- - Overriden in 3.3.5 due to the lack of the ability to play on custom sound channel, the lack of `AutoToggleDialog` config implementation, and the custom functionality to play the sound on the music channel instead.
+---@param soundData SoundData
 function Utils:PlaySound(soundData)
     local channel = Enums.SoundChannel:GetName(Addon.db.profile.Audio.SoundChannel)
     local willPlay, handle = PlaySoundFile(soundData.filePath, channel)
     soundData.handle = handle
 end
 
+--- Stops the sound started by `Utils:PlaySound(soundData)` via the provided `SoundData.handle` and removes it.
+--- - Overriden in 1.12 with a custom implementation that interrupts all in-game sounds.
+--- - Overriden in 3.3.5 due to the custom functionality to play the sound on the music channel instead.
+---@param soundData SoundData
 function Utils:StopSound(soundData)
     StopSound(soundData.handle)
     soundData.handle = nil
 end
 
+--- Returns the button index offset of the virtualized Quest Log scroll frame.
+--- - Overriden in 3.3.5 and 3.4 due to the different Quest Log layout that uses `HybridScrollFrame` instead of `FauxScrollFrame`.
+---@return number offset
 function Utils:GetQuestLogScrollOffset()
     return FauxScrollFrame_GetOffset(QuestLogListScrollFrame)
 end
 
+--- Returns the `Button` that represents the quest in the Quest Log frame.
+--- - Overriden in 3.3.5 and 3.4 due to the different naming scheme used by the Quest Log.
+---@return Button button
 function Utils:GetQuestLogTitleFrame(index)
     return _G["QuestLogTitle" .. index]
 end
 
+--- Returns the title `FontString` of the button that represents the quest in the Quest Log frame.
+--- - Overriden in 3.3.5 and 3.4 due to the different naming scheme used by the Quest Log.
+---@return FontString title
 function Utils:GetQuestLogTitleNormalText(index)
     return _G["QuestLogTitle" .. index .. "NormalText"]
 end
 
+--- Returns the quest tracking check mark `Texture` of the button that represents the quest in the Quest Log frame.
+--- - Overriden in 3.3.5 and 3.4 due to the different naming scheme used by the Quest Log.
+---@return Texture check
 function Utils:GetQuestLogTitleCheck(index)
     return _G["QuestLogTitle" .. index .. "Check"]
 end
 
+--- Returns the provided text enclosed in the provided color tag.
+---@param text string
+---@param color string Color tag in "|cAARRGGBB" format
+---@return string colorizedText
 function Utils:ColorizeText(text, color)
     return color .. text .. "|r"
 end
 
+--- Returns an iterator to the table sorted with the provided function, or sorted by value if no function was provided.
+---@generic K, V
+---@param tbl table<K, V>
+---@param sorter fun(valueA: V, valueB: V, keyA: K, keyB: K): boolean Should return whether A should preceed B
+---@return function iterator
+---@return table tbl
+---@return nil
 function Utils:Ordered(tbl, sorter)
     local orderedIndex = {}
     for key in pairs(tbl) do
@@ -181,9 +263,19 @@ if Version.IsLegacyVanilla or Version.IsRetailVanilla then
     animationDurations["Original"][119369][60] = 0
     animationDurations["Original"][119376][60] = 0
 end
+
+--- Returns the model set used by `Utils:GetModelAnimationDuration(model, animation)` to determine duration of which model's animation to return.
+--- - Overriden in 3.3.5 to return "HD" if the player has confirmed to be using HD model patches.
+--- - Overriden in Mainline to always return "HD".
+---@return string|"Original"|"HD"
 function Utils:GetCurrentModelSet()
     return "Original"
 end
+
+--- Returns the duration in milliseconds of the provided animation in the provided 3D model.
+---@param model number Model's FileDataID
+---@param animation number Animation ID
+---@return number|nil duration Animation duration in milliseconds, 0 if the model is known to lack the animation, or nil if no model is loaded or the animation duration is unknown
 function Utils:GetModelAnimationDuration(model, animation)
     if not model or model == 123 then return end
     local models = animationDurations[Utils:GetCurrentModelSet()] or animationDurations["Original"]
@@ -192,7 +284,14 @@ function Utils:GetModelAnimationDuration(model, animation)
     return duration and duration / 1000
 end
 
+--- Stores a `DressUpModel` in `SoundData.modelFrame` that's meant to represent the unit speaking.
+--- - Implemented in 1.12 due to the lack of the ability to display an arbitrary creature ID in a `DressUpModel`.
+---@param soundData SoundData
 function Utils:CreateNPCModelFrame(soundData)
 end
+
+--- Frees the `DressUpModel` stored in `SoundData.modelFrame` by `Utils:CreateNPCModelFrame(soundData)` back to the model pool once it's no longer needed.
+--- - Implemented in 1.12 due to the lack of the ability to display an arbitrary creature ID in a `DressUpModel`.
+---@param soundData SoundData
 function Utils:FreeNPCModelFrame(soundData)
 end

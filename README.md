@@ -73,7 +73,10 @@ The dataframe schema before calling the `preprocess_dataframe` function consists
 | `DisplayRaceID` | The race ID of the NPC involved in the interaction          |
 | `DisplaySexID`  | The gender ID of the NPC involved in the interaction        |
 | `name`        | The name of the NPC involved in the interaction               |
-| `id`          | The creature ID of the NPC involved in the interaction        |
+| `type`        | The type of the NPC involved in the interaction ('creature', 'gameobject', or 'item') |
+| `id`          | The creature/gameobject/item ID of the NPC involved in the interaction |
+
+`DisplayRaceID = -1` is used for interactions with inanimate NPCs: gameobjects, items etc. It's mapped to a voice called "narrator" in `RACE_DICT`.
 
 ## New Fields Added by `preprocess_dataframe`
 

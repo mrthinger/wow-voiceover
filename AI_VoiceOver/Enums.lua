@@ -11,27 +11,15 @@ Enums.SoundEvent =
     QuestGreeting = 4,
     Gossip = 5,
 }
+---@param event SoundEvent
+---@return boolean isQuestEvent Is event related to a quest (`SoundData.questID` must be present)
 function Enums.SoundEvent:IsQuestEvent(event)
     return event == self.QuestAccept or event == self.QuestProgress or event == self.QuestComplete
 end
+---@param event SoundEvent
+---@return boolean isGossipEvent Is event related to a gossip (`SoundData.text` must be present)
 function Enums.SoundEvent:IsGossipEvent(event)
     return event == self.Gossip or event == self.QuestGreeting
-end
-
-function Enums.SoundEvent:ToString(event)
-    if event == self.QuestAccept then
-        return "accept"
-    elseif event == self.QuestProgress then
-        return "progress"
-    elseif event == self.QuestComplete then
-        return "complete"
-    elseif event == self.QuestGreeting then
-        return "greeting"
-    elseif event == self.Gossip then
-        return "gossip"
-    else
-        return nil
-    end
 end
 
 ---@enum GossipFrequency
@@ -62,9 +50,13 @@ Enums.GUID =
     Vehicle = 9,
     GameObject = 11,
 }
+---@param type GUID GUID type
+---@return boolean isCreature GUID type is representing a server-controlled Creature
 function Enums.GUID:IsCreature(type)
     return type == self.Creature or type == self.Vehicle
 end
+---@param type GUID GUID type
+---@return boolean isCreature GUID string can contain WorldObject ID
 function Enums.GUID:CanHaveID(type)
     return type == self.Creature or type == self.Vehicle or type == self.GameObject
 end

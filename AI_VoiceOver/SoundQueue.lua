@@ -1,18 +1,49 @@
 setfenv(1, VoiceOver)
-SoundQueue = {}
-SoundQueue.__index = SoundQueue
 
-function SoundQueue:new()
-    local soundQueue = {}
-    setmetatable(soundQueue, SoundQueue)
+---@class SoundData
+---@field event SoundEvent Sound event that triggered the voiceover
+---@field name string The name of the NPC that the voiceover originates from
+---@field unitGUID? string The GUID of the NPC that the voiceover originates from
+---@field unitIsObjectOrItem? boolean Whether the NPC that the voiceover originates from is a GameObject or Item. Useful when `SoundData.unitGUID` isn't available
+---@field title? string Quest title or gossip option text that are the subject of the voiceover
+---@field text? string Quest text or gossip text that are the subject of the voiceover
+---@field questID? number Quest ID that is the subject of the voiceover
+---@field delay? number Duration in seconds to wait before playing the sound file
+---@field addedCallback? fun(soundData: SoundData) Function to call if the voiceover was successfully added to the queue
+---@field startCallback? fun(soundData: SoundData) Function to call when the voiceover starts playing
+---@field stopCallback? fun(soundData: SoundData) Function to call when the voiceover is removed from the queue
+--- The following fields are set automatically
+---@field id? number Unique ID assigned by `SoundQueue` when the voiceover is added to the queue
+---@field handle? number Sound handle assigned by `Utils:PlaySound(soundData)` signifying that the sound can be stopped by `Utils:StopSound(soundData)`
+---@field nextSoundTimer? any Handle to the `AceTimer` timer that progresses the queue once the voiceover is finished. Set by `SoundQueue` only while the voiceover is actively playing
+---@field fileName? string Name of the sound file to be played. Filled by `DataModules:PrepareSound(soundData)`
+---@field filePath? string Path to the sound file to be played. Filled by `DataModules:PrepareSound(soundData)`
+---@field length? number Duration of sound file to be played in seconds. Filled by `DataModules:PrepareSound(soundData)`
+---@field module? DataModule Data module that provided the sound file. Filled by `DataModules:PrepareSound(soundData)`
 
-    soundQueue.soundIdCounter = 0
-    soundQueue.sounds = {}
-    soundQueue.ui = SoundQueueUI:new(soundQueue)
+SoundQueue = {
+    soundIdCounter = 0,
+    ---@type SoundData[]
+    sounds = {},
+}
 
-    return soundQueue
+function SoundQueue:GetQueueSize()
+    return getn(self.sounds)
 end
 
+function SoundQueue:IsEmpty()
+    return self:GetQueueSize() == 0
+end
+
+function SoundQueue:GetCurrentSound()
+    return self.sounds[1]
+end
+
+function SoundQueue:GetNextSound()
+    return self.sounds[2]
+end
+
+---@param soundData SoundData
 function SoundQueue:Contains(soundData)
     for _, queuedSound in ipairs(self.sounds) do
         if queuedSound == soundData then
@@ -22,6 +53,7 @@ function SoundQueue:Contains(soundData)
     return false
 end
 
+---@param soundData SoundData
 function SoundQueue:AddSoundToQueue(soundData)
     if not DataModules:PrepareSound(soundData) then
         Debug:Print(format("Sound does not exist for: %s", soundData.title or soundData.name or ""))
@@ -68,13 +100,14 @@ function SoundQueue:AddSoundToQueue(soundData)
     end
 
     -- If the sound queue only contains one sound, play it immediately
-    if getn(self.sounds) == 1 and not Addon.db.char.IsPaused then
+    if self:GetQueueSize() == 1 and not Addon.db.char.IsPaused then
         self:PlaySound(soundData)
     end
 
-    self.ui:UpdateSoundQueueDisplay()
+    SoundQueueUI:UpdateSoundQueueDisplay()
 end
 
+---@param soundData SoundData
 function SoundQueue:PlaySound(soundData)
     Utils:PlaySound(soundData)
 
@@ -93,12 +126,12 @@ function SoundQueue:PlaySound(soundData)
 end
 
 function SoundQueue:IsPlaying()
-    local currentSound = self.sounds[1]
+    local currentSound = self:GetCurrentSound()
     return currentSound and currentSound.nextSoundTimer
 end
 
 function SoundQueue:CanBePaused()
-    return not self:IsPlaying() or self.sounds[1].handle
+    return not self:IsPlaying() or self:GetCurrentSound().handle
 end
 
 function SoundQueue:PauseQueue()
@@ -108,14 +141,14 @@ function SoundQueue:PauseQueue()
 
     Addon.db.char.IsPaused = true
 
-    local currentSound = self.sounds[1]
+    local currentSound = self:GetCurrentSound()
     if currentSound and self:CanBePaused() then
         Utils:StopSound(currentSound)
         Addon:CancelTimer(currentSound.nextSoundTimer)
         currentSound.nextSoundTimer = nil
     end
 
-    self.ui:UpdatePauseDisplay()
+    SoundQueueUI:UpdatePauseDisplay()
 end
 
 function SoundQueue:ResumeQueue()
@@ -125,12 +158,12 @@ function SoundQueue:ResumeQueue()
 
     Addon.db.char.IsPaused = false
 
-    local currentSound = self.sounds[1]
+    local currentSound = self:GetCurrentSound()
     if currentSound and self:CanBePaused() then
         self:PlaySound(currentSound)
     end
 
-    self.ui:UpdateSoundQueueDisplay()
+    SoundQueueUI:UpdateSoundQueueDisplay()
 end
 
 function SoundQueue:TogglePauseQueue()
@@ -141,6 +174,7 @@ function SoundQueue:TogglePauseQueue()
     end
 end
 
+---@param soundData SoundData
 function SoundQueue:RemoveSoundFromQueue(soundData, finishedPlaying)
     local removedIndex = nil
     for index, queuedSound in ipairs(self.sounds) do
@@ -169,21 +203,21 @@ function SoundQueue:RemoveSoundFromQueue(soundData, finishedPlaying)
         Utils:StopSound(soundData)
         Addon:CancelTimer(soundData.nextSoundTimer)
 
-        local nextSoundData = self.sounds[1]
+        local nextSoundData = self:GetCurrentSound()
         if nextSoundData then
             self:PlaySound(nextSoundData)
         end
     end
 
-    if getn(self.sounds) == 0 and Addon.db.profile.Audio.AutoToggleDialog and Version:IsRetailOrAboveLegacyVersion(60100) then
+    if self:IsEmpty() and Addon.db.profile.Audio.AutoToggleDialog and Version:IsRetailOrAboveLegacyVersion(60100) then
         SetCVar("Sound_EnableDialog", 1)
     end
 
-    self.ui:UpdateSoundQueueDisplay()
+    SoundQueueUI:UpdateSoundQueueDisplay()
 end
 
 function SoundQueue:RemoveAllSoundsFromQueue()
-    for i = getn(self.sounds), 1, -1 do
+    for i = self:GetQueueSize(), 1, -1 do
         local queuedSound = self.sounds[i]
         if queuedSound then
             if i == 1 and not self:CanBePaused() then

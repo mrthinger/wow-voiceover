@@ -4,13 +4,59 @@ local CURRENT_MODULE_VERSION = 1
 local FORCE_ENABLE_DISABLED_MODULES = true
 local LOAD_ALL_MODULES = true
 
+---@class DataModuleMetadata
+---@field AddonName string Addon name
+---@field LoadOnDemand boolean Whether the module can be dynamically loaded (TOC ##LoadOnDemand)
+---@field ModuleVersion number Module's data format version (TOC ##X-VoiceOver-DataModule-Version, must be CURRENT_MODULE_VERSION to be loaded)
+---@field ModulePriority number Module's priority (TOC ##X-VoiceOver-DataModule-Priority, larger number = higher priority)
+---@field ContentVersion? string Module's content version (TOC ##Version)
+---@field Title string Module's title (TOC ##Title or addon name if missing)
+---@field Maps number[] Map IDs in which the module should load (TOC ##X-VoiceOver-DataModule-Maps)
+
+---@class DataModule
+---@field METADATA DataModuleMetadata
+---@field GetSoundPath fun(self: DataModule, fileName: string, event: SoundEvent): string Function implemented in the module that returns the sound path for the desired voiceover
+---@field GossipLookupByNPCID table<number, table<string, string>> Maps Creature ID and fuzzy-searchable gossip text to gossip text hash
+---@field GossipLookupByNPCName table<string, table<string, string>> Maps Creature name and fuzzy-searchable gossip text to gossip text hash
+---@field GossipLookupByObjectID table<number, table<string, string>> Maps GameObject ID and fuzzy-searchable gossip text to gossip text hash
+---@field GossipLookupByObjectName table<string, table<string, string>> Maps GameObject name and fuzzy-searchable gossip text to gossip text hash
+---@field QuestIDLookup table<string, number|table<string, number|table<string, number>> Maps quest title to quest ID or (if there is ambiguity) maps quest title and quest giver name to quest ID or (if there is ambiguity) maps quest title and quest giver name and fuzzy-searchable quest text to quest ID
+---@field NPCIDLookupByQuestID table<number, number> Maps Quest ID to quest giver Creature ID
+---@field ObjectIDLookupByQuestID table<number, number> Maps Quest ID to quest giver GameObject ID
+---@field ItemIDLookupByQuestID table<number, number> Maps Quest ID to quest giver Item ID
+---@field NPCNameLookupByNPCID table<number, string> Maps Creature ID to Creature name
+---@field ObjectNameLookupByObjectID table<number, string> Maps GameObject ID to GameObject name
+---@field ItemNameLookupByItemID table<number, string> Maps Item ID to Item name
+---@field SoundLengthLookupByFileName table<string, number> Maps sound filenames to their duration in seconds
+
+---@class AvailableDataModule
+---@field AddonName string Addon name
+---@field Title string Module's title (TOC ##Title)
+---@field ContentVersion string Module's content version (TOC ##Version)
+---@field RelevantAboveVersion? number Interface number above which (inclusive) it makes sense to show this module as available to download or update
+---@field RelevantBelowVersion? number Interface number below which (exclusive) it makes sense to show this module as available to download or update
+---@field URL string URL where the module can be downloaded
+
 DataModules =
 {
-    presentModules = {},           -- To store the list of modules present in Interface\AddOns folder, whether they're loaded or not
-    presentModulesOrdered = {},    -- To have a consistent ordering of modules (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
-    registeredModules = {},        -- To keep track of which module names were already registered
+    --- Store the modules present in Interface\AddOns folder, whether they're loaded or not
+    ---@type table<string, DataModuleMetadata>
+    presentModules = {},
+
+    --- Stores present modules with a consistent ordering (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
+    ---@type DataModuleMetadata[]
+    presentModulesOrdered = {},
+
+    --- Stores the modules that were already loaded and registered
+    ---@type table<string, DataModule>
+    registeredModules = {},
+
+    --- Stores registered modules with a consistent ordering (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
+    ---@type DataModule[]
     registeredModulesOrdered = {}, -- To have a consistent ordering of modules (which key-value hashmaps don't provide) to avoid bugs that can only be reproduced randomly
 
+    --- Stores modules known to exist to present the player with information on how to download or update them
+    ---@type AvailableDataModule[]
     availableModules = {
         {
             AddonName = "AI_VoiceOverData_Vanilla",
@@ -22,6 +68,8 @@ DataModules =
     },
 }
 
+---@param a DataModule|DataModuleMetadata
+---@param b DataModule|DataModuleMetadata
 local function SortModules(a, b)
     a = a.METADATA or a
     b = b.METADATA or b
@@ -31,6 +79,8 @@ local function SortModules(a, b)
     return a.AddonName < b.AddonName
 end
 
+---@param name string Addon name
+---@param module DataModule Module data table
 function DataModules:Register(name, module)
     assert(not self.registeredModules[name], format([[Module "%s" already registered]], name))
 
@@ -79,6 +129,13 @@ function DataModules:GetAvailableModules()
 end
 
 function DataModules:EnumerateAddons()
+    if Version:IsRetailOrAboveLegacyVersion(50000) then
+        -- Without this, the very first time the player launches a new client build - setting cvar checkAddonVersion to 0 will have no immediate effect
+        if tonumber(GetCVar("lastAddonVersion")) ~= Version.Interface then
+            SetCVar("lastAddonVersion", Version.Interface)
+        end
+    end
+
     local playerName = UnitName("player")
     for i = 1, GetNumAddOns() do
         local moduleVersion = tonumber(GetAddOnMetadata(i, "X-VoiceOver-DataModule-Version"))
@@ -94,6 +151,7 @@ function DataModules:EnumerateAddons()
                     end
                 end
             end
+            ---@type DataModuleMetadata
             local module =
             {
                 AddonName = name,
@@ -132,6 +190,7 @@ function DataModules:EnumerateAddons()
     end
 end
 
+---@param module DataModuleMetadata
 function DataModules:LoadModule(module)
     if not module.LoadOnDemand or self:GetModule(module.AddonName) or IsAddOnLoaded(module.AddonName) then
         return false
@@ -144,20 +203,43 @@ function DataModules:LoadModule(module)
     -- We deliberately use a high ##Interface version in TOC to ensure that all clients will load it.
     -- Otherwise pre-classic-rerelease clients will refuse to load addons with version < 20000.
     -- Here we temporarily enable "Load out of date AddOns" to load the module, and restore the user's setting afterwards.
-    local oldLoadOutOfDateAddons = GetCVar("checkAddonVersion")
+    local old = GetCVar("checkAddonVersion")
     SetCVar("checkAddonVersion", 0)
-    local loaded = LoadAddOn(module.AddonName)
-    SetCVar("checkAddonVersion", oldLoadOutOfDateAddons)
-    return loaded
+    local loaded, reason = LoadAddOn(module.AddonName)
+    SetCVar("checkAddonVersion", old)
+    return loaded, reason
+end
+
+function DataModules:GetModuleAddOnInfo(module)
+    local old = GetCVar("checkAddonVersion")
+    SetCVar("checkAddonVersion", 0)
+    local name, title, notes, loadable, reason = GetAddOnInfo(module.AddonName)
+    SetCVar("checkAddonVersion", old)
+    return name, title, notes, loadable, reason
 end
 
 local function replaceDoubleQuotes(text)
     return string.gsub(text, '"', "'")
 end
 
+---@param soundData SoundData
+---@return string|nil hash
 function DataModules:GetNPCGossipTextHash(soundData)
-    local table = soundData.unitGUID and "GossipLookupByNPCID" or "GossipLookupByNPCName"
-    local npc = soundData.unitGUID and Utils:GetIDFromGUID(soundData.unitGUID) or replaceDoubleQuotes(soundData.name)
+    local table, npc
+    if soundData.unitGUID then
+        local type = Utils:GetGUIDType(soundData.unitGUID)
+        if Enums.GUID:IsCreature(type) then
+            table = "GossipLookupByNPCID"
+        elseif type == Enums.GUID.GameObject then
+            table = "GossipLookupByObjectID"
+        else
+            return
+        end
+        npc = Utils:GetIDFromGUID(soundData.unitGUID)
+    else
+        table = soundData.unitIsObjectOrItem and "GossipLookupByObjectName" or "GossipLookupByNPCName"
+        npc = replaceDoubleQuotes(soundData.name)
+    end
     local text = soundData.text
 
     local text_entries = {}
@@ -209,6 +291,11 @@ local function getLastNWords(text, n)
     return table.concat(lastNWords, " ", startIndex, endIndex)
 end
 
+---@param source string|"accept"|"progress"|"complete"
+---@param title string
+---@param npcName string
+---@param text string
+---@return number questID
 function DataModules:GetQuestID(source, title, npcName, text)
     local cleanedTitle = replaceDoubleQuotes(title)
     local cleanedNPCName = replaceDoubleQuotes(npcName)
@@ -245,23 +332,56 @@ function DataModules:GetQuestID(source, title, npcName, text)
     return best_result and best_result.value
 end
 
-function DataModules:GetQuestLogNPCID(questID)
+---@param questID number
+---@return GUID|nil type `Enums.GUID` type of the quest giver
+---@return number|nil id ID of the quest giver
+function DataModules:GetQuestLogQuestGiverTypeAndID(questID)
     for _, module in self:GetModules() do
         local data = module.NPCIDLookupByQuestID
         if data then
             local npcID = data[questID]
             if npcID then
-                return npcID
+                return Enums.GUID.Creature, npcID
+            end
+        end
+
+        data = module.ObjectIDLookupByQuestID
+        if data then
+            local objectID = data[questID]
+            if objectID then
+                return Enums.GUID.GameObject, objectID
+            end
+        end
+
+        data = module.ItemIDLookupByQuestID
+        if data then
+            local itemID = data[questID]
+            if itemID then
+                return Enums.GUID.Item, itemID
             end
         end
     end
 end
 
-function DataModules:GetNPCName(npcID)
+---@param type GUID `Enums.GUID` type of the desired object
+---@param id number ID of the desired object
+---@return string|nil name
+function DataModules:GetObjectName(type, id)
+    local table
+    if Enums.GUID:IsCreature(type) then
+        table = "NPCNameLookupByNPCID"
+    elseif type == Enums.GUID.GameObject then
+        table = "ObjectNameLookupByObjectID"
+    elseif type == Enums.GUID.Item then
+        table = "ItemNameLookupByItemID"
+    else
+        return
+    end
+
     for _, module in self:GetModules() do
-        local data = module.NPCNameLookupByNPCID
+        local data = module[table]
         if data then
-            local npcName = data[npcID]
+            local npcName = data[id]
             if npcName then
                 return npcName
             end
@@ -269,6 +389,7 @@ function DataModules:GetNPCName(npcID)
     end
 end
 
+---@type table<SoundEvent, fun(soundData: SoundData): string|nil>
 local getFileNameForEvent =
 {
     [Enums.SoundEvent.QuestAccept]   = function(soundData) return format("%d-%s", soundData.questID, "accept") end,
@@ -285,6 +406,8 @@ setmetatable(getFileNameForEvent,
         end
     })
 
+---@param soundData SoundData
+---@return boolean found Whether the sound is found and can be played
 function DataModules:PrepareSound(soundData)
     soundData.fileName = getFileNameForEvent[soundData.event](soundData)
 
@@ -296,10 +419,12 @@ function DataModules:PrepareSound(soundData)
         local data = module.SoundLengthLookupByFileName
         if data then
             local playerGenderedFileName = DataModules:AddPlayerGenderToFilename(soundData.fileName)
-            if data[playerGenderedFileName] then
+            local length = data[playerGenderedFileName]
+            if length then
                 soundData.fileName = playerGenderedFileName
+            else
+                length = data[soundData.fileName]
             end
-            local length = data[soundData.fileName]
             if length then
                 soundData.filePath = format([[Interface\AddOns\%s\%s]], module.METADATA.AddonName,
                     module.GetSoundPath and module:GetSoundPath(soundData.fileName, soundData.event) or

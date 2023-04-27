@@ -1,16 +1,14 @@
 setfenv(1, VoiceOver)
-QuestOverlayUI = {}
-QuestOverlayUI.__index = QuestOverlayUI
 
-function QuestOverlayUI:new(soundQueue)
-    local questOverlayUI = {}
-    setmetatable(questOverlayUI, QuestOverlayUI)
+---@class QuestPlayButton : Button
+---@field soundData SoundData
 
-    questOverlayUI.soundQueue = soundQueue
-    questOverlayUI.questPlayButtons = {}
-    questOverlayUI.displayedButtons = {}
-    return questOverlayUI
-end
+QuestOverlayUI = {
+    ---@type table<number, QuestPlayButton>
+    questPlayButtons = {},
+    ---@type QuestPlayButton[]
+    displayedButtons = {},
+}
 
 function QuestOverlayUI:CreatePlayButton(questID)
     local playButton = CreateFrame("Button", nil, QuestLogFrame)
@@ -22,6 +20,7 @@ function QuestOverlayUI:CreatePlayButton(questID)
     playButton:GetDisabledTexture():SetDesaturated(true)
     playButton:GetDisabledTexture():SetAlpha(0.33)
     playButton:SetHighlightTexture("Interface\\BUTTONS\\UI-Panel-MinimizeButton-Highlight")
+    ---@cast playButton QuestPlayButton
     self.questPlayButtons[questID] = playButton
 end
 
@@ -53,7 +52,7 @@ end
 function QuestOverlayUI:UpdatePlayButtonTexture(questID)
     local button = self.questPlayButtons[questID]
     if button then
-        local isPlaying = button.soundData and self.soundQueue:Contains(button.soundData)
+        local isPlaying = button.soundData and SoundQueue:Contains(button.soundData)
         local texturePath = isPlaying and [[Interface\AddOns\AI_VoiceOver\Textures\QuestLogStopButton]] or [[Interface\AddOns\AI_VoiceOver\Textures\QuestLogPlayButton]]
         button:SetNormalTexture(texturePath)
     end
@@ -65,39 +64,37 @@ function QuestOverlayUI:UpdatePlayButton(soundTitle, questID, questLogTitleFrame
 
     QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, self.questPlayButtons[questID], normalText, questCheck)
 
-    local questOverlayUI = self
     self.questPlayButtons[questID]:SetScript("OnClick", function(self)
-        if questOverlayUI.questPlayButtons[questID].soundData == nil then
-            local npcID = DataModules:GetQuestLogNPCID(questID) -- TODO: Add fallbacks to item and object questgivers once VO for them is made
-            questOverlayUI.questPlayButtons[questID].soundData = {
+        if not QuestOverlayUI.questPlayButtons[questID].soundData then
+            local type, id = DataModules:GetQuestLogQuestGiverTypeAndID(questID)
+            QuestOverlayUI.questPlayButtons[questID].soundData = {
                 event = Enums.SoundEvent.QuestAccept,
                 questID = questID,
-                name = npcID and DataModules:GetNPCName(npcID) or "Unknown Name",
+                name = id and DataModules:GetObjectName(type, id) or "Unknown Name",
                 title = soundTitle,
-                unitGUID = npcID and Utils:MakeGUID(Enums.GUID.Creature, npcID)
+                unitGUID = id and Enums.GUID:CanHaveID(type) and Utils:MakeGUID(type, id) or nil
             }
         end
 
-        local button = self
-        local soundData = button.soundData
+        local soundData = self.soundData
         local questID = soundData.questID
-        local isPlaying = questOverlayUI.soundQueue:Contains(soundData)
+        local isPlaying = SoundQueue:Contains(soundData)
 
         if not isPlaying then
-            questOverlayUI.soundQueue:AddSoundToQueue(soundData)
-            questOverlayUI:UpdatePlayButtonTexture(questID)
+            SoundQueue:AddSoundToQueue(soundData)
+            QuestOverlayUI:UpdatePlayButtonTexture(questID)
 
             soundData.stopCallback = function()
-                questOverlayUI:UpdatePlayButtonTexture(questID)
-                button.soundData = nil
+                QuestOverlayUI:UpdatePlayButtonTexture(questID)
+                self.soundData = nil
             end
         else
-            questOverlayUI.soundQueue:RemoveSoundFromQueue(soundData)
+            SoundQueue:RemoveSoundFromQueue(soundData)
         end
     end)
 end
 
-function QuestOverlayUI:UpdateQuestOverlayUI()
+function QuestOverlayUI:Update()
     if not QuestLogFrame:IsShown() then
         return
     end

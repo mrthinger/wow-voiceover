@@ -213,56 +213,62 @@ class TTSProcessor:
                     pbar.update(1)
 
 
-    def write_gossip_file_lookups_table(self, df, module_name):
-        output_file = OUTPUT_FOLDER + "/gossip_file_lookups.lua"
+    def write_gossip_file_lookups_table(self, df, module_name, type, table, filename):
+        output_file = OUTPUT_FOLDER + f"/{filename}.lua"
         gossip_table = {}
 
-        for i, row in tqdm(df.iterrows()):
-            if row['quest']:
-                continue
+        accept_df = df[(df['quest'] == '') & (df['type'] == type)]
 
+        for i, row in tqdm(accept_df.iterrows()):
             if row['id'] not in gossip_table:
                 gossip_table[row['id']] = {}
 
             escapedText = row['text'].replace('"', '\'').replace('\r',' ').replace('\n',' ')
-            
+
             gossip_table[row['id']][escapedText] = row['templateText_race_gender_hash']
 
         with open(output_file, "w") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
-            f.write(f"{module_name}.GossipLookupByNPCID = ")
+            f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(gossip_table))
             f.write("\n")
 
+        print(f"Finished writing {filename}.lua")
 
-    def write_questlog_npc_lookups_table(self, df, module_name):
-        output_file = OUTPUT_FOLDER + "/questlog_npc_lookups.lua"
+
+    def write_questlog_npc_lookups_table(self, df, module_name, type, table, filename):
+        output_file = OUTPUT_FOLDER + f"/{filename}.lua"
         questlog_table = {}
 
-        accept_df = df[df['source'] == 'accept']
+        accept_df = df[(df['source'] == 'accept') & (df['type'] == type)]
 
         for i, row in tqdm(accept_df.iterrows()):
             questlog_table[int(row['quest'])] = row['id']
 
         with open(output_file, "w") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
-            f.write(f"{module_name}.NPCIDLookupByQuestID = ")
+            f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(questlog_table))
             f.write("\n")
-    
-    def write_npc_name_lookup_table(self, df, module_name):
-        output_file = OUTPUT_FOLDER + "/npc_name_lookups.lua"
+
+        print(f"Finished writing {filename}.lua")
+
+    def write_npc_name_lookup_table(self, df, module_name, type, table, filename):
+        output_file = OUTPUT_FOLDER + f"/{filename}.lua"
         npc_name_table = {}
 
+        accept_df = df[df['type'] == type]
 
-        for i, row in tqdm(df.iterrows()):
+        for i, row in tqdm(accept_df.iterrows()):
             npc_name_table[row['id']] =  row['name']
 
         with open(output_file, "w") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
-            f.write(f"{module_name}.NPCNameLookupByNPCID = ")
+            f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(npc_name_table))
             f.write("\n")
+
+        print(f"Finished writing {filename}.lua")
 
     def write_quest_id_lookup(self, df, module_name):
         output_file = OUTPUT_FOLDER + "/quest_id_lookups.lua"
@@ -305,13 +311,13 @@ class TTSProcessor:
             f.write("\n")
 
 
-    def write_npc_name_gossip_file_lookups_table(self, df, module_name):
-        output_file = OUTPUT_FOLDER + "/npc_name_gossip_file_lookups.lua"
+    def write_npc_name_gossip_file_lookups_table(self, df, module_name, type, table, filename):
+        output_file = OUTPUT_FOLDER + f"/{filename}.lua"
         gossip_table = {}
 
-        for i, row in tqdm(df.iterrows()):
-            if row['quest']:
-                continue
+        accept_df = df[(df['quest'] == '') & (df['type'] == type)]
+
+        for i, row in tqdm(accept_df.iterrows()):
             npc_name = row['name']
             escaped_npc_name = npc_name.replace('"', '\'').replace('\r',' ').replace('\n',' ')
 
@@ -319,14 +325,16 @@ class TTSProcessor:
                 gossip_table[escaped_npc_name] = {}
 
             escapedText = row['text'].replace('"', '\'').replace('\r',' ').replace('\n',' ')
-            
+
             gossip_table[escaped_npc_name][escapedText] = row['templateText_race_gender_hash']
 
         with open(output_file, "w") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
-            f.write(f"{module_name}.GossipLookupByNPCName = ")
+            f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(gossip_table))
             f.write("\n")
+
+        print(f"Finished writing {filename}.lua")
 
 
 
@@ -337,20 +345,22 @@ class TTSProcessor:
 
     def generate_lookup_tables(self, df):
         self.create_output_dirs()
-        self.write_gossip_file_lookups_table(df, MODULE_NAME)
-        print("Finished writing gossip_file_lookups.lua")
+        self.write_gossip_file_lookups_table(df, MODULE_NAME, 'creature',   'GossipLookupByNPCID',    'npc_gossip_file_lookups')
+        self.write_gossip_file_lookups_table(df, MODULE_NAME, 'gameobject', 'GossipLookupByObjectID', 'object_gossip_file_lookups')
 
         self.write_quest_id_lookup(df, MODULE_NAME)
         print("Finished writing quest_id_lookups.lua")
 
-        self.write_npc_name_gossip_file_lookups_table(df, MODULE_NAME)
-        print("Finished writing npc_name_gossip_file_lookups.lua")
+        self.write_npc_name_gossip_file_lookups_table(df, MODULE_NAME, 'creature',   'GossipLookupByNPCName',    'npc_name_gossip_file_lookups')
+        self.write_npc_name_gossip_file_lookups_table(df, MODULE_NAME, 'gameobject', 'GossipLookupByObjectName', 'object_name_gossip_file_lookups')
 
-        self.write_questlog_npc_lookups_table(df, MODULE_NAME)
-        print("Finished writing questlog_npc_lookups.lua")
+        self.write_questlog_npc_lookups_table(df, MODULE_NAME, 'creature',   'NPCIDLookupByQuestID',    'questlog_npc_lookups')
+        self.write_questlog_npc_lookups_table(df, MODULE_NAME, 'gameobject', 'ObjectIDLookupByQuestID', 'questlog_object_lookups')
+        self.write_questlog_npc_lookups_table(df, MODULE_NAME, 'item',       'ItemIDLookupByQuestID',   'questlog_item_lookups')
 
-        self.write_npc_name_lookup_table(df, MODULE_NAME)
-        print("Finished writing npc_name_lookups.lua")
-        
+        self.write_npc_name_lookup_table(df, MODULE_NAME, 'creature',   'NPCNameLookupByNPCID',       'npc_name_lookups')
+        self.write_npc_name_lookup_table(df, MODULE_NAME, 'gameobject', 'ObjectNameLookupByObjectID', 'object_name_lookups')
+        self.write_npc_name_lookup_table(df, MODULE_NAME, 'item',       'ItemNameLookupByItemID',     'item_name_lookups')
+
         write_sound_length_table_lua(MODULE_NAME, SOUND_OUTPUT_FOLDER, OUTPUT_FOLDER)
         print("Updated sound_length_table.lua")
