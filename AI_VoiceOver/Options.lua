@@ -542,7 +542,10 @@ function Options:AddDataModule(module, order)
                 name = "Load",
                 hidden = function() return reason or not module.LoadOnDemand or DataModules:GetModule(module.AddonName) end,
                 func = function()
-                    DataModules:LoadModule(module)
+                    local loaded, reason = DataModules:LoadModule(module)
+                    if not loaded then
+                        StaticPopup_Show("VOICEOVER_ERROR", format([[Failed to load data module "%s". Reason: %s]], module.AddonName, reason and _G["ADDON_" .. reason] or "Unknown"))
+                    end
                 end,
             },
         }

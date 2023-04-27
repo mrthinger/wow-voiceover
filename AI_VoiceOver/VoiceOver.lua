@@ -58,6 +58,14 @@ function Addon:OnInitialize()
     self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
     self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
 
+    StaticPopupDialogs["VOICEOVER_ERROR"] =
+    {
+        text = "VoiceOver|n|n%s",
+        button1 = OKAY,
+        timeout = 0,
+        whileDead = 1,
+    }
+
     SoundQueueUI:Initialize()
     DataModules:EnumerateAddons()
     Options:Initialize()
