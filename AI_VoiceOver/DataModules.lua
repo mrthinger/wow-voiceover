@@ -129,6 +129,13 @@ function DataModules:GetAvailableModules()
 end
 
 function DataModules:EnumerateAddons()
+    if Version:IsRetailOrAboveLegacyVersion(50000) then
+        -- Without this, the very first time the player launches a new client build - setting cvar checkAddonVersion to 0 will have no immediate effect
+        if tonumber(GetCVar("lastAddonVersion")) ~= Version.Interface then
+            SetCVar("lastAddonVersion", Version.Interface)
+        end
+    end
+
     local playerName = UnitName("player")
     for i = 1, GetNumAddOns() do
         local moduleVersion = tonumber(GetAddOnMetadata(i, "X-VoiceOver-DataModule-Version"))
