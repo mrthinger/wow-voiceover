@@ -1012,6 +1012,12 @@ if Version.IsRetailVanilla then
             end)
         end)
     end
+    function Addon.OnAddonLoad.Guidelime()
+        QuestLogFrame:HookScript("OnUpdate", function()
+            -- Update QuestOverlayUI again after Guidelime decorates the titles
+            QuestOverlayUI:Update()
+        end)
+    end
 
 end
 if Version.IsRetailWrath then
@@ -1060,6 +1066,13 @@ if Version.IsRetailWrath then
     hooksecurefunc(Addon, "OnInitialize", function()
         QuestLogListScrollFrame.update = QuestLog_Update
     end)
+
+    function Addon.OnAddonLoad.Guidelime()
+        QuestLogFrame:HookScript("OnUpdate", function()
+            -- Update QuestOverlayUI again after Guidelime decorates the titles
+            QuestOverlayUI:Update()
+        end)
+    end
 
 end
 if Version.IsRetailMainline then
