@@ -129,13 +129,6 @@ function DataModules:GetAvailableModules()
 end
 
 function DataModules:EnumerateAddons()
-    if Version:IsRetailOrAboveLegacyVersion(50000) then
-        -- Without this, the very first time the player launches a new client build - setting cvar checkAddonVersion to 0 will have no immediate effect
-        if tonumber(GetCVar("lastAddonVersion")) ~= Version.Interface then
-            SetCVar("lastAddonVersion", Version.Interface)
-        end
-    end
-
     local playerName = UnitName("player")
     for i = 1, GetNumAddOns() do
         local moduleVersion = tonumber(GetAddOnMetadata(i, "X-VoiceOver-DataModule-Version"))
@@ -190,6 +183,35 @@ function DataModules:EnumerateAddons()
     end
 end
 
+-- We deliberately use a high ##Interface version in TOC to ensure that all clients will load it.
+-- Otherwise pre-classic-rerelease clients will refuse to load addons with version < 20000.
+-- Here we temporarily enable "Load out of date AddOns" to load the module, and restore the user's setting afterwards.
+-- These cvars can be nil, so have to store the fact of them being changed in a separate variable.
+local prev_checkAddonVersion, changed_checkAddonVersion
+local prev_lastAddonVersion, changed_lastAddonVersion -- Added in 5.x
+local function EnableOutOfDate()
+    if not changed_checkAddonVersion then
+        prev_checkAddonVersion = GetCVar("checkAddonVersion")
+        SetCVar("checkAddonVersion", 0)
+        changed_checkAddonVersion = true
+    end
+    if not changed_lastAddonVersion and Version:IsRetailOrAboveLegacyVersion(50000) then
+        prev_lastAddonVersion = GetCVar("lastAddonVersion")
+        SetCVar("lastAddonVersion", Version.Interface)
+        changed_lastAddonVersion = true
+    end
+end
+local function RestoreOutOfDate()
+    if changed_checkAddonVersion then
+        SetCVar("checkAddonVersion", prev_checkAddonVersion)
+        changed_checkAddonVersion = nil
+    end
+    if changed_lastAddonVersion and Version:IsRetailOrAboveLegacyVersion(50000) then
+        SetCVar("lastAddonVersion", prev_lastAddonVersion)
+        changed_lastAddonVersion = nil
+    end
+end
+
 ---@param module DataModuleMetadata
 function DataModules:LoadModule(module)
     if not module.LoadOnDemand or self:GetModule(module.AddonName) or IsAddOnLoaded(module.AddonName) then
@@ -200,21 +222,16 @@ function DataModules:LoadModule(module)
         EnableAddOn(module.AddonName)
     end
 
-    -- We deliberately use a high ##Interface version in TOC to ensure that all clients will load it.
-    -- Otherwise pre-classic-rerelease clients will refuse to load addons with version < 20000.
-    -- Here we temporarily enable "Load out of date AddOns" to load the module, and restore the user's setting afterwards.
-    local old = GetCVar("checkAddonVersion")
-    SetCVar("checkAddonVersion", 0)
+    EnableOutOfDate()
     local loaded, reason = LoadAddOn(module.AddonName)
-    SetCVar("checkAddonVersion", old)
+    RestoreOutOfDate()
     return loaded, reason
 end
 
 function DataModules:GetModuleAddOnInfo(module)
-    local old = GetCVar("checkAddonVersion")
-    SetCVar("checkAddonVersion", 0)
+    EnableOutOfDate()
     local name, title, notes, loadable, reason = GetAddOnInfo(module.AddonName)
-    SetCVar("checkAddonVersion", old)
+    RestoreOutOfDate()
     return name, title, notes, loadable, reason
 end
 
