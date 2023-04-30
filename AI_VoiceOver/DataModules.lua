@@ -189,7 +189,8 @@ end
 -- These cvars can be nil, so have to store the fact of them being changed in a separate variable.
 local prev_checkAddonVersion, changed_checkAddonVersion
 local prev_lastAddonVersion, changed_lastAddonVersion -- Added in 5.x
-local function EnableOutOfDate()
+local addonWasDisabled = {}
+local function EnableOutOfDate(addon)
     if not changed_checkAddonVersion then
         prev_checkAddonVersion = GetCVar("checkAddonVersion")
         SetCVar("checkAddonVersion", 0)
@@ -200,8 +201,13 @@ local function EnableOutOfDate()
         SetCVar("lastAddonVersion", Version.Interface)
         changed_lastAddonVersion = true
     end
+
+    addonWasDisabled[addon] = GetAddOnEnableState(UnitName("player"), addon) == 0
+    if FORCE_ENABLE_DISABLED_MODULES and addonWasDisabled[addon] then
+        EnableAddOn(addon)
+    end
 end
-local function RestoreOutOfDate()
+local function RestoreOutOfDate(addon)
     if changed_checkAddonVersion then
         SetCVar("checkAddonVersion", prev_checkAddonVersion)
         changed_checkAddonVersion = nil
@@ -210,6 +216,11 @@ local function RestoreOutOfDate()
         SetCVar("lastAddonVersion", prev_lastAddonVersion)
         changed_lastAddonVersion = nil
     end
+
+    if FORCE_ENABLE_DISABLED_MODULES and addonWasDisabled[addon] then
+        DisableAddOn(addon)
+    end
+    addonWasDisabled[addon] = nil
 end
 
 ---@param module DataModuleMetadata
@@ -218,20 +229,16 @@ function DataModules:LoadModule(module)
         return false
     end
 
-    if FORCE_ENABLE_DISABLED_MODULES and GetAddOnEnableState(UnitName("player"), module.AddonName) == 0 then
-        EnableAddOn(module.AddonName)
-    end
-
-    EnableOutOfDate()
+    EnableOutOfDate(module.AddonName)
     local loaded, reason = LoadAddOn(module.AddonName)
-    RestoreOutOfDate()
+    RestoreOutOfDate(module.AddonName)
     return loaded, reason
 end
 
 function DataModules:GetModuleAddOnInfo(module)
-    EnableOutOfDate()
+    EnableOutOfDate(module.AddonName)
     local name, title, notes, loadable, reason = GetAddOnInfo(module.AddonName)
-    RestoreOutOfDate()
+    RestoreOutOfDate(module.AddonName)
     return name, title, notes, loadable, reason
 end
 
