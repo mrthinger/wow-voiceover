@@ -173,7 +173,6 @@ local GeneralTab =
                     type = "range",
                     order = 4,
                     name = "Frame Scale",
-                    desc = "Automatically hides the takling frame when no voice over is playing.",
                     softMin = 0.5,
                     softMax = 2,
                     bigStep = 0.05,
