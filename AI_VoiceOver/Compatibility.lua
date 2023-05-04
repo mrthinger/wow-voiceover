@@ -417,7 +417,7 @@ if Version.IsLegacyVanilla then
         return arg.n
     end
     function GetNumGossipActiveQuests()
-        return getargn(GetGossipAvailableQuests())
+        return getargn(GetGossipActiveQuests())
     end
     function GetNumGossipAvailableQuests()
         return getargn(GetGossipAvailableQuests())
