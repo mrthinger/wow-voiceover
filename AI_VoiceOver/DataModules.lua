@@ -20,7 +20,7 @@ local LOAD_ALL_MODULES = true
 ---@field GossipLookupByNPCName table<string, table<string, string>> Maps Creature name and fuzzy-searchable gossip text to gossip text hash
 ---@field GossipLookupByObjectID table<number, table<string, string>> Maps GameObject ID and fuzzy-searchable gossip text to gossip text hash
 ---@field GossipLookupByObjectName table<string, table<string, string>> Maps GameObject name and fuzzy-searchable gossip text to gossip text hash
----@field QuestIDLookup table<string, number|table<string, number|table<string, number>> Maps quest title to quest ID or (if there is ambiguity) maps quest title and quest giver name to quest ID or (if there is ambiguity) maps quest title and quest giver name and fuzzy-searchable quest text to quest ID
+---@field QuestIDLookup table<QuestIDLookupSource, table<string, number|table<string, number|table<string, number>>>> Maps quest title to quest ID or (if there is ambiguity) maps quest title and quest giver name to quest ID or (if there is ambiguity) maps quest title and quest giver name and fuzzy-searchable quest text to quest ID
 ---@field NPCIDLookupByQuestID table<number, number> Maps Quest ID to quest giver Creature ID
 ---@field ObjectIDLookupByQuestID table<number, number> Maps Quest ID to quest giver GameObject ID
 ---@field ItemIDLookupByQuestID table<number, number> Maps Quest ID to quest giver Item ID
@@ -315,7 +315,9 @@ local function getLastNWords(text, n)
     return table.concat(lastNWords, " ", startIndex, endIndex)
 end
 
----@param source string|"accept"|"progress"|"complete"
+---@alias QuestIDLookupSource "accept"|"progress"|"complete"
+
+---@param source QuestIDLookupSource
 ---@param title string
 ---@param npcName string
 ---@param text string
