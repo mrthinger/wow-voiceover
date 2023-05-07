@@ -39,7 +39,7 @@ end
 --- Returns the name of the NPC that's being interacted with while a GossipFrame or QuestFrame is visible.
 ---
 --- Uses "questnpc" unitID when available, falls back to "npc" unitID.
---- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12.
+--- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12 and causes an error.
 ---@return string|nil name
 function Utils:GetNPCName()
     return UnitName("questnpc") or UnitName("npc")
@@ -57,7 +57,7 @@ end
 --- Returns whether the NPC that's being interacted with while a GossipFrame or QuestFrame is visible is a GameObject or Item.
 ---
 --- Uses "questnpc" unitID when available, falls back to "npc" unitID.
---- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12.
+--- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12 and causes an error.
 ---@return boolean isObjectOrItem
 function Utils:IsNPCObjectOrItem()
     return not (UnitExists("questnpc") or UnitExists("npc"))
@@ -66,7 +66,7 @@ end
 --- Returns whether the NPC that's being interacted with while a GossipFrame or QuestFrame is visible is a Player.
 ---
 --- Uses "questnpc" unitID when available, falls back to "npc" unitID.
---- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12.
+--- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12 and causes an error.
 ---@return boolean isPlayer
 function Utils:IsNPCPlayer()
     return UnitIsPlayer("questnpc") or UnitIsPlayer("npc")
@@ -76,7 +76,7 @@ end
 ---
 --- Used to differentiate the output of `Utils:TestSound(soundData)` returning false when the sound channel is disabled from it returning false due to the sound file missing.
 --- - Overriden in 1.12 due to the different sound system that uses different CVars.
---- - Overriden in 3.3.5 due to the lack of sound channels.
+--- - Overriden in 2.4.3 and 3.3.5 due to the lack of sound channels.
 ---@return boolean enabled
 function Utils:IsSoundEnabled()
     if tonumber(GetCVar("Sound_EnableAllSound")) ~= 1 then
@@ -95,7 +95,7 @@ end
 --- Attempts to play the sound and immediately stops it to check if the sound file exists.
 ---
 --- Will also return false if the playback failed because the sound channel was disabled. Use `Utils:IsSoundEnabled()` to handle the latter case.
---- - Overriden in 1.12 and 3.3.5 to always return true due to the lack of ability of stop the sounds and the unreliability of `willPlay` return (always returns 1 if a filename is provided).
+--- - Overriden in 1.12, 2.4.3 and 3.3.5 to always return true due to the lack of ability of stop the sounds and the unreliability of `willPlay` return (always returns 1 if a filename is provided).
 ---@param soundData SoundData
 ---@return boolean willPlay
 function Utils:TestSound(soundData)
@@ -108,7 +108,7 @@ end
 
 --- Plays the sound from SoundData on the configured sound channel and stores a handle to it in `SoundData.handle` so that it can be later stopped with `Utils:StopSound(soundData)`.
 --- - Overriden in 1.12 due to the lack of the ability to play on custom sound channel, and the different implementation of `AutoToggleDialog` config.
---- - Overriden in 3.3.5 due to the lack of the ability to play on custom sound channel, the lack of `AutoToggleDialog` config implementation, and the custom functionality to play the sound on the music channel instead.
+--- - Overriden in 2.4.3 and 3.3.5 due to the lack of the ability to play on custom sound channel, the lack of `AutoToggleDialog` config implementation, and the custom functionality to play the sound on the music channel instead.
 ---@param soundData SoundData
 function Utils:PlaySound(soundData)
     local channel = Enums.SoundChannel:GetName(Addon.db.profile.Audio.SoundChannel)
@@ -118,7 +118,7 @@ end
 
 --- Stops the sound started by `Utils:PlaySound(soundData)` via the provided `SoundData.handle` and removes it.
 --- - Overriden in 1.12 with a custom implementation that interrupts all in-game sounds.
---- - Overriden in 3.3.5 due to the custom functionality to play the sound on the music channel instead.
+--- - Overriden in 2.4.3 and 3.3.5 due to the custom functionality to play the sound on the music channel instead.
 ---@param soundData SoundData
 function Utils:StopSound(soundData)
     StopSound(soundData.handle)
@@ -265,7 +265,7 @@ if Version.IsLegacyVanilla or Version.IsRetailVanilla then
 end
 
 --- Returns the model set used by `Utils:GetModelAnimationDuration(model, animation)` to determine duration of which model's animation to return.
---- - Overriden in 3.3.5 to return "HD" if the player has confirmed to be using HD model patches.
+--- - Overriden in 2.4.3 and 3.3.5 to return "HD" if the player has confirmed to be using HD model patches.
 --- - Overriden in Mainline to always return "HD".
 ---@return string|"Original"|"HD"
 function Utils:GetCurrentModelSet()
@@ -285,13 +285,13 @@ function Utils:GetModelAnimationDuration(model, animation)
 end
 
 --- Stores a `DressUpModel` in `SoundData.modelFrame` that's meant to represent the unit speaking.
---- - Implemented in 1.12 due to the lack of the ability to display an arbitrary creature ID in a `DressUpModel`.
+--- - Implemented in 1.12 and 2.4.3 due to the lack of the ability to display an arbitrary creature ID in a `DressUpModel`.
 ---@param soundData SoundData
 function Utils:CreateNPCModelFrame(soundData)
 end
 
 --- Frees the `DressUpModel` stored in `SoundData.modelFrame` by `Utils:CreateNPCModelFrame(soundData)` back to the model pool once it's no longer needed.
---- - Implemented in 1.12 due to the lack of the ability to display an arbitrary creature ID in a `DressUpModel`.
+--- - Implemented in 1.12 and 2.4.3 due to the lack of the ability to display an arbitrary creature ID in a `DressUpModel`.
 ---@param soundData SoundData
 function Utils:FreeNPCModelFrame(soundData)
 end

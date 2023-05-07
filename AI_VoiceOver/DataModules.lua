@@ -20,7 +20,7 @@ local LOAD_ALL_MODULES = true
 ---@field GossipLookupByNPCName table<string, table<string, string>> Maps Creature name and fuzzy-searchable gossip text to gossip text hash
 ---@field GossipLookupByObjectID table<number, table<string, string>> Maps GameObject ID and fuzzy-searchable gossip text to gossip text hash
 ---@field GossipLookupByObjectName table<string, table<string, string>> Maps GameObject name and fuzzy-searchable gossip text to gossip text hash
----@field QuestIDLookup table<string, number|table<string, number|table<string, number>> Maps quest title to quest ID or (if there is ambiguity) maps quest title and quest giver name to quest ID or (if there is ambiguity) maps quest title and quest giver name and fuzzy-searchable quest text to quest ID
+---@field QuestIDLookup table<QuestIDLookupSource, table<string, number|table<string, number|table<string, number>>>> Maps quest title to quest ID or (if there is ambiguity) maps quest title and quest giver name to quest ID or (if there is ambiguity) maps quest title and quest giver name and fuzzy-searchable quest text to quest ID
 ---@field NPCIDLookupByQuestID table<number, number> Maps Quest ID to quest giver Creature ID
 ---@field ObjectIDLookupByQuestID table<number, number> Maps Quest ID to quest giver GameObject ID
 ---@field ItemIDLookupByQuestID table<number, number> Maps Quest ID to quest giver Item ID
@@ -129,13 +129,6 @@ function DataModules:GetAvailableModules()
 end
 
 function DataModules:EnumerateAddons()
-    if Version:IsRetailOrAboveLegacyVersion(50000) then
-        -- Without this, the very first time the player launches a new client build - setting cvar checkAddonVersion to 0 will have no immediate effect
-        if tonumber(GetCVar("lastAddonVersion")) ~= Version.Interface then
-            SetCVar("lastAddonVersion", Version.Interface)
-        end
-    end
-
     local playerName = UnitName("player")
     for i = 1, GetNumAddOns() do
         local moduleVersion = tonumber(GetAddOnMetadata(i, "X-VoiceOver-DataModule-Version"))
@@ -190,31 +183,62 @@ function DataModules:EnumerateAddons()
     end
 end
 
+-- We deliberately use a high ##Interface version in TOC to ensure that all clients will load it.
+-- Otherwise pre-classic-rerelease clients will refuse to load addons with version < 20000.
+-- Here we temporarily enable "Load out of date AddOns" to load the module, and restore the user's setting afterwards.
+-- These cvars can be nil, so have to store the fact of them being changed in a separate variable.
+local prev_checkAddonVersion, changed_checkAddonVersion
+local prev_lastAddonVersion, changed_lastAddonVersion -- Added in 5.x
+local addonWasDisabled = {}
+local function EnableOutOfDate(addon)
+    if not changed_checkAddonVersion then
+        prev_checkAddonVersion = GetCVar("checkAddonVersion")
+        SetCVar("checkAddonVersion", 0)
+        changed_checkAddonVersion = true
+    end
+    if not changed_lastAddonVersion and Version:IsRetailOrAboveLegacyVersion(50000) then
+        prev_lastAddonVersion = GetCVar("lastAddonVersion")
+        SetCVar("lastAddonVersion", Version.Interface)
+        changed_lastAddonVersion = true
+    end
+
+    addonWasDisabled[addon] = GetAddOnEnableState(UnitName("player"), addon) == 0
+    if FORCE_ENABLE_DISABLED_MODULES and addonWasDisabled[addon] then
+        EnableAddOn(addon)
+    end
+end
+local function RestoreOutOfDate(addon)
+    if changed_checkAddonVersion then
+        SetCVar("checkAddonVersion", prev_checkAddonVersion)
+        changed_checkAddonVersion = nil
+    end
+    if changed_lastAddonVersion and Version:IsRetailOrAboveLegacyVersion(50000) then
+        SetCVar("lastAddonVersion", prev_lastAddonVersion)
+        changed_lastAddonVersion = nil
+    end
+
+    if FORCE_ENABLE_DISABLED_MODULES and addonWasDisabled[addon] then
+        DisableAddOn(addon)
+    end
+    addonWasDisabled[addon] = nil
+end
+
 ---@param module DataModuleMetadata
 function DataModules:LoadModule(module)
     if not module.LoadOnDemand or self:GetModule(module.AddonName) or IsAddOnLoaded(module.AddonName) then
         return false
     end
 
-    if FORCE_ENABLE_DISABLED_MODULES and GetAddOnEnableState(UnitName("player"), module.AddonName) == 0 then
-        EnableAddOn(module.AddonName)
-    end
-
-    -- We deliberately use a high ##Interface version in TOC to ensure that all clients will load it.
-    -- Otherwise pre-classic-rerelease clients will refuse to load addons with version < 20000.
-    -- Here we temporarily enable "Load out of date AddOns" to load the module, and restore the user's setting afterwards.
-    local old = GetCVar("checkAddonVersion")
-    SetCVar("checkAddonVersion", 0)
+    EnableOutOfDate(module.AddonName)
     local loaded, reason = LoadAddOn(module.AddonName)
-    SetCVar("checkAddonVersion", old)
+    RestoreOutOfDate(module.AddonName)
     return loaded, reason
 end
 
 function DataModules:GetModuleAddOnInfo(module)
-    local old = GetCVar("checkAddonVersion")
-    SetCVar("checkAddonVersion", 0)
+    EnableOutOfDate(module.AddonName)
     local name, title, notes, loadable, reason = GetAddOnInfo(module.AddonName)
-    SetCVar("checkAddonVersion", old)
+    RestoreOutOfDate(module.AddonName)
     return name, title, notes, loadable, reason
 end
 
@@ -291,7 +315,9 @@ local function getLastNWords(text, n)
     return table.concat(lastNWords, " ", startIndex, endIndex)
 end
 
----@param source string|"accept"|"progress"|"complete"
+---@alias QuestIDLookupSource "accept"|"progress"|"complete"
+
+---@param source QuestIDLookupSource
 ---@param title string
 ---@param npcName string
 ---@param text string
