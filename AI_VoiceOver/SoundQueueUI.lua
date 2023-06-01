@@ -360,7 +360,7 @@ function SoundQueueUI:InitPortrait()
     self.frame.portrait.book:SetTexCoord(8 / 256, 248 / 256, 8 / 256, 248 / 256)
     self.frame.portrait.book:Hide()
 
-    -- Create a play/pause button with a semi-transparent background (mimicing the portrait frame's background to create an illusion of the 3D model becoming semi-transparent)
+    -- Create a play/pause button with a semi-transparent background (mimicking the portrait frame's background to create an illusion of the 3D model becoming semi-transparent)
     self.frame.portrait.pause = CreateFrame("Button", nil, self.frame.portrait)
     self.frame.portrait.pause:SetFrameLevel(self.frame.portrait.model:GetFrameLevel() + 1)
     self.frame.portrait.pause:SetAllPoints()
