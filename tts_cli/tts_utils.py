@@ -274,6 +274,9 @@ class TTSProcessor:
         output_file = OUTPUT_FOLDER + "/quest_id_lookups.lua"
         quest_id_table = {}
 
+        output_file_de = OUTPUT_FOLDER + "/quest_id_lookups_de.lua"
+        quest_id_table_de = {}
+
         quest_df = df[df['quest'] != '']
 
         for i, row in tqdm(quest_df.iterrows()):
@@ -289,6 +292,15 @@ class TTSProcessor:
             npc_name = row['name']
             escaped_npc_name = npc_name.replace('"', '\'').replace('\r',' ').replace('\n',' ')
 
+            if(quest_id ==40):
+                print(str(quest_id))
+            quest_title_de = row['quest_title_de']
+            quest_text_de = get_first_n_words(row['text_de'], 15) + ' ' +  get_last_n_words(row['text_de'], 15)
+            escaped_quest_text_de = replace_dollar_bs_with_space(quest_text_de.replace('"', '\'').replace('\r',' ').replace('\n',' '))
+            escaped_quest_title_de = quest_title_de.replace('"', '\'').replace('\r',' ').replace('\n',' ')
+            npc_name_de = row['name_de']
+            escaped_npc_name_de = npc_name_de.replace('"', '\'').replace('\r',' ').replace('\n',' ')
+
             # table[source][title][npcName][text]
             if quest_source not in quest_id_table:
                 quest_id_table[quest_source] = {}
@@ -302,12 +314,33 @@ class TTSProcessor:
             if quest_text not in quest_id_table[quest_source][escaped_quest_title][escaped_npc_name]:
                 quest_id_table[quest_source][escaped_quest_title][escaped_npc_name][escaped_quest_text] = quest_id
 
+            # German - table[source][title][npcName][text]
+            if quest_source not in quest_id_table_de:
+                quest_id_table_de[quest_source] = {}
+
+            if escaped_quest_title_de not in quest_id_table_de[quest_source]:
+                quest_id_table_de[quest_source][escaped_quest_title_de] = {}
+
+            if escaped_npc_name_de not in quest_id_table_de[quest_source][escaped_quest_title_de]:
+                quest_id_table_de[quest_source][escaped_quest_title_de][escaped_npc_name_de] = {}
+
+            if quest_text_de not in quest_id_table_de[quest_source][escaped_quest_title_de][escaped_npc_name_de]:
+                quest_id_table_de[quest_source][escaped_quest_title_de][escaped_npc_name_de][escaped_quest_text_de] = quest_id
+
         pruned_quest_id_table = prune_quest_id_table(quest_id_table)
+
+        pruned_quest_id_table_de = prune_quest_id_table(quest_id_table_de)
 
         with open(output_file, "w") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.QuestIDLookup = ")
             f.write(lua.encode(pruned_quest_id_table))
+            f.write("\n")
+        
+        with open(output_file_de, "w") as f:
+            f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
+            f.write(f"{module_name}.QuestIDLookup = ")
+            f.write(lua.encode(pruned_quest_id_table_de))
             f.write("\n")
 
 
