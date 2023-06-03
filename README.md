@@ -16,7 +16,7 @@ This project contains a CLI (Command Line Interface) tool that generates Text-to
 - docker (for the database)
 
 ## Installation
-1. Make a python virtual enviornment. (make sure to source it after creating)
+1. Make a python virtual environment. (make sure to source it after creating)
 ```bash
 python -m venv .venv
 ```

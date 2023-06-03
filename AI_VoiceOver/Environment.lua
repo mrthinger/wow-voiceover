@@ -7,7 +7,7 @@ allowing us to have our own global variables isolated from the rest of the game.
 This accomplishes several goals:
 1. Prevents addon-specific "globals" from leaking to game-wide global namespace _G
 2. Optionally retains the ability to access these "globals" via the only exposed global variable "VoiceOver"
-3. Allows us to make overrides for WoW API's global funtions and variables without actually touching
+3. Allows us to make overrides for WoW API's global functions and variables without actually touching
    the real global namespace, making these overrides visible only to this addon.
    This will be useful mainly for adding backwards-compatibility with older WoW clients.
 

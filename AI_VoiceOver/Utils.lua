@@ -3,7 +3,7 @@ Utils = {}
 
 --- Returns `Enum.GUID` type of the provided GUID.
 --- - Removed in clients before 2.3 as those don't provide `UnitGUID(unitID)` function.
---- - Overriden for clients before 6.0 that use an older GUID format.
+--- - Overridden for clients before 6.0 that use an older GUID format.
 ---@param guid string GUID returned by the API
 ---@return GUID guid
 function Utils:GetGUIDType(guid)
@@ -14,7 +14,7 @@ end
 ---
 --- Only supported for GUID types that can contain the ID, checkable via `Enums.GUID:CanHaveID(type)`.
 --- - Removed in clients before 2.3 as those don't provide `UnitGUID(unitID)` function.
---- - Overriden for clients before 6.0 that use an older GUID format.
+--- - Overridden for clients before 6.0 that use an older GUID format.
 ---@param guid string GUID returned by the API
 ---@return number id
 function Utils:GetIDFromGUID(guid)
@@ -26,7 +26,7 @@ end
 
 --- Returns a dummy WorldObject GUID using the provided `Enums.GUID` type and ID.
 --- - Returns nil in clients before 2.3 as those don't provide `UnitGUID(unitID)` function.
---- - Overriden for clients before 6.0 that use an older GUID format.
+--- - Overridden for clients before 6.0 that use an older GUID format.
 ---@param type GUID
 ---@param id number
 ---@return string|nil guid
@@ -39,7 +39,7 @@ end
 --- Returns the name of the NPC that's being interacted with while a GossipFrame or QuestFrame is visible.
 ---
 --- Uses "questnpc" unitID when available, falls back to "npc" unitID.
---- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12 and causes an error.
+--- - Overridden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12 and causes an error.
 ---@return string|nil name
 function Utils:GetNPCName()
     return UnitName("questnpc") or UnitName("npc")
@@ -57,7 +57,7 @@ end
 --- Returns whether the NPC that's being interacted with while a GossipFrame or QuestFrame is visible is a GameObject or Item.
 ---
 --- Uses "questnpc" unitID when available, falls back to "npc" unitID.
---- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12 and causes an error.
+--- - Overridden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12 and causes an error.
 ---@return boolean isObjectOrItem
 function Utils:IsNPCObjectOrItem()
     return not (UnitExists("questnpc") or UnitExists("npc"))
@@ -66,7 +66,7 @@ end
 --- Returns whether the NPC that's being interacted with while a GossipFrame or QuestFrame is visible is a Player.
 ---
 --- Uses "questnpc" unitID when available, falls back to "npc" unitID.
---- - Overriden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12 and causes an error.
+--- - Overridden in 1.12 to only return "npc" as "questnpc" unitID is unavailable in 1.12 and causes an error.
 ---@return boolean isPlayer
 function Utils:IsNPCPlayer()
     return UnitIsPlayer("questnpc") or UnitIsPlayer("npc")
@@ -75,8 +75,8 @@ end
 --- Returns whether the player's sound options will allow the playback of sound files.
 ---
 --- Used to differentiate the output of `Utils:TestSound(soundData)` returning false when the sound channel is disabled from it returning false due to the sound file missing.
---- - Overriden in 1.12 due to the different sound system that uses different CVars.
---- - Overriden in 2.4.3 and 3.3.5 due to the lack of sound channels.
+--- - Overridden in 1.12 due to the different sound system that uses different CVars.
+--- - Overridden in 2.4.3 and 3.3.5 due to the lack of sound channels.
 ---@return boolean enabled
 function Utils:IsSoundEnabled()
     if tonumber(GetCVar("Sound_EnableAllSound")) ~= 1 then
@@ -95,7 +95,7 @@ end
 --- Attempts to play the sound and immediately stops it to check if the sound file exists.
 ---
 --- Will also return false if the playback failed because the sound channel was disabled. Use `Utils:IsSoundEnabled()` to handle the latter case.
---- - Overriden in 1.12, 2.4.3 and 3.3.5 to always return true due to the lack of ability of stop the sounds and the unreliability of `willPlay` return (always returns 1 if a filename is provided).
+--- - Overridden in 1.12, 2.4.3 and 3.3.5 to always return true due to the lack of ability of stop the sounds and the unreliability of `willPlay` return (always returns 1 if a filename is provided).
 ---@param soundData SoundData
 ---@return boolean willPlay
 function Utils:TestSound(soundData)
@@ -107,8 +107,8 @@ function Utils:TestSound(soundData)
 end
 
 --- Plays the sound from SoundData on the configured sound channel and stores a handle to it in `SoundData.handle` so that it can be later stopped with `Utils:StopSound(soundData)`.
---- - Overriden in 1.12 due to the lack of the ability to play on custom sound channel, and the different implementation of `AutoToggleDialog` config.
---- - Overriden in 2.4.3 and 3.3.5 due to the lack of the ability to play on custom sound channel, the lack of `AutoToggleDialog` config implementation, and the custom functionality to play the sound on the music channel instead.
+--- - Overridden in 1.12 due to the lack of the ability to play on custom sound channel, and the different implementation of `AutoToggleDialog` config.
+--- - Overridden in 2.4.3 and 3.3.5 due to the lack of the ability to play on custom sound channel, the lack of `AutoToggleDialog` config implementation, and the custom functionality to play the sound on the music channel instead.
 ---@param soundData SoundData
 function Utils:PlaySound(soundData)
     local channel = Enums.SoundChannel:GetName(Addon.db.profile.Audio.SoundChannel)
@@ -117,8 +117,8 @@ function Utils:PlaySound(soundData)
 end
 
 --- Stops the sound started by `Utils:PlaySound(soundData)` via the provided `SoundData.handle` and removes it.
---- - Overriden in 1.12 with a custom implementation that interrupts all in-game sounds.
---- - Overriden in 2.4.3 and 3.3.5 due to the custom functionality to play the sound on the music channel instead.
+--- - Overridden in 1.12 with a custom implementation that interrupts all in-game sounds.
+--- - Overridden in 2.4.3 and 3.3.5 due to the custom functionality to play the sound on the music channel instead.
 ---@param soundData SoundData
 function Utils:StopSound(soundData)
     StopSound(soundData.handle)
@@ -126,28 +126,28 @@ function Utils:StopSound(soundData)
 end
 
 --- Returns the button index offset of the virtualized Quest Log scroll frame.
---- - Overriden in 3.3.5 and 3.4 due to the different Quest Log layout that uses `HybridScrollFrame` instead of `FauxScrollFrame`.
+--- - Overridden in 3.3.5 and 3.4 due to the different Quest Log layout that uses `HybridScrollFrame` instead of `FauxScrollFrame`.
 ---@return number offset
 function Utils:GetQuestLogScrollOffset()
     return FauxScrollFrame_GetOffset(QuestLogListScrollFrame)
 end
 
 --- Returns the `Button` that represents the quest in the Quest Log frame.
---- - Overriden in 3.3.5 and 3.4 due to the different naming scheme used by the Quest Log.
+--- - Overridden in 3.3.5 and 3.4 due to the different naming scheme used by the Quest Log.
 ---@return Button button
 function Utils:GetQuestLogTitleFrame(index)
     return _G["QuestLogTitle" .. index]
 end
 
 --- Returns the title `FontString` of the button that represents the quest in the Quest Log frame.
---- - Overriden in 3.3.5 and 3.4 due to the different naming scheme used by the Quest Log.
+--- - Overridden in 3.3.5 and 3.4 due to the different naming scheme used by the Quest Log.
 ---@return FontString title
 function Utils:GetQuestLogTitleNormalText(index)
     return _G["QuestLogTitle" .. index .. "NormalText"]
 end
 
 --- Returns the quest tracking check mark `Texture` of the button that represents the quest in the Quest Log frame.
---- - Overriden in 3.3.5 and 3.4 due to the different naming scheme used by the Quest Log.
+--- - Overridden in 3.3.5 and 3.4 due to the different naming scheme used by the Quest Log.
 ---@return Texture check
 function Utils:GetQuestLogTitleCheck(index)
     return _G["QuestLogTitle" .. index .. "Check"]
@@ -164,7 +164,7 @@ end
 --- Returns an iterator to the table sorted with the provided function, or sorted by value if no function was provided.
 ---@generic K, V
 ---@param tbl table<K, V>
----@param sorter fun(valueA: V, valueB: V, keyA: K, keyB: K): boolean Should return whether A should preceed B
+---@param sorter fun(valueA: V, valueB: V, keyA: K, keyB: K): boolean Should return whether A should precede B
 ---@return function iterator
 ---@return table tbl
 ---@return nil
@@ -265,8 +265,8 @@ if Version.IsLegacyVanilla or Version.IsRetailVanilla then
 end
 
 --- Returns the model set used by `Utils:GetModelAnimationDuration(model, animation)` to determine duration of which model's animation to return.
---- - Overriden in 2.4.3 and 3.3.5 to return "HD" if the player has confirmed to be using HD model patches.
---- - Overriden in Mainline to always return "HD".
+--- - Overridden in 2.4.3 and 3.3.5 to return "HD" if the player has confirmed to be using HD model patches.
+--- - Overridden in Mainline to always return "HD".
 ---@return string|"Original"|"HD"
 function Utils:GetCurrentModelSet()
     return "Original"
