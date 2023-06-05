@@ -547,24 +547,24 @@ def query_dataframe_for_all_quests_and_gossip_localized(language_code : str):
 	SELECT
 	    ALL_DATA.source,
 		ALL_DATA.quest,
-		IFNULL(NULLIF(lq.title_loc3, ''), quest_title) as quest_title,
+		IFNULL(NULLIF(lq.title_loc{0}, ''), quest_title) as quest_title,
 		IFNULL(NULLIF(CASE source
 			WHEN 'gossip' THEN (CASE
-				WHEN broadcast_text_id = 0 THEN qg.content_loc3
-				WHEN ALL_DATA.type = 'creature' THEN IF(DisplaySexID = 0, lbt.male_text_loc3, lbt.female_text_loc3)
-				ELSE IFNULL(NULLIF(lbt.male_text_loc3, ''), lbt.female_text_loc3)
+				WHEN broadcast_text_id = 0 THEN qg.content_loc{0}
+				WHEN ALL_DATA.type = 'creature' THEN IF(DisplaySexID = 0, lbt.male_text_loc{0}, lbt.female_text_loc{0})
+				ELSE IFNULL(NULLIF(lbt.male_text_loc{0}, ''), lbt.female_text_loc{0})
 			END)
-			WHEN 'accept'   THEN lq.Details_loc3
-			WHEN 'progress' THEN lq.RequestItemsText_loc3
-			WHEN 'complete' THEN lq.OfferRewardText_loc3
+			WHEN 'accept'   THEN lq.Details_loc{0}
+			WHEN 'progress' THEN lq.RequestItemsText_loc{0}
+			WHEN 'complete' THEN lq.OfferRewardText_loc{0}
 			ELSE NULL
 		END, ''), ALL_DATA.text) as text,
 		ALL_DATA.DisplayRaceID,
 		ALL_DATA.DisplaySexID,
 		IFNULL(NULLIF((CASE ALL_DATA.type
-			WHEN 'creature'   THEN lc.name_loc3
-			WHEN 'gameobject' THEN lg.name_loc3
-			WHEN 'item'       THEN li.name_loc3
+			WHEN 'creature'   THEN lc.name_loc{0}
+			WHEN 'gameobject' THEN lg.name_loc{0}
+			WHEN 'item'       THEN li.name_loc{0}
 			ELSE NULL
 		END), ''), name) as name,
 		ALL_DATA.type,

@@ -142,7 +142,7 @@ elif args.mode == "gen_lookup_tables":
     df = None
     if(args.lang == ""):
         df = query_dataframe_for_all_quests_and_gossip()
-        
+    
     else:
         language_code = args.lang
         print(f"Selected language: {language_code}")
@@ -150,7 +150,6 @@ elif args.mode == "gen_lookup_tables":
 
     df = tts_processor.preprocess_dataframe(df)
     tts_processor.generate_lookup_tables(df)
-        
 
 else:
     interactive_mode()
