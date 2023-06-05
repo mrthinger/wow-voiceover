@@ -292,7 +292,7 @@ class TTSProcessor:
             npc_name = row['name']
             escaped_npc_name = npc_name.replace('"', '\'').replace('\r',' ').replace('\n',' ')
 
-            if(quest_id ==40):
+            if(quest_id == 176):
                 print(str(quest_id))
             quest_title_de = row['quest_title_de']
             quest_text_de = get_first_n_words(row['text_de'], 15) + ' ' +  get_last_n_words(row['text_de'], 15)
@@ -337,7 +337,7 @@ class TTSProcessor:
             f.write(lua.encode(pruned_quest_id_table))
             f.write("\n")
         
-        with open(output_file_de, "w") as f:
+        with open(output_file_de, "w", encoding="utf-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.QuestIDLookup = ")
             f.write(lua.encode(pruned_quest_id_table_de))
