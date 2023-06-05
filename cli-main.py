@@ -120,7 +120,7 @@ parser = argparse.ArgumentParser(
 subparsers = parser.add_subparsers(dest="mode", help="Available modes")
 subparsers.add_parser("init-db", help="Initialize the database")
 subparsers.add_parser("interactive", help="Interactive mode")
-subparsers.add_parser("gen_lookup_tables", help="Generate the lookup tables for all quests and gossip in the game. Also recomputes the sound length table.")
+subparsers.add_parser("gen_lookup_tables", help="Generate the lookup tables for all quests and gossip in the game. Also recomputes the sound length table.").add_argument("--lang", default='', )
 
 args = parser.parse_args()
 
@@ -138,6 +138,8 @@ if args.mode == "init-db":
 elif args.mode == "interactive":
     interactive_mode()
 elif args.mode == "gen_lookup_tables":
+    language = args.lang
+    print("Lang: " + language)
     tts_processor = TTSProcessor()
     df = query_dataframe_for_all_quests_and_gossip()
     df = tts_processor.preprocess_dataframe(df)
