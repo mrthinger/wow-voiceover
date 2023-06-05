@@ -148,9 +148,8 @@ WHERE
     return df
 
 
-def query_dataframe_for_all_quests_and_gossip_localized(local_number :int):
-	if not utils.is_valid_local_number(local_number):
-		return None
+def query_dataframe_for_all_quests_and_gossip_localized(language_code : str):
+	language_number = utils.language_code_to_language_number(language_code)
 
 	db = make_connection()
 	sql_query = '''
@@ -546,25 +545,30 @@ def query_dataframe_for_all_quests_and_gossip_localized(local_number :int):
 
 	)
 	SELECT
-		ALL_DATA.*,
-		IFNULL(NULLIF(lq.title_loc{0}, ''), quest_title) as quest_title_loc,
+	    ALL_DATA.source,
+		ALL_DATA.quest,
+		IFNULL(NULLIF(lq.title_loc3, ''), quest_title) as quest_title,
 		IFNULL(NULLIF(CASE source
 			WHEN 'gossip' THEN (CASE
-				WHEN broadcast_text_id = 0 THEN qg.content_loc{0}
-				WHEN ALL_DATA.type = 'creature' THEN IF(DisplaySexID = 0, lbt.male_text_loc{0}, lbt.female_text_loc{0})
-				ELSE IFNULL(NULLIF(lbt.male_text_loc{0}, ''), lbt.female_text_loc{0})
+				WHEN broadcast_text_id = 0 THEN qg.content_loc3
+				WHEN ALL_DATA.type = 'creature' THEN IF(DisplaySexID = 0, lbt.male_text_loc3, lbt.female_text_loc3)
+				ELSE IFNULL(NULLIF(lbt.male_text_loc3, ''), lbt.female_text_loc3)
 			END)
-			WHEN 'accept'   THEN lq.Details_loc{0}
-			WHEN 'progress' THEN lq.RequestItemsText_loc{0}
-			WHEN 'complete' THEN lq.OfferRewardText_loc{0}
+			WHEN 'accept'   THEN lq.Details_loc3
+			WHEN 'progress' THEN lq.RequestItemsText_loc3
+			WHEN 'complete' THEN lq.OfferRewardText_loc3
 			ELSE NULL
-		END, ''), ALL_DATA.text) as text_loc,
+		END, ''), ALL_DATA.text) as text,
+		ALL_DATA.DisplayRaceID,
+		ALL_DATA.DisplaySexID,
 		IFNULL(NULLIF((CASE ALL_DATA.type
-			WHEN 'creature'   THEN lc.name_loc{0}
-			WHEN 'gameobject' THEN lg.name_loc{0}
-			WHEN 'item'       THEN li.name_loc{0}
+			WHEN 'creature'   THEN lc.name_loc3
+			WHEN 'gameobject' THEN lg.name_loc3
+			WHEN 'item'       THEN li.name_loc3
 			ELSE NULL
-		END), ''), name) as name_loc
+		END), ''), name) as name,
+		ALL_DATA.type,
+		ALL_DATA.id
 	FROM ALL_DATA
 		LEFT JOIN mangos.locales_quest          lq  ON lq .entry = quest
 		LEFT JOIN mangos.locales_broadcast_text lbt ON lbt.entry = broadcast_text_id
@@ -572,8 +576,8 @@ def query_dataframe_for_all_quests_and_gossip_localized(local_number :int):
 		LEFT JOIN mangos.locales_gameobject     lg  ON lg .entry = id AND ALL_DATA.type = 'gameobject'
 		LEFT JOIN mangos.locales_item           li  ON li .entry = id AND ALL_DATA.type = 'item'
 		LEFT JOIN mangos.quest_greeting         qg  ON qg .entry = id AND qg.type = (CASE ALL_DATA.type WHEN 'creature' THEN 0 WHEN 'gameobject' THEN 1 ELSE -1 END)
-	;
-	'''.replace('{0}', local_number)
+
+	'''.replace('{0}', str(language_number))
 
 	with db.cursor() as cursor:
 		cursor.execute(sql_query)

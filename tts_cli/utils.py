@@ -15,29 +15,19 @@ def replace_dollar_bs_with_space(text):
     result = re.sub(pattern, ' ', text)
     return result
 
-def local_number_to_code(local_number: int) -> str:
-    if local_number == 1:
-        return "ko"
-    elif local_number == 2:
-        return "fr"
-    elif local_number == 3:
-        return "de"
-    elif local_number == 4:
-        return "zh"
-    elif local_number == 5:
-        return "zh"             # This one should be traditionale chinese
-    elif local_number == 6:
-        return "es"
-    elif local_number == 7:
-        return "es"             # Not sure whats the different between 6 and 7
-    elif local_number == 8:
-        return "ru"
-    
-    raise Exception("Unsupported local_number!")
-
-def is_valid_local_number(local_number: int) -> bool:
-    try:
-        local_number_to_code(local_number)
-        return True
-    except Exception:
-        return False
+def language_code_to_language_number(local_code : str) -> int:
+    match local_code:
+        case "ko":
+            return 1
+        case "fr":
+            return 2
+        case "de":
+            return 3
+        case "zh":
+            return 4            # Not sure what the difference between 4 and 5 is
+        case "es":
+            return 6            # Not sure why spain is 6 and 7
+        case "ru":
+            return 8
+        case _:
+            raise Exception("Unsupported local code!")

@@ -1,11 +1,10 @@
 import argparse
 from prompt_toolkit.shortcuts import checkboxlist_dialog, radiolist_dialog, yes_no_dialog
-from tts_cli.sql_queries import query_dataframe_for_all_quests_and_gossip, query_dataframe_for_area
+from tts_cli.sql_queries import query_dataframe_for_all_quests_and_gossip, query_dataframe_for_area, query_dataframe_for_all_quests_and_gossip_localized
 from tts_cli.tts_utils import TTSProcessor
 from tts_cli.init_db import download_and_extract_latest_db_dump, import_sql_files_to_database
 from tts_cli.consts import RACE_DICT_INV, GENDER_DICT_INV, race_gender_tuple_to_strings
 from tts_cli.zone_selector import KalimdorZoneSelector, EasternKingdomsZoneSelector
-
 
 def prompt_user(tts_processor):
 
@@ -138,11 +137,20 @@ if args.mode == "init-db":
 elif args.mode == "interactive":
     interactive_mode()
 elif args.mode == "gen_lookup_tables":
-    language = args.lang
-    print("Lang: " + language)
     tts_processor = TTSProcessor()
-    df = query_dataframe_for_all_quests_and_gossip()
+
+    df = None
+    if(args.lang == ""):
+        df = query_dataframe_for_all_quests_and_gossip()
+        
+    else:
+        language_code = args.lang
+        print(f"Selected language: {language_code}")
+        df = query_dataframe_for_all_quests_and_gossip_localized(language_code)
+
     df = tts_processor.preprocess_dataframe(df)
     tts_processor.generate_lookup_tables(df)
+        
+
 else:
     interactive_mode()

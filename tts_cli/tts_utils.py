@@ -227,7 +227,7 @@ class TTSProcessor:
 
             gossip_table[row['id']][escapedText] = row['templateText_race_gender_hash']
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="UTF-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(gossip_table))
@@ -245,7 +245,7 @@ class TTSProcessor:
         for i, row in tqdm(accept_df.iterrows()):
             questlog_table[int(row['quest'])] = row['id']
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="UTF-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(questlog_table))
@@ -262,7 +262,7 @@ class TTSProcessor:
         for i, row in tqdm(accept_df.iterrows()):
             npc_name_table[row['id']] =  row['name']
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="UTF-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(npc_name_table))
@@ -273,9 +273,6 @@ class TTSProcessor:
     def write_quest_id_lookup(self, df, module_name):
         output_file = OUTPUT_FOLDER + "/quest_id_lookups.lua"
         quest_id_table = {}
-
-        output_file_de = OUTPUT_FOLDER + "/quest_id_lookups_de.lua"
-        quest_id_table_de = {}
 
         quest_df = df[df['quest'] != '']
 
@@ -292,15 +289,6 @@ class TTSProcessor:
             npc_name = row['name']
             escaped_npc_name = npc_name.replace('"', '\'').replace('\r',' ').replace('\n',' ')
 
-            if(quest_id == 176):
-                print(str(quest_id))
-            quest_title_de = row['quest_title_de']
-            quest_text_de = get_first_n_words(row['text_de'], 15) + ' ' +  get_last_n_words(row['text_de'], 15)
-            escaped_quest_text_de = replace_dollar_bs_with_space(quest_text_de.replace('"', '\'').replace('\r',' ').replace('\n',' '))
-            escaped_quest_title_de = quest_title_de.replace('"', '\'').replace('\r',' ').replace('\n',' ')
-            npc_name_de = row['name_de']
-            escaped_npc_name_de = npc_name_de.replace('"', '\'').replace('\r',' ').replace('\n',' ')
-
             # table[source][title][npcName][text]
             if quest_source not in quest_id_table:
                 quest_id_table[quest_source] = {}
@@ -314,35 +302,14 @@ class TTSProcessor:
             if quest_text not in quest_id_table[quest_source][escaped_quest_title][escaped_npc_name]:
                 quest_id_table[quest_source][escaped_quest_title][escaped_npc_name][escaped_quest_text] = quest_id
 
-            # German - table[source][title][npcName][text]
-            if quest_source not in quest_id_table_de:
-                quest_id_table_de[quest_source] = {}
-
-            if escaped_quest_title_de not in quest_id_table_de[quest_source]:
-                quest_id_table_de[quest_source][escaped_quest_title_de] = {}
-
-            if escaped_npc_name_de not in quest_id_table_de[quest_source][escaped_quest_title_de]:
-                quest_id_table_de[quest_source][escaped_quest_title_de][escaped_npc_name_de] = {}
-
-            if quest_text_de not in quest_id_table_de[quest_source][escaped_quest_title_de][escaped_npc_name_de]:
-                quest_id_table_de[quest_source][escaped_quest_title_de][escaped_npc_name_de][escaped_quest_text_de] = quest_id
-
         pruned_quest_id_table = prune_quest_id_table(quest_id_table)
 
-        pruned_quest_id_table_de = prune_quest_id_table(quest_id_table_de)
-
-        with open(output_file, "w") as f:
+        # UTF-8 Encoding is important for other languages!
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.QuestIDLookup = ")
             f.write(lua.encode(pruned_quest_id_table))
             f.write("\n")
-        
-        with open(output_file_de, "w", encoding="utf-8") as f:
-            f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
-            f.write(f"{module_name}.QuestIDLookup = ")
-            f.write(lua.encode(pruned_quest_id_table_de))
-            f.write("\n")
-
 
     def write_npc_name_gossip_file_lookups_table(self, df, module_name, type, table, filename):
         output_file = OUTPUT_FOLDER + f"/{filename}.lua"
@@ -361,7 +328,7 @@ class TTSProcessor:
 
             gossip_table[escaped_npc_name][escapedText] = row['templateText_race_gender_hash']
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="UTF-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(gossip_table))
