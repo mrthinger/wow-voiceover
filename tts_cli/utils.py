@@ -17,17 +17,23 @@ def replace_dollar_bs_with_space(text):
 
 def language_code_to_language_number(local_code : str) -> int:
     match local_code:
-        case "ko":
+        case "enUS":
+            return 0
+        case "koKR":
             return 1
-        case "fr":
+        case "frFR":
             return 2
-        case "de":
+        case "deDE":
             return 3
-        case "zh":
-            return 4            # Not sure what the difference between 4 and 5 is
-        case "es":
-            return 6            # Not sure why spain is 6 and 7
-        case "ru":
+        case "zhCN":    # Chinese simplified
+            return 4    
+        case "zhTW":    # Chinese traditional
+            return 5
+        case "esES":    # European spain
+            return 6
+        case "esMX":    # Mexican spain
+            return 7
+        case "ruRU":
             return 8
         case _:
             raise Exception("Unsupported local code!")
