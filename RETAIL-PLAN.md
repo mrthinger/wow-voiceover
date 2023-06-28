@@ -61,7 +61,7 @@ Potential Guessing Methods:
 
 #### Converting uploaded text to template text
 
-The API should be capable of handling variations in the text based on gender, name, class, and race differences. To achieve this, the API collects those pieces of information and post processes the uploaded text. Name should be easy to do a simple subsitution along with race. Gender typically has completely different dialog. Through a combination of subsitution then diffing user's submissions for the same piece of content, we should be able to make a good estimate as to what the template text is. The most up to date guess on the template text should be stored in the DB.
+The API should be capable of handling variations in the text based on gender, name, class, and race differences. To achieve this, the API collects those pieces of information and post processes the uploaded text. Name should be easy to do a simple substitution along with race. Gender typically has completely different dialog. Through a combination of substitution then diffing user's submissions for the same piece of content, we should be able to make a good estimate as to what the template text is. The most up to date guess on the template text should be stored in the DB.
 
 #### Notes on using client cache
 
