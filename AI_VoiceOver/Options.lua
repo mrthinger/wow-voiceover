@@ -487,7 +487,7 @@ Options.table = {
         General = GeneralTab,
         LegacyWrath = LegacyWrathTab,
         DataModules = DataModulesTab,
-        Profiles = nil, -- Filled in Options:OnInitialize, order is implicity 100
+        Profiles = nil, -- Filled in Options:OnInitialize, order is implicitly 100
 
         SlashCommands = SlashCommands,
     }
