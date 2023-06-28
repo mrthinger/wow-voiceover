@@ -568,7 +568,8 @@ def query_dataframe_for_all_quests_and_gossip_localized(language_code : str):
 			ELSE NULL
 		END), ''), name) as name,
 		ALL_DATA.type,
-		ALL_DATA.id
+		ALL_DATA.id,
+        ALL_DATA.text as original_text
 	FROM ALL_DATA
 		LEFT JOIN mangos.locales_quest          lq  ON lq .entry = quest
 		LEFT JOIN mangos.locales_broadcast_text lbt ON lbt.entry = broadcast_text_id

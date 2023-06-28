@@ -138,7 +138,7 @@ class TTSProcessor:
         df['gender'] = df['DisplaySexID'].map(GENDER_DICT)
         df['voice_name'] = df['race'] + '-' + df['gender']
 
-        df['templateText_race_gender'] = df['text'] + df['race'] + df['gender']
+        df['templateText_race_gender'] = df['original_text'] + df['race'] + df['gender']
         df['templateText_race_gender_hash'] = df['templateText_race_gender'].apply(get_hash)
 
         df['cleanedText'] = df['text'].copy()
