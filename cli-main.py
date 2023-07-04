@@ -1,10 +1,11 @@
 import argparse
 from prompt_toolkit.shortcuts import checkboxlist_dialog, radiolist_dialog, yes_no_dialog
-from tts_cli.sql_queries import query_dataframe_for_all_quests_and_gossip, query_dataframe_for_area, query_dataframe_for_all_quests_and_gossip_localized
+from tts_cli.sql_queries import query_dataframe_for_all_quests_and_gossip, query_dataframe_for_area
 from tts_cli.tts_utils import TTSProcessor
 from tts_cli.init_db import download_and_extract_latest_db_dump, import_sql_files_to_database
 from tts_cli.consts import RACE_DICT_INV, GENDER_DICT_INV, race_gender_tuple_to_strings
 from tts_cli.zone_selector import KalimdorZoneSelector, EasternKingdomsZoneSelector
+from tts_cli import utils
 
 def prompt_user(tts_processor):
 
@@ -119,7 +120,7 @@ parser = argparse.ArgumentParser(
 subparsers = parser.add_subparsers(dest="mode", help="Available modes")
 subparsers.add_parser("init-db", help="Initialize the database")
 subparsers.add_parser("interactive", help="Interactive mode")
-subparsers.add_parser("gen_lookup_tables", help="Generate the lookup tables for all quests and gossip in the game. Also recomputes the sound length table.").add_argument("--lang", default='', )
+subparsers.add_parser("gen_lookup_tables", help="Generate the lookup tables for all quests and gossip in the game. Also recomputes the sound length table.").add_argument("--lang", default="enUS")
 
 args = parser.parse_args()
 
@@ -139,14 +140,10 @@ elif args.mode == "interactive":
 elif args.mode == "gen_lookup_tables":
     tts_processor = TTSProcessor()
 
-    df = None
-    if(args.lang == ""):
-        df = query_dataframe_for_all_quests_and_gossip()
-    
-    else:
-        language_code = args.lang
-        print(f"Selected language: {language_code}")
-        df = query_dataframe_for_all_quests_and_gossip_localized(language_code)
+    language_code = args.lang
+    language_number = utils.language_code_to_language_number(language_code)
+    print(f"Selected language: {language_code}")
+    df = query_dataframe_for_all_quests_and_gossip(language_number)
 
     df = tts_processor.preprocess_dataframe(df)
     tts_processor.generate_lookup_tables(df)

@@ -17,7 +17,7 @@ def replace_dollar_bs_with_space(text):
 
 def language_code_to_language_number(local_code : str) -> int:
     match local_code:
-        case "enUS":
+        case "enUS" | "enGB":
             return 0
         case "koKR":
             return 1
@@ -25,13 +25,13 @@ def language_code_to_language_number(local_code : str) -> int:
             return 2
         case "deDE":
             return 3
-        case "zhCN":    # Chinese simplified
-            return 4    
-        case "zhTW":    # Chinese traditional
+        case "zhCN":    # Simplified chinese
+            return 4
+        case "zhTW":    # Traditional chinese
             return 5
-        case "esES":    # European spain
+        case "esES":    # European spanish
             return 6
-        case "esMX":    # Mexican spain
+        case "esMX":    # Mexican spanish
             return 7
         case "ruRU":
             return 8
