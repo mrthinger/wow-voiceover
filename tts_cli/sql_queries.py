@@ -156,11 +156,11 @@ creature_quest_relations AS (
     SELECT 'accept' as source, qr.quest, ct.entry as creature_id
     FROM creature_template ct
     JOIN creature_questrelation qr ON qr.id = ct.entry
-UNION ALL
+        UNION ALL
     SELECT 'complete' as source, qr.quest, ct.entry as creature_id
     FROM creature_template ct
     JOIN creature_involvedrelation qr ON qr.id = ct.entry
-UNION ALL
+        UNION ALL
     SELECT 'progress' as source, qr.quest, ct.entry as creature_id
     FROM creature_template ct
     JOIN creature_involvedrelation qr ON qr.id = ct.entry
@@ -169,11 +169,11 @@ gameobject_quest_relations AS (
     SELECT 'accept' as source, qr.quest, gt.entry as gameobject_id
     FROM gameobject_template gt
     JOIN gameobject_questrelation qr ON qr.id = gt.entry
-UNION ALL
+        UNION ALL
     SELECT 'complete' as source, qr.quest, gt.entry as gameobject_id
     FROM gameobject_template gt
     JOIN gameobject_involvedrelation qr ON qr.id = gt.entry
-UNION ALL
+        UNION ALL
     SELECT 'progress' as source, qr.quest, gt.entry as gameobject_id
     FROM gameobject_template gt
     JOIN gameobject_involvedrelation qr ON qr.id = gt.entry
@@ -425,7 +425,7 @@ FROM gameobject_data
     JOIN quest_greeting qg ON qg.entry=gameobject_data.id AND type=1
 
 )
-'''
+    '''
 
     if lang == 0:
         sql_query += '''
@@ -441,7 +441,7 @@ SELECT
     id,
     text as original_text
 FROM ALL_DATA
-'''
+        '''
     else:
         sql_query += f'''
 SELECT
@@ -477,7 +477,7 @@ FROM ALL_DATA
     LEFT JOIN mangos.locales_gameobject     lg  ON lg .entry = id AND type = 'gameobject'
     LEFT JOIN mangos.locales_item           li  ON li .entry = id AND type = 'item'
     LEFT JOIN mangos.quest_greeting         qg  ON qg .entry = id AND qg.type = (CASE ALL_DATA.type WHEN 'creature' THEN 0 WHEN 'gameobject' THEN 1 ELSE -1 END)
-'''
+        '''
 
     with db.cursor() as cursor:
         cursor.execute(sql_query)

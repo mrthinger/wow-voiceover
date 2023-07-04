@@ -15,7 +15,7 @@ def replace_dollar_bs_with_space(text):
     result = re.sub(pattern, ' ', text)
     return result
 
-def language_code_to_language_number(local_code : str) -> int:
+def language_code_to_language_number(local_code: str) -> int:
     match local_code:
         case "enUS" | "enGB":
             return 0

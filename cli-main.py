@@ -7,6 +7,7 @@ from tts_cli.consts import RACE_DICT_INV, GENDER_DICT_INV, race_gender_tuple_to_
 from tts_cli.zone_selector import KalimdorZoneSelector, EasternKingdomsZoneSelector
 from tts_cli import utils
 
+
 def prompt_user(tts_processor):
 
     #map
@@ -120,7 +121,8 @@ parser = argparse.ArgumentParser(
 subparsers = parser.add_subparsers(dest="mode", help="Available modes")
 subparsers.add_parser("init-db", help="Initialize the database")
 subparsers.add_parser("interactive", help="Interactive mode")
-subparsers.add_parser("gen_lookup_tables", help="Generate the lookup tables for all quests and gossip in the game. Also recomputes the sound length table.").add_argument("--lang", default="enUS")
+subparsers.add_parser("gen_lookup_tables", help="Generate the lookup tables for all quests and gossip in the game. Also recomputes the sound length table.") \
+          .add_argument("--lang", default="enUS")
 
 args = parser.parse_args()
 
@@ -143,10 +145,9 @@ elif args.mode == "gen_lookup_tables":
     language_code = args.lang
     language_number = utils.language_code_to_language_number(language_code)
     print(f"Selected language: {language_code}")
-    df = query_dataframe_for_all_quests_and_gossip(language_number)
 
+    df = query_dataframe_for_all_quests_and_gossip(language_number)
     df = tts_processor.preprocess_dataframe(df)
     tts_processor.generate_lookup_tables(df)
-
 else:
     interactive_mode()
