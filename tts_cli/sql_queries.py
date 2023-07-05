@@ -461,12 +461,12 @@ SELECT
     END, ''), text) as text,
     DisplayRaceID,
     DisplaySexID,
-    IFNULL(NULLIF((CASE ALL_DATA.type
+    IFNULL(NULLIF(CASE ALL_DATA.type
         WHEN 'creature'   THEN lc.name_loc{lang}
         WHEN 'gameobject' THEN lg.name_loc{lang}
         WHEN 'item'       THEN li.name_loc{lang}
         ELSE NULL
-    END), ''), name) as name,
+    END, ''), name) as name,
     ALL_DATA.type,
     id,
     text as original_text
