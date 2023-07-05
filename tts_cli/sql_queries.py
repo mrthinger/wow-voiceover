@@ -148,7 +148,7 @@ WHERE
     return df
 
 
-def query_dataframe_for_all_quests_and_gossip():
+def query_dataframe_for_all_quests_and_gossip(lang: int = 0):
     db = make_connection()
     sql_query = '''
 WITH RECURSIVE
@@ -234,7 +234,8 @@ numbers AS (
     UNION ALL SELECT 5
     UNION ALL SELECT 6
     UNION ALL SELECT 7
-)
+),
+ALL_DATA AS (
 
 -- Creature QuestGivers
 
@@ -248,6 +249,7 @@ SELECT
         WHEN qr.source = 'progress' THEN qt.RequestItemsText
         ELSE qt.OfferRewardText
     END as "text",
+    0 as broadcast_text_id,
     cdie.DisplayRaceID,
     cdie.DisplaySexID,
     ct.name,
@@ -279,6 +281,7 @@ SELECT
         WHEN qr.source = 'progress' THEN qt.RequestItemsText
         ELSE qt.OfferRewardText
     END as "text",
+    0 as broadcast_text_id,
     -1 as DisplayRaceID,
     0 as DisplaySexID,
     gt.name,
@@ -304,6 +307,7 @@ SELECT
     qr.quest,
     qt.Title as quest_title,
     qt.Details as "text",
+    0 as broadcast_text_id,
     -1 as DisplayRaceID,
     0 as DisplaySexID,
     it.name,
@@ -327,6 +331,7 @@ SELECT
     '' as quest,
     '' as quest_title,
     IF(creature_data.DisplaySexID = 0, bt.male_text, bt.female_text) AS text,
+    bt.entry as broadcast_text_id,
     creature_data.DisplayRaceID,
     creature_data.DisplaySexID,
     creature_data.name,
@@ -359,6 +364,7 @@ SELECT
     '' as quest,
     '' as quest_title,
     IF(bt.male_text IS NOT NULL AND bt.male_text != '', bt.male_text, bt.female_text) AS text,
+    bt.entry as broadcast_text_id,
     -1 as DisplayRaceID,
     0 as DisplaySexID,
     gameobject_data.name,
@@ -391,6 +397,7 @@ SELECT
     '' as quest,
     '' as quest_title,
     qg.content_default AS text,
+    0 as broadcast_text_id,
     creature_data.DisplayRaceID,
     creature_data.DisplaySexID,
     creature_data.name,
@@ -408,6 +415,7 @@ SELECT
     '' as quest,
     '' as quest_title,
     qg.content_default AS text,
+    0 as broadcast_text_id,
     -1 AS DisplayRaceID,
     0 AS DisplaySexID,
     gameobject_data.name,
@@ -416,8 +424,60 @@ SELECT
 FROM gameobject_data
     JOIN quest_greeting qg ON qg.entry=gameobject_data.id AND type=1
 
-;
+)
     '''
+
+    if lang == 0:
+        sql_query += '''
+SELECT
+    source,
+    quest,
+    quest_title,
+    text,
+    DisplayRaceID,
+    DisplaySexID,
+    name,
+    type,
+    id,
+    text as original_text
+FROM ALL_DATA
+        '''
+    else:
+        sql_query += f'''
+SELECT
+    source,
+    quest,
+    IFNULL(NULLIF(lq.title_loc{lang}, ''), quest_title) as quest_title,
+    IFNULL(NULLIF(CASE source
+        WHEN 'gossip' THEN (CASE
+            WHEN broadcast_text_id = 0 THEN qg.content_loc{lang}
+            WHEN ALL_DATA.type = 'creature' THEN IF(DisplaySexID = 0, lbt.male_text_loc{lang}, lbt.female_text_loc{lang})
+            ELSE IFNULL(NULLIF(lbt.male_text_loc{lang}, ''), lbt.female_text_loc{lang})
+        END)
+        WHEN 'accept'   THEN lq.Details_loc{lang}
+        WHEN 'progress' THEN lq.RequestItemsText_loc{lang}
+        WHEN 'complete' THEN lq.OfferRewardText_loc{lang}
+        ELSE NULL
+    END, ''), text) as text,
+    DisplayRaceID,
+    DisplaySexID,
+    IFNULL(NULLIF(CASE ALL_DATA.type
+        WHEN 'creature'   THEN lc.name_loc{lang}
+        WHEN 'gameobject' THEN lg.name_loc{lang}
+        WHEN 'item'       THEN li.name_loc{lang}
+        ELSE NULL
+    END, ''), name) as name,
+    ALL_DATA.type,
+    id,
+    text as original_text
+FROM ALL_DATA
+    LEFT JOIN mangos.locales_quest          lq  ON lq .entry = quest
+    LEFT JOIN mangos.locales_broadcast_text lbt ON lbt.entry = broadcast_text_id
+    LEFT JOIN mangos.locales_creature       lc  ON lc .entry = id AND type = 'creature'
+    LEFT JOIN mangos.locales_gameobject     lg  ON lg .entry = id AND type = 'gameobject'
+    LEFT JOIN mangos.locales_item           li  ON li .entry = id AND type = 'item'
+    LEFT JOIN mangos.quest_greeting         qg  ON qg .entry = id AND qg.type = (CASE ALL_DATA.type WHEN 'creature' THEN 0 WHEN 'gameobject' THEN 1 ELSE -1 END)
+        '''
 
     with db.cursor() as cursor:
         cursor.execute(sql_query)

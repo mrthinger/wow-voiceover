@@ -138,7 +138,7 @@ class TTSProcessor:
         df['gender'] = df['DisplaySexID'].map(GENDER_DICT)
         df['voice_name'] = df['race'] + '-' + df['gender']
 
-        df['templateText_race_gender'] = df['text'] + df['race'] + df['gender']
+        df['templateText_race_gender'] = df['original_text'] + df['race'] + df['gender']
         df['templateText_race_gender_hash'] = df['templateText_race_gender'].apply(get_hash)
 
         df['cleanedText'] = df['text'].copy()
@@ -227,7 +227,7 @@ class TTSProcessor:
 
             gossip_table[row['id']][escapedText] = row['templateText_race_gender_hash']
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="UTF-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(gossip_table))
@@ -245,7 +245,7 @@ class TTSProcessor:
         for i, row in tqdm(accept_df.iterrows()):
             questlog_table[int(row['quest'])] = row['id']
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="UTF-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(questlog_table))
@@ -262,7 +262,7 @@ class TTSProcessor:
         for i, row in tqdm(accept_df.iterrows()):
             npc_name_table[row['id']] =  row['name']
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="UTF-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(npc_name_table))
@@ -304,12 +304,12 @@ class TTSProcessor:
 
         pruned_quest_id_table = prune_quest_id_table(quest_id_table)
 
-        with open(output_file, "w") as f:
+        # UTF-8 Encoding is important for other languages!
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.QuestIDLookup = ")
             f.write(lua.encode(pruned_quest_id_table))
             f.write("\n")
-
 
     def write_npc_name_gossip_file_lookups_table(self, df, module_name, type, table, filename):
         output_file = OUTPUT_FOLDER + f"/{filename}.lua"
@@ -328,7 +328,7 @@ class TTSProcessor:
 
             gossip_table[escaped_npc_name][escapedText] = row['templateText_race_gender_hash']
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="UTF-8") as f:
             f.write(DATAMODULE_TABLE_GUARD_CLAUSE + "\n")
             f.write(f"{module_name}.{table} = ")
             f.write(lua.encode(gossip_table))
