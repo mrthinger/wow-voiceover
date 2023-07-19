@@ -4,6 +4,7 @@ from tts_cli.sql_queries import query_dataframe_for_all_quests_and_gossip, query
 from tts_cli.tts_utils import TTSProcessor
 from tts_cli.init_db import download_and_extract_latest_db_dump, import_sql_files_to_database
 from tts_cli.consts import RACE_DICT_INV, GENDER_DICT_INV, race_gender_tuple_to_strings
+from tts_cli.wrath_model_extraction import write_model_data
 from tts_cli.zone_selector import KalimdorZoneSelector, EasternKingdomsZoneSelector
 from tts_cli import utils
 
@@ -121,6 +122,7 @@ parser = argparse.ArgumentParser(
 subparsers = parser.add_subparsers(dest="mode", help="Available modes")
 subparsers.add_parser("init-db", help="Initialize the database")
 subparsers.add_parser("interactive", help="Interactive mode")
+subparsers.add_parser("extract_model_data", help="Generate info about which NPC entry uses which model.")
 subparsers.add_parser("gen_lookup_tables", help="Generate the lookup tables for all quests and gossip in the game. Also recomputes the sound length table.") \
           .add_argument("--lang", default="enUS")
 
@@ -149,5 +151,7 @@ elif args.mode == "gen_lookup_tables":
     df = query_dataframe_for_all_quests_and_gossip(language_number)
     df = tts_processor.preprocess_dataframe(df)
     tts_processor.generate_lookup_tables(df)
+elif args.mode == "extract_model_data":
+    write_model_data()
 else:
     interactive_mode()
