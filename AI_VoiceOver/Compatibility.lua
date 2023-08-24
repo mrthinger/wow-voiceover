@@ -1004,6 +1004,10 @@ if Version.IsLegacyWrath then
 end
 if Version.IsRetailVanilla then
 
+    GetGossipText = C_GossipInfo.GetText
+    GetNumGossipActiveQuests = C_GossipInfo.GetNumActiveQuests
+    GetNumGossipAvailableQuests = C_GossipInfo.GetNumAvailableQuests
+    
     function Addon.OnAddonLoad.Leatrix_Plus()
         C_Timer.After(0, function() -- Let it run its ADDON_LOADED code
             hooksecurefunc("QuestLog_Update", function()
