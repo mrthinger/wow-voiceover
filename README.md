@@ -12,7 +12,7 @@ This project contains a CLI (Command Line Interface) tool that generates Text-to
 - Parallel processing for faster generation.
 
 ## Requirements
-- python 3.9+
+- python 3.10+
 - docker (for the database)
 
 ## Installation
