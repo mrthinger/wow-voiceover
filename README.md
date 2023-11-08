@@ -45,6 +45,30 @@ To use the interactive CLI tool, run the following command:
 ```bash
 python cli-main.py
 ```
+
+### Language Client Selection
+Currently there are no voice translations available for languages other than english. However, if you want to use the addon with a non English client, you can still do so by creating the lookup tables in the client's respective language.
+
+To create the lookup tables, you can use the following command, with `LANGUAGE_CODE` representing the required language for the client:
+```bash
+python cli-main.py gen_lookup_tables --lang=LANGUAGE_CODE
+```
+The default selection, when no language code is provided, is English. Please be aware that the quality of text completion for translations in languages other than English can vary significantly.
+
+The following language codes are supported:
+| Language Code | Language |
+| ------------- | ------- |
+| enUS          | English |
+| enGB          | English |
+| koKR          | Korean |
+| frFR          | French |
+| deDE          | German |
+| zhCN          | Simplified Chinese |
+| zhTW          | Traditional Chinese |
+| esES          | European Spanish |
+| esMX          | Mexican Spanish |
+| ruRU          | Russian |
+
 ## Output
 The generated TTS audio files will be saved in the sounds folder, with separate subfolders for quests and gossip. Lookup tables and sound length tables will also be generated for use in the addon. 
 
