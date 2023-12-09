@@ -22,7 +22,6 @@
 
 ### 1.12 (Private Vanilla Servers & Turtle)
 - Download the [**1.12 Addon**]({{ github_zip_download_112 }}) and [**Vanilla Sounds**]({{ github_zip_download_vanilla_sounds }}) zips and extract them to your Addons folder.
-- If you are upgrading, the folder has changed from `AI_VoiceOver_112` to `AI_VoiceOver`. Delete `AI_VoiceOver_112`.
 
 ### 2.4.3 (Private TBC Servers)
 - Download the [**2.4.3 Addon**]({{ github_zip_download_243 }}) and [**Vanilla Sounds**]({{ github_zip_download_vanilla_sounds }}) zips and extract them to your Addons folder.
