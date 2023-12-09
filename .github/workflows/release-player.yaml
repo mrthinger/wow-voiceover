@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Rename TOC files
+        run: |
+          VERSION=${{ github.ref_name }}
+          VERSION=${VERSION:1}
+          find ./AI_VoiceOver -name "*.toc" -exec sed -i "s/## Version: 0.0.0/## Version: $VERSION/g" {} \;
+      - name: Copy AI_VoiceOver to release
+        run: |
+          mkdir -p ./release
+          cp -r ./AI_VoiceOver ./release/vanilla
+          cp -r ./AI_VoiceOver ./release/tbc
+          cp -r ./AI_VoiceOver ./release/wrath
+          cp -r ./AI_VoiceOver ./release/blizz
+
+      - name: Copy TOC files
+        run: |
+          cp ./release/vanilla/AI_VoiceOver_1.12.toc ./release/vanilla/AI_VoiceOver.toc
+          cp ./release/tbc/AI_VoiceOver_2.4.3.toc ./release/tbc/AI_VoiceOver.toc
+          cp ./release/wrath/AI_VoiceOver_3.3.5.toc ./release/wrath/AI_VoiceOver.toc
+          cp ./release/blizz/AI_VoiceOver_Mainline.toc ./release/blizz/AI_VoiceOver.toc
+
+      - name: Zip each release version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          cd ./release/vanilla && zip -r ../AI_VoiceOver-WoW_1.12-$VERSION.zip . && cd ../..
+          cd ./release/tbc && zip -r ../AI_VoiceOver-WoW_2.4.3-$VERSION.zip . && cd ../..
+          cd ./release/wrath && zip -r ../AI_VoiceOver-WoW_3.3.5-$VERSION.zip . && cd ../..
+          cd ./release/blizz && zip -r ../AI_VoiceOver-WoW_BlizzClassic-$VERSION.zip . && cd ../..
+
+      - name: Generate release notes
+        uses: cuchi/jinja2-action@v1.2.2
+        with:
+          template: .github/release-template.md
+          output_file: release_notes.md
+          strict: true
+          variables: |
+            github_zip_download_vanilla_sounds=https://github.com/mrthinger/wow-voiceover/releases/download/v1.3.1/AI_VoiceOverData_Vanilla-v1.0.0.zip
+            github_zip_download_blizz=https://github.com/mrthinger/wow-voiceover/releases/download/${{ github.ref_name }}/AI_VoiceOver-WoW_BlizzClassic-${{ github.ref_name }}.zip
+            github_zip_download_112=https://github.com/mrthinger/wow-voiceover/releases/download/${{ github.ref_name }}/AI_VoiceOver-WoW_1.12-${{ github.ref_name }}.zip
+            github_zip_download_243=https://github.com/mrthinger/wow-voiceover/releases/download/${{ github.ref_name }}/AI_VoiceOver-WoW_2.4.3-${{ github.ref_name }}.zip
+            github_zip_download_335=https://github.com/mrthinger/wow-voiceover/releases/download/${{ github.ref_name }}/AI_VoiceOver-WoW_3.3.5-${{ github.ref_name }}.zip
+            curse_link_blizz=https://www.curseforge.com/wow/addons/voiceover
+            curse_link_vanilla_sounds=https://www.curseforge.com/wow/addons/voiceover-sounds-vanilla
+            donation_link=https://ko-fi.com/evanpierce
+            discord_link=https://discord.gg/VdhUmA8ZCt
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          body_path: release_notes.md
+          files: |
+            release/*.zip
+
+      # - name: Upload Release Asset
+      #   id: upload_release_asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./path/to/your/artifact
+      #     asset_name: artifact-name
+      #     asset_content_type: application/zip
+
+      # - name: Generate release notes
+      #   id: generate_notes
+      #   run: |
+      #     echo "## Download" > release_notes.md
+      #     echo "" >> release_notes.md
+      #     echo "### Players" >> release_notes.md
+      #     echo "| Addon Version | GitHub Direct Link | Curse Link |" >> release_notes.md
+      #     echo "| ----- | ------------------ | ---------- |" >> release_notes.md
+      #     echo "| Blizzard Classic (Vanilla & WotLK) | [GitHub ZIP Download](${{ steps.upload_release_asset.outputs.browser_download_url }}) | [Curse](https://www.curseforge.com/wow/addons/voiceover) |" >> release_notes.md
+      #     # Add more lines as needed
+
+      # - name: Update release
+      #   uses: actions/github-script@v3
+      #   with:
+      #     github-token: ${{secrets.GITHUB_TOKEN}}
+      #     script: |
+      #       const fs = require('fs');
+      #       const release_notes = fs.readFileSync('release_notes.md', 'utf8');
+      #       github.repos.updateRelease({
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         release_id: ${{ steps.create_release.outputs.id }},
+      #         body: release_notes
