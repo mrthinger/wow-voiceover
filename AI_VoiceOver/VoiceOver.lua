@@ -53,6 +53,11 @@ local selectedGossipOption
 local currentQuestSoundData
 local currentGossipSoundData
 
+local function DisplayThankYouMessageWithDelay()
+    -- Add your "thank you" message with color formatting
+    print("|cFFFFA500[VoiceOver]|r Thank you for using |cFFFFA500VoiceOver|r! You may open options with |cFFFFA500/vo options|r.")
+end
+
 function Addon:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("VoiceOverDB", defaults)
     self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
@@ -69,6 +74,13 @@ function Addon:OnInitialize()
     SoundQueueUI:Initialize()
     DataModules:EnumerateAddons()
     Options:Initialize()
+
+    -- Add character onLogin/Reload message
+    -- Define the delay (in seconds)
+    local delay = 5  -- Adjust the delay as needed
+
+    -- Add a delay before displaying the "thank you" message
+    C_Timer.After(delay, DisplayThankYouMessageWithDelay)
 
     self:RegisterEvent("ADDON_LOADED")
     self:RegisterEvent("QUEST_DETAIL")
