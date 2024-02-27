@@ -11,6 +11,24 @@ from tts_cli import utils
 
 def prompt_user(tts_processor):
 
+        #lang
+    lang_choices = [
+        (0, "enUS/enGB"),
+        (1, "koKR"),
+        (2, "frFR"),
+        (3, "deDE"),
+        (4, "zhCN"),
+        (5, "zhTW"),
+        (6, "esES"),
+        (7, "esMX"),
+        (8, "ruRU"),
+    ]
+    lang_id = radiolist_dialog(
+        title="Select a lang",
+        text="Choose a lang:",
+        values=lang_choices,
+    ).run()
+
     #map
     map_choices = [
         (-1, "All (includes dungeons)"),
@@ -35,7 +53,7 @@ def prompt_user(tts_processor):
         df = query_dataframe_for_area(xrange, yrange, map_id)
     else:
         (xrange, yrange) = 'all', 'all'
-        df = query_dataframe_for_all_quests_and_gossip()
+        df = query_dataframe_for_all_quests_and_gossip(lang_id)
     
     # Get unique race-gender combinations
     unique_race_gender_combos = df[[
@@ -102,7 +120,8 @@ def prompt_user(tts_processor):
 
     confirmed = yes_no_dialog(
         title="Summary",
-        text=f"Selected Map: {map_choices[map_id][1]}\n"
+        text=f"Selected lang: {lang_choices[lang_id][1]}\n"
+             f"Selected Map: {map_choices[map_id][1]}\n"
              f"Coordinate Range: x={xrange}, y={yrange}\n"
              f"Selected Voices: {', '.join(selected_voice_names)}\n"
              f"Approximate Text Characters: {total_characters}",
