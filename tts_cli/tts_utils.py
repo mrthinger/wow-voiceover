@@ -99,8 +99,10 @@ class TTSProcessor:
 
         voice_id = self.voice_map[voice]
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        # use multilingual model to support more languages 
         payload = {
             "text": text,
+            "model_id": "eleven_multilingual_v2",
             "voice_settings": {
                 "stability": 0.28,
                 "similarity_boost": .992
