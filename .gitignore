@@ -1,6 +1,7 @@
 __pycache__
 datagrip
 .venv
+.vscode
 sql-data
 .env
 sql/db_dump
