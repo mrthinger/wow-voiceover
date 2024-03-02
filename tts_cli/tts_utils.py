@@ -345,8 +345,15 @@ class TTSProcessor:
 
     def tts_dataframe(self, df, selected_voices):
         self.create_output_dirs()
-        self.process_rows_in_parallel(df, self.process_row, selected_voices, max_workers=5)
-        print("Audio finished generating.")
+        
+        try:
+            self.process_rows_in_parallel(df, self.process_row, selected_voices, max_workers=5)
+            print("Audio finished generating.")
+        except Exception as e:
+            if '401' in str(e):  # Check if the exception message contains '401'
+                print("Error: Total quota reached or exceeded.")
+            else:
+                print(f"An error occurred: {e}")
 
     def generate_lookup_tables(self, df):
         self.create_output_dirs()
