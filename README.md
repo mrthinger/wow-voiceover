@@ -1,11 +1,11 @@
-# VoiceOver for World of Warcraft Quests and Gossip
+# VoiceOver for World of Warcraft
 
-## V2: https://allvoice.ai
-Contribute voices on https://allvoice.ai so I can give each NPC a unique AI voicemodel to power their dialog. The top rated voice for each NPC will be used. 
+## v2: https://allvoice.ai
+Contribute voices on [allvoice.ai](https://allvoice.ai) so I can give each NPC a unique AI voicemodel to power their dialog. The top rated voice for each NPC will be used. 
 
 
-### [Discord](https://discord.gg/VdhUmA8ZCt)
-
+### [discord](https://discord.gg/VdhUmA8ZCt)
+### [allvoice code](https://github.com/allvoice/allvoice-website)
 
 ## Overview
 - tts cli to create audio files for quests and gossip text.
