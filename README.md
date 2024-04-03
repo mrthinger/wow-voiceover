@@ -4,7 +4,7 @@
 Contribute voices on [allvoice.ai](https://allvoice.ai) so I can give each NPC a unique AI voicemodel to power their dialog. The top rated voice for each NPC will be used. 
 
 
-### [discord](https://discord.gg/VdhUmA8ZCt)
+### [voiceover discord](https://discord.gg/VdhUmA8ZCt)
 ### [allvoice code](https://github.com/allvoice/allvoice-website)
 
 ## Overview
