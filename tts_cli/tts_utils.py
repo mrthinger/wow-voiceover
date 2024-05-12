@@ -112,13 +112,18 @@ class TTSProcessor:
 
         response = requests.post(url, json=payload, headers=headers)
 
-        if response.status_code == 200 and response.headers["Content-Type"] == "audio/mpeg":
+        if (
+            response.status_code == 200
+            and response.headers["Content-Type"] == "audio/mpeg"
+        ):
             with open(outpath, "wb") as f:
                 f.write(response.content)
                 result = f"Audio file saved successfully!: {outpath}"
                 print(result)
+        elif response.status_code == 401:
+            raise Exception(f"Error: Total quota reached or exceeded. {response}")
         else:
-            result = f"Error: unable to save audio file {response}"
+            result = f"Error: unable to save audio file. {response}"
             print(result)
         return result
 
@@ -340,8 +345,15 @@ class TTSProcessor:
 
     def tts_dataframe(self, df, selected_voices):
         self.create_output_dirs()
-        self.process_rows_in_parallel(df, self.process_row, selected_voices, max_workers=5)
-        print("Audio finished generating.")
+        
+        try:
+            self.process_rows_in_parallel(df, self.process_row, selected_voices, max_workers=5)
+            print("Audio finished generating.")
+        except Exception as e:
+            if '401' in str(e):  # Check if the exception message contains '401'
+                print("Error: Total quota reached or exceeded.")
+            else:
+                print(f"An error occurred: {e}")
 
     def generate_lookup_tables(self, df):
         self.create_output_dirs()
