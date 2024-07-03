@@ -60,11 +60,11 @@ class ZoneSelector:
                                       linewidth=2, edgecolor='g', facecolor='none')
         ax.add_patch(self.confirm_rect)
 
-        self.ok_button_ax = plt.axes([0.7, 0.05, 0.1, 0.075])
+        self.ok_button_ax = self.confirm_fig.add_axes([0.7, 0.05, 0.1, 0.075])
         self.ok_button = plt.Button(self.ok_button_ax, 'OK')
         self.ok_button.on_clicked(self.confirm_selection)
 
-        self.try_again_button_ax = plt.axes([0.81, 0.05, 0.1, 0.075])
+        self.try_again_button_ax = self.confirm_fig.add_axes([0.81, 0.05, 0.1, 0.075])
         self.try_again_button = plt.Button(
             self.try_again_button_ax, 'Try Again')
         self.try_again_button.on_clicked(self.cancel_selection)
@@ -109,6 +109,8 @@ class ZoneSelector:
         # Create a new axes for the image
         img_ax = self.fig.add_axes([0.1, 0.1, 0.8, 0.8])
         img = plt.imread(self.image_path)
+        if img.dtype == np.uint8:
+            img = img.astype(np.float32) / 255.0  # Normalize if image is in uint8 format
         img_ax.imshow(img)
         img_ax.add_patch(self.rect)
 
@@ -157,8 +159,7 @@ class KalimdorZoneSelector(ZoneSelector):
             image_points, game_points)
 
         image_path = 'assets/images/kalimdor.jpg'
-        super(KalimdorZoneSelector, self).__init__(
-            image_path, x_scale, y_scale, x_offset, y_offset)
+        super().__init__(image_path, x_scale, y_scale, x_offset, y_offset)
 
 
 class EasternKingdomsZoneSelector(ZoneSelector):
@@ -179,5 +180,4 @@ class EasternKingdomsZoneSelector(ZoneSelector):
             image_points, game_points)
 
         image_path = 'assets/images/easternkingdoms.jpg'
-        super(EasternKingdomsZoneSelector, self).__init__(
-            image_path, x_scale, y_scale, x_offset, y_offset)
+        super().__init__(image_path, x_scale, y_scale, x_offset, y_offset)

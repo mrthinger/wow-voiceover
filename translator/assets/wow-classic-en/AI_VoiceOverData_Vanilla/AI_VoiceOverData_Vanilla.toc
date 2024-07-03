@@ -1,0 +1,18 @@
+## Interface: 100000
+## Title: VoiceOver Data - Vanilla
+## Version: 0.1
+## LoadOnDemand: 1
+## OptionalDeps: AI_VoiceOver_112, AI_VoiceOver
+## X-Part-Of: VoiceOver
+## X-Child-Of: VoiceOver
+## X-VoiceOver-DataModule-Version: 1
+## X-VoiceOver-DataModule-Priority: 100
+## X-VoiceOver-DataModule-Maps: 0, 1, 30, 33, 43, 47, 48, 70, 90, 109, 129, 189, 209, 229, 230, 289, 309, 329, 349, 369, 389, 429, 469, 509, 531, 533
+
+Module.lua
+generated\gossip_file_lookups.lua
+generated\npc_name_gossip_file_lookups.lua
+generated\npc_name_lookups.lua
+generated\quest_id_lookups.lua
+generated\questlog_npc_lookups.lua
+generated\sound_length_table.lua
