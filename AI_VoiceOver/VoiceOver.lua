@@ -70,6 +70,11 @@ function Addon:OnInitialize()
     DataModules:EnumerateAddons()
     Options:Initialize()
 
+    -- Add character onLogin/Reload message
+    self:ScheduleTimer(function()
+        print("|cFFFFA500[VoiceOver]|r Thank you for using |cFFFFA500VoiceOver|r! You may open options with |cFFFFA500/vo options|r.")
+    end, 5)
+
     self:RegisterEvent("ADDON_LOADED")
     self:RegisterEvent("QUEST_DETAIL")
     -- self:RegisterEvent("QUEST_PROGRESS")
