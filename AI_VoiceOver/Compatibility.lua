@@ -93,6 +93,7 @@ if not hooksecurefunc then
     end
 end
 
+-- Legacy clients before GetAddOnEnableState existed (C_AddOns shims live in Environment.lua).
 if not GetAddOnEnableState then
     ---@overload fun(addon)
     function GetAddOnEnableState(character, addon)

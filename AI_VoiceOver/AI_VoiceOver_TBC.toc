@@ -1,4 +1,4 @@
-## Interface: 20504
+## Interface: 20506
 ## Title: VoiceOver
 ## Notes: Adds voiceovers to npcs.
 ## Version: 0.0.0

@@ -17,3 +17,25 @@ and this Environment file must be loaded before all others
 
 local _G = getfenv(0)
 VoiceOver = setmetatable({ _G = _G }, { __index = _G })
+
+-- Classic 1.15.9 / TBC 2.5.6 removed global AddOn APIs (same as modern clients).
+-- Keep legacy names in the addon environment, including GetAddOnEnableState(character, addon) order.
+local AddOns = _G.C_AddOns
+if AddOns then
+    VoiceOver.GetAddOnMetadata = _G.GetAddOnMetadata or AddOns.GetAddOnMetadata
+    VoiceOver.GetNumAddOns = _G.GetNumAddOns or AddOns.GetNumAddOns
+    VoiceOver.GetAddOnInfo = _G.GetAddOnInfo or AddOns.GetAddOnInfo
+    VoiceOver.IsAddOnLoaded = _G.IsAddOnLoaded or AddOns.IsAddOnLoaded
+    VoiceOver.IsAddOnLoadOnDemand = _G.IsAddOnLoadOnDemand or AddOns.IsAddOnLoadOnDemand
+    VoiceOver.LoadAddOn = _G.LoadAddOn or AddOns.LoadAddOn
+    VoiceOver.EnableAddOn = _G.EnableAddOn or AddOns.EnableAddOn
+    VoiceOver.DisableAddOn = _G.DisableAddOn or AddOns.DisableAddOn
+    if not _G.GetAddOnEnableState then
+        VoiceOver.GetAddOnEnableState = function(character, addon)
+            if addon == nil then
+                return AddOns.GetAddOnEnableState(character)
+            end
+            return AddOns.GetAddOnEnableState(addon, character)
+        end
+    end
+end
