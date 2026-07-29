@@ -39,7 +39,7 @@ function QuestOverlayUI:UpdateQuestTitle(questLogTitleFrame, playButton, normalT
         normalText:SetText(text)
     end
 
-    playButton:SetPoint("LEFT", normalText, "LEFT", 4, 0)
+    playButton:SetPoint("RIGHT", normalText, "LEFT")
 
     local formatedText = prefix .. string.trim(normalText:GetText() or "")
 
