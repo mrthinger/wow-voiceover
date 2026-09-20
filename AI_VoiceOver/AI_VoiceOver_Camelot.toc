@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: VoiceOver
+## Notes: Adds voiceovers to npcs.
+## Version: 1.4.5-forever
+## SavedVariables: VoiceOverDB, VoiceOverCaptureDB
+## X-Part-Of: VoiceOver
+
+embeds.xml
+addon_camelot.xml

@@ -186,11 +186,11 @@ function SoundQueueUI:InitPortraitLine()
         if Addon.db.char.IsPaused then
             self:GetNormalTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetPushedTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
-            self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0.75)
+            self:GetNormalTexture():SetAlpha(self:IsMouseOver() and 1 or 0.75)
         else
             self:GetNormalTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetPushedTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
-            self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0.75)
+            self:GetNormalTexture():SetAlpha(self:IsMouseOver() and 1 or 0.75)
         end
     end
     self.frame.miniPause:Update()
@@ -385,12 +385,12 @@ function SoundQueueUI:InitPortrait()
             end
             self:GetNormalTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetPushedTexture():SetTexCoord(0 / PORTRAIT_ATLAS_SIZE, 93 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
-            self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0.75)
+            self:GetNormalTexture():SetAlpha(self:IsMouseOver() and 1 or 0.75)
         else
             self.background:Hide()
             self:GetNormalTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
             self:GetPushedTexture():SetTexCoord(93 / PORTRAIT_ATLAS_SIZE, 186 / PORTRAIT_ATLAS_SIZE, 419 / PORTRAIT_ATLAS_SIZE, 512 / PORTRAIT_ATLAS_SIZE)
-            self:GetNormalTexture():SetAlpha(MouseIsOver(self) and 1 or 0)
+            self:GetNormalTexture():SetAlpha(self:IsMouseOver() and 1 or 0)
         end
     end
     self.frame.portrait.pause:Update()

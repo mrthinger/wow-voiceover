@@ -10,3 +10,13 @@ generated
 .DS_Store
 AI_VoiceOver/AI_VoiceOver.toc
 RELEASE
+# Forever pipeline
+.venv-tts
+forever/data/db2/
+forever/*.wav
+forever/voices/*.wav
+!AI_VoiceOverData_Forever/generated/
+AI_VoiceOverData_Forever/generated/sounds/*/*.mp3
+AI_VoiceOverData_Forever/generated/sounds/*/*.ogg
+forever/voices/raw/
+forever/samples/

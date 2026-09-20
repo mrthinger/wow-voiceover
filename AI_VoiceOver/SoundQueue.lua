@@ -216,6 +216,39 @@ function SoundQueue:RemoveSoundFromQueue(soundData, finishedPlaying)
     SoundQueueUI:UpdateSoundQueueDisplay()
 end
 
+--- Moves a queued sound to the front of the queue and starts playing it (unless paused).
+---@param soundData SoundData
+function SoundQueue:MoveToFront(soundData)
+    local index
+    for i, queuedSound in ipairs(self.sounds) do
+        if queuedSound.id == soundData.id then
+            index = i
+            break
+        end
+    end
+    if not index or index == 1 then
+        return
+    end
+
+    local current = self:GetCurrentSound()
+    if current and current.nextSoundTimer then
+        if current.handle then
+            Utils:StopSound(current)
+        end
+        Addon:CancelTimer(current.nextSoundTimer)
+        current.nextSoundTimer = nil
+    end
+
+    table.remove(self.sounds, index)
+    table.insert(self.sounds, 1, soundData)
+
+    if not Addon.db.char.IsPaused then
+        self:PlaySound(soundData)
+    end
+
+    SoundQueueUI:UpdateSoundQueueDisplay()
+end
+
 function SoundQueue:RemoveAllSoundsFromQueue()
     for i = self:GetQueueSize(), 1, -1 do
         local queuedSound = self.sounds[i]

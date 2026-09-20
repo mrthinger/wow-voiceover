@@ -1,4 +1,4 @@
---[[ $Id: AceGUIWidget-DropDown.lua 1284 2022-09-25 09:15:30Z nevcairiel $ ]]--
+--[[ $Id$ ]]--
 local AceGUI = LibStub("AceGUI-3.0")
 
 -- Lua APIs

@@ -28,7 +28,7 @@
 -- end
 -- @class file
 -- @name AceAddon-3.0.lua
--- @release $Id: AceAddon-3.0.lua 1284 2022-09-25 09:15:30Z nevcairiel $
+-- @release $Id$
 
 local MAJOR, MINOR = "AceAddon-3.0", 13
 local AceAddon, oldminor = LibStub:NewLibrary(MAJOR, MINOR)

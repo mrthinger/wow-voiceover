@@ -1,0 +1,22 @@
+## Interface: 16001
+## Title: VoiceOver Data - Forever
+## Notes: Voiceovers for quests and gossip that are new or changed in WoW Forever. Install alongside VoiceOver Data - Vanilla.
+## Version: 0.1
+## LoadOnDemand: 1
+## OptionalDeps: AI_VoiceOver
+## X-Part-Of: VoiceOver
+## X-Child-Of: VoiceOver
+## X-VoiceOver-DataModule-Version: 1
+## X-VoiceOver-DataModule-Priority: 200
+
+Module.lua
+generated\gossip_file_lookups.lua
+generated\object_gossip_file_lookups.lua
+generated\npc_name_gossip_file_lookups.lua
+generated\object_name_gossip_file_lookups.lua
+generated\npc_name_lookups.lua
+generated\object_name_lookups.lua
+generated\quest_id_lookups.lua
+generated\questlog_npc_lookups.lua
+generated\questlog_object_lookups.lua
+generated\sound_length_table.lua
