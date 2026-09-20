@@ -1,0 +1,39 @@
+{
+ "gossip": {
+  "Creature:68|Gryphons, eh?": {
+   "event": "Gossip",
+   "npc": "Creature:68",
+   "text": "Gryphons, eh?",
+   "time": 1758400001
+  }
+ },
+ "npcs": {
+  "Creature:288": {
+   "creatureType": "Humanoid",
+   "displayID": 3157,
+   "name": "Jitters",
+   "sex": 2
+  }
+ },
+ "quests": {
+  "5-QuestAccept": {
+   "event": "QuestAccept",
+   "file": "5-accept",
+   "found": true,
+   "mapID": 1429,
+   "name": "Jitters",
+   "npc": "Creature:288",
+   "questID": 5,
+   "text": "Hey, mate! \"Quoted\" text with a\nnewline and \\backslash and unicode é.",
+   "time": 1758400000,
+   "title": "Jitters' Growling Gut"
+  }
+ },
+ "sources": {
+  "/tmp/claude-1000/-home-q-Faugus-battlenet-drive-c-Program-Files--x86--World-of-Warcraft--classic-beta--Interface-AddOns/c367cb2f-c4a0-4663-b74d-edd0b038ebe3/scratchpad/sample_sv.lua": {
+   "mtime": 1789922205.1101918,
+   "size": 761
+  }
+ },
+ "version": 1
+}

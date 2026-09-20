@@ -2,8 +2,9 @@
 ## Title: VoiceOver
 ## Notes: Adds voiceovers to npcs.
 ## Version: 0.0.0
-## SavedVariables: VoiceOverDB
+## SavedVariables: VoiceOverDB, VoiceOverCaptureDB
 ## X-Part-Of: VoiceOver
 
 embeds.xml
 addon.xml
+Capture.lua
