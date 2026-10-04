@@ -25,10 +25,12 @@ jobs:
           mkdir -p ./release/tbc/AI_VoiceOver
           mkdir -p ./release/wrath/AI_VoiceOver
           mkdir -p ./release/blizz/AI_VoiceOver
+          mkdir -p ./release/forever/AI_VoiceOver
           cp -r ./AI_VoiceOver/* ./release/vanilla/AI_VoiceOver
           cp -r ./AI_VoiceOver/* ./release/tbc/AI_VoiceOver
           cp -r ./AI_VoiceOver/* ./release/wrath/AI_VoiceOver
           cp -r ./AI_VoiceOver/* ./release/blizz/AI_VoiceOver
+          cp -r ./AI_VoiceOver/* ./release/forever/AI_VoiceOver
 
       - name: Copy TOC files
         run: |
@@ -36,6 +38,8 @@ jobs:
           cp ./release/tbc/AI_VoiceOver/AI_VoiceOver_2.4.3.toc ./release/tbc/AI_VoiceOver/AI_VoiceOver.toc
           cp ./release/wrath/AI_VoiceOver/AI_VoiceOver_3.3.5.toc ./release/wrath/AI_VoiceOver/AI_VoiceOver.toc
           cp ./release/blizz/AI_VoiceOver/AI_VoiceOver_Mainline.toc ./release/blizz/AI_VoiceOver/AI_VoiceOver.toc
+          cp ./release/forever/AI_VoiceOver/AI_VoiceOver_Camelot.toc ./release/forever/AI_VoiceOver/AI_VoiceOver.toc
+          find ./release/forever/AI_VoiceOver -maxdepth 1 -name "AI_VoiceOver_*.toc" ! -name AI_VoiceOver_Camelot.toc -delete
 
       - name: Zip each release version
         run: |
@@ -44,6 +48,7 @@ jobs:
           cd ./release/tbc && zip -r ../AI_VoiceOver-WoW_2.4.3-$VERSION.zip . && cd ../..
           cd ./release/wrath && zip -r ../AI_VoiceOver-WoW_3.3.5-$VERSION.zip . && cd ../..
           cd ./release/blizz && zip -r ../AI_VoiceOver-WoW_BlizzClassic-$VERSION.zip . && cd ../..
+          cd ./release/forever && zip -r ../AI_VoiceOver-WoW_Forever-$VERSION.zip . && cd ../..
 
       - name: Generate release notes
         uses: cuchi/jinja2-action@v1.3.0
@@ -57,6 +62,7 @@ jobs:
             github_zip_download_112=https://github.com/mrthinger/wow-voiceover/releases/download/${{ github.ref_name }}/AI_VoiceOver-WoW_1.12-${{ github.ref_name }}.zip
             github_zip_download_243=https://github.com/mrthinger/wow-voiceover/releases/download/${{ github.ref_name }}/AI_VoiceOver-WoW_2.4.3-${{ github.ref_name }}.zip
             github_zip_download_335=https://github.com/mrthinger/wow-voiceover/releases/download/${{ github.ref_name }}/AI_VoiceOver-WoW_3.3.5-${{ github.ref_name }}.zip
+            github_zip_download_forever=https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/AI_VoiceOver-WoW_Forever-${{ github.ref_name }}.zip
             curse_link_blizz=https://www.curseforge.com/wow/addons/voiceover
             curse_link_vanilla_sounds=https://www.curseforge.com/wow/addons/voiceover-sounds-vanilla
             donation_link=https://ko-fi.com/evanpierce

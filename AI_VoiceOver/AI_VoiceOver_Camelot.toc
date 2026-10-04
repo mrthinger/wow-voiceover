@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: VoiceOver
+## Notes: Adds voiceovers to npcs.
+## Version: 0.0.0
+## SavedVariables: VoiceOverDB
+## X-Part-Of: VoiceOver
+
+embeds.xml
+Forever\Libs\AceGUI-3.0\AceGUI-3.0.xml
+Forever\Libs\AceConfig-3.0\AceConfig-3.0.xml
+addon.xml
+Forever.lua

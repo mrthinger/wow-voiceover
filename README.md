@@ -14,6 +14,29 @@ Contribute voices on [allvoice.ai](https://allvoice.ai) so I can give each NPC a
 - cli uses data fetched from a local MySQL database and ElevenLabs tts for speech
 
 
+## World of Warcraft: Forever
+This section is for World of Warcraft: Forever only. Other clients: use the install steps on the [releases](https://github.com/mrthinger/wow-voiceover/releases) page as before.
+
+1. From the [releases](https://github.com/mrthinger/wow-voiceover/releases) page, download `AI_VoiceOver-WoW_Forever-<version>.zip`. Extract the `AI_VoiceOver` folder into `World of Warcraft/_classic_beta_/Interface/AddOns`.
+2. Install the sound pack (`AI_VoiceOverData_Vanilla`) from the releases page, the same way as for other clients.
+3. The sound pack's release zip has no Forever TOC file, so download one small file: [AI_VoiceOverData_Vanilla_Camelot.toc](https://raw.githubusercontent.com/mrthinger/wow-voiceover/master/AI_VoiceOverData_Vanilla/AI_VoiceOverData_Vanilla_Camelot.toc). Save it into the `AI_VoiceOverData_Vanilla` folder inside AddOns, with exactly that name. Without it Forever lists the sound pack as "Incompatible". That is a different status from "Out of date", and ticking "Load out of date AddOns" does not help.
+4. Restart the game completely. A new addon needs a full restart, not just `/reload`.
+
+On Windows, step 3 can be done from the command line. It works in both Command Prompt and PowerShell. First go to the AddOns folder:
+
+```
+pushd "C:\Program Files (x86)\World of Warcraft\_classic_beta_\Interface\AddOns"
+```
+
+Your prompt must now end in `\Interface\AddOns`. If it does not, or an error appeared, stop: the game is installed somewhere else, so put your own path between the quotes. Then run:
+
+```
+curl.exe -f -L -o AI_VoiceOverData_Vanilla\AI_VoiceOverData_Vanilla_Camelot.toc https://raw.githubusercontent.com/mrthinger/wow-voiceover/master/AI_VoiceOverData_Vanilla/AI_VoiceOverData_Vanilla_Camelot.toc
+```
+
+Voices exist for quests and NPCs that were in the Classic data. Quests and NPCs that are new or changed in Forever stay silent, without an error. Forever support is additive and only active on Forever, so other clients are unaffected.
+
+
 ## Below is for developers only. Go to [releases](https://github.com/mrthinger/wow-voiceover/releases) if youre looking to install the addon.
 
 ## Requirements

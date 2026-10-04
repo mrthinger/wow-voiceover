@@ -4,6 +4,7 @@
 | Addon Version | GitHub Direct Link | Curse Link |
 | ----- | ------------------ | ---------- |
 | Blizzard Classic (Vanilla & WotLK) | [GitHub ZIP Download]({{ github_zip_download_blizz }}) | [Curse]({{ curse_link_blizz }}) |
+| Forever | [GitHub ZIP Download]({{ github_zip_download_forever }}) | - |
 | 1.12 | [GitHub ZIP Download]({{ github_zip_download_112 }}) | - |
 | 2.4.3 | [GitHub ZIP Download]({{ github_zip_download_243 }}) | - |
 | 3.3.5 | [GitHub ZIP Download]({{ github_zip_download_335 }}) | - |
@@ -28,6 +29,9 @@
 
 ### 3.3.5 (Private WotLK Servers)
 - Download the [**3.3.5 Addon**]({{ github_zip_download_335 }}) and [**Vanilla Sounds**]({{ github_zip_download_vanilla_sounds }}) zips and extract them to your Addons folder.
+
+### Forever
+- Download the [**Forever Addon**]({{ github_zip_download_forever }}) and [**Vanilla Sounds**]({{ github_zip_download_vanilla_sounds }}) zips and extract them to your Addons folder.
 
 
 ## Support This Project
